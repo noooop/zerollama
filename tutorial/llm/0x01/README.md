@@ -106,5 +106,6 @@ $ curl http://localhost:11434/v1/chat/completions -d '{
 # Reference
 https://github.com/QwenLM/Qwen1.5
 https://huggingface.co/Qwen
+https://hf-mirror.com
 
 
