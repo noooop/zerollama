@@ -104,8 +104,8 @@ $ curl http://localhost:11434/v1/chat/completions -d '{
 2. 支持流式推理，生成一个字，输出一个字，明显能提高用户体验
 
 # Reference
-https://github.com/QwenLM/Qwen1.5
-https://huggingface.co/Qwen
-https://hf-mirror.com
+1. https://github.com/QwenLM/Qwen1.5
+2. https://huggingface.co/Qwen
+3. https://hf-mirror.com
 
 
