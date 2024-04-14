@@ -6,6 +6,7 @@ os.environ['HF_HOME'] = 'D:/.cache/'
 
 import torch
 
+
 class Qwen(object):
     def __init__(self, model_name, device="cuda"):
         self.device = device
@@ -32,7 +33,7 @@ class Qwen(object):
     @torch.no_grad()
     def chat(self, messages, options=None):
         options = options or dict()
-        max_new_tokens = options.get("max_new_tokens", 128)
+        max_new_tokens = options.get("max_new_tokens", 512)
 
         messages = [{"role": "system", "content": "你是一个有用的助手。"}] + messages
 
@@ -69,7 +70,7 @@ class Qwen(object):
 
 if __name__ == '__main__':
     from pprint import pprint
-    qwen = Qwen("Qwen/Qwen1.5-0.5B")
+    qwen = Qwen("Qwen/Qwen1.5-0.5B-Chat")
     qwen.load()
 
     prompt = "给我介绍一下大型语言模型。"

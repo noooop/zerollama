@@ -10,9 +10,9 @@ huggingface transformers，最简单也兼容性最强
 $ python model.py
 {'finish_reason': 'stop',
  'prompt_length': 24,
- 'response_length': 95,
- 'response_text': '大型语言模型是一种能够处理大规模数据并进行自然语言处理的计算机程序。它们通常使用深度学习技术，包括卷积神经网络（CNN）、循环神经网络（RNN）和长短时记忆网络（LSTM）等。这些模型通常能够处理大量的文本数据，并能够提取文本中的重要信息和结构。大型语言模型在自然语言处理领域中具有广泛的应用，例如文本分类、情感分析、机器翻译、问答系统等。'}
-```
+ 'response_length': 69,
+ 'response_text': '大型语言模型是一种机器学习技术，它可以模拟人类智能，并从中提取有用的信息。它们可以用于识别文本、语音、图像和视频等类型的数据，并可以实现自动翻译、文本摘要、情感分析、问答系统等功能。大型语言模型的开发需要大量的计算资源，因此它们在处理大规模数据时效率非常高。'}
+ ```
 
 
 > ## 注意
@@ -33,12 +33,12 @@ $ python server.py
 
 第二个窗口
 $ python client.py 
-{'created_at': '2024-04-11T15:30:44',
+{'created_at': '2024-04-14T16:14:24',
  'done': True,
- 'message': {'content': '大型语言模型是一种能够处理大规模数据并进行自然语言处理的计算机程序。它们通常使用深度学习技术，包括卷积神经网络（CNN）、循环神经网络（RNN）和长短时记忆网络（LSTM）等。这些模型通常能够处理大量的文本数据，并能够提取文本中的重要信息和结构。大型语言模型在自然语言处理领域中具有广泛的应用，例如文本分类、情感分析、机器翻译、问答系统等。',
+ 'message': {'content': '大型语言模型是指能够处理大规模、复杂的信息，包括文本、语音、图像和视频等数据的机器学习模型。它们可以用于各种领域，例如自然语言处理、计算机视觉、对话系统、智能客服、搜索引擎优化、自动驾驶等。这些大型语言模型通常使用深度学习技术，通过大量的训练数据来建立复杂的神经网络架构，并利用大量的训练数据来提高模型的准确性。',
              'images': None,
              'role': 'assistant'},
- 'model': 'Qwen/Qwen1.5-0.5B'}
+ 'model': 'Qwen/Qwen1.5-0.5B-Chat'}
 ```
 
 # http 网关
@@ -49,14 +49,13 @@ $ python client.py
 
 
 ```
-
 第一个窗口
 $ python main.py 
 
 ollama Chat Completions API
 第二个窗口
 $ curl http://localhost:11434/api/chat -d '{
-  "model": "Qwen/Qwen1.5-0.5B",
+  "model": "Qwen/Qwen1.5-0.5B-Chat",
   "messages": [
     {
       "role": "user",
@@ -64,22 +63,23 @@ $ curl http://localhost:11434/api/chat -d '{
     }
   ]
 }'
+
 {
-  "created_at": "2024-04-11T16:50:07",
+  "created_at": "2024-04-14T16:16:05",
   "done": true,
   "message": {
-    "content": "The sky is blue because it is made up of a mixture of different gases, such as nitrogen, oxygen, and water vapor. These gases are constantly moving around and interacting with each other, creating a blue color. The blue color is caused by the absorption of light by the different gases, which causes the light to be split into different colors.",
+    "content": "The color of the sky varies depending on several factors, including the distance from the sun and its position in relation to the Earth. The color of the sky can also be influenced by factors such as humidity, temperature, and wind patterns.\nIn general, the sky appears blue when it is near the horizon because the sun is located at a higher altitude than the earth. This creates a layer of high energy light that passes through the Earth's atmosphere and reaches the surface of the planet.\nHowever, the color of the sky can change over time due to changes in the Earth's orbit around the Sun and other celestial bodies. As the sun moves closer to the Earth, more sunlight is scattered and the color of the sky becomes more yellow and orange instead of blue. This phenomenon is known as \"sky pollution.\"\nDespite these variations, the primary reason why the sky appears blue is because of the presence of sunlight that enters the Earth's atmosphere at sunrise and sunset. The blue\u5149\u7ebf is absorbed by the Earth's atmosphere and diffused out into space, creating the blue appearance we see in the sky.",
     "images": null,
     "role": "assistant"
   },
-  "model": "Qwen/Qwen1.5-0.5B"
+  "model": "Qwen/Qwen1.5-0.5B-Chat"
 }
 
 
 OpenAI's Chat Completions API
 第二个窗口
 $ curl http://localhost:11434/v1/chat/completions -d '{
-  "model": "Qwen/Qwen1.5-0.5B",
+  "model": "Qwen/Qwen1.5-0.5B-Chat",
   "messages": [
     {
       "role": "user",
@@ -87,15 +87,16 @@ $ curl http://localhost:11434/v1/chat/completions -d '{
     }
   ]
 }'
+
 {
-  "created_at": "2024-04-11T17:10:33",
+  "created_at": "2024-04-14T16:17:11",
   "done": true,
   "message": {
-    "content": "The sky is blue because it is made up of a mixture of different gases, such as nitrogen, oxygen, and water vapor. These gases are constantly moving around and interacting with each other, creating a blue color. The blue color is caused by the absorption of light by the different gases, which causes the light to be split into different colors.",
+    "content": "The sky appears blue because of a combination of two colors: blue light and white light. Blue light travels much faster than other colors, so it reaches our eyes first. When we look at the sky, the blue light from the sun shines through the atmosphere, creating a colorful effect.\nHowever, when we look directly into the sun, the blue light is blocked by the Earth's atmosphere, causing it to scatter or disperse. This causes the blue color to appear in shades of green, red, and orange. In addition, some blue light may be absorbed by the Earth's clouds, which can also affect the appearance of the sky.\nIt's important to note that the way we perceive colors depends on how we use them. By paying attention to where the sun is shining and how it's reflected off the atmosphere, you can better understand why the sky appears blue.",
     "images": null,
     "role": "assistant"
   },
-  "model": "Qwen/Qwen1.5-0.5B"
+  "model": "Qwen/Qwen1.5-0.5B-Chat"
 }
 ```
 
