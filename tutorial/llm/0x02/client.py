@@ -14,7 +14,7 @@ class Client(object):
         socket.connect(f"tcp://localhost:{port}")
 
         message = json.dumps({
-            "model": "Qwen/Qwen1.5-0.5B",
+            "model": "Qwen/Qwen1.5-0.5B-Chat",
             "messages": messages,
             "options": {
                 "max_new_tokens": 128
@@ -34,7 +34,7 @@ class Client(object):
         socket.connect(f"tcp://localhost:{port}")
 
         message = json.dumps({
-            "model": "Qwen/Qwen1.5-0.5B",
+            "model": "Qwen/Qwen1.5-0.5B-Chat",
             "messages": messages,
             "options": {
                 "max_new_tokens": 128

@@ -103,7 +103,7 @@ class Qwen(object):
 
 
 if __name__ == '__main__':
-    qwen = Qwen("Qwen/Qwen1.5-0.5B")
+    qwen = Qwen("Qwen/Qwen1.5-0.5B-Chat")
     qwen.load()
 
     prompt = "给我介绍一下大型语言模型。"

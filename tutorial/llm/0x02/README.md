@@ -24,13 +24,13 @@ $ python server.py
 
 第二个窗口
 $ python client.py 
-{'model': 'Qwen/Qwen1.5-0.5B', 'created_at': '2024-04-12T18:11:34', 'message': {'role': 'assistant', 'content': '大型', 'images': None}, 'done': False}
-{'model': 'Qwen/Qwen1.5-0.5B', 'created_at': '2024-04-12T18:11:34', 'message': {'role': 'assistant', 'content': '语言', 'images': None}, 'done': False}
-{'model': 'Qwen/Qwen1.5-0.5B', 'created_at': '2024-04-12T18:11:34', 'message': {'role': 'assistant', 'content': '模型', 'images': None}, 'done': False}
+{'model': 'Qwen/Qwen1.5-0.5B-Chat', 'created_at': '2024-04-14T16:21:08', 'message': {'role': 'assistant', 'content': '大型', 'images': None}, 'done': False}
+{'model': 'Qwen/Qwen1.5-0.5B-Chat', 'created_at': '2024-04-14T16:21:08', 'message': {'role': 'assistant', 'content': '语言', 'images': None}, 'done': False}
+{'model': 'Qwen/Qwen1.5-0.5B-Chat', 'created_at': '2024-04-14T16:21:08', 'message': {'role': 'assistant', 'content': '模型', 'images': None}, 'done': False}
 ...
-{'model': 'Qwen/Qwen1.5-0.5B', 'created_at': '2024-04-12T18:11:38', 'message': {'role': 'assistant', 'content': '', 'images': None}, 'done': False}
-{'model': 'Qwen/Qwen1.5-0.5B', 'created_at': '2024-04-12T18:11:38', 'message': {'role': 'assistant', 'content': '。', 'images': None}, 'done': False}
-{'model': 'Qwen/Qwen1.5-0.5B', 'created_at': '2024-04-12T18:11:38', 'done': True, 'total_duration': 0, 'load_duration': 0, 'prompt_eval_count': 0, 'prompt_eval_duration': 0, 'eval_count': 0, 'eval_duration': 0}
+{'model': 'Qwen/Qwen1.5-0.5B-Chat', 'created_at': '2024-04-14T16:21:13', 'message': {'role': 'assistant', 'content': '能够', 'images': None}, 'done': False}
+{'model': 'Qwen/Qwen1.5-0.5B-Chat', 'created_at': '2024-04-14T16:21:13', 'message': {'role': 'assistant', 'content': '', 'images': None}, 'done': False}
+{'model': 'Qwen/Qwen1.5-0.5B-Chat', 'created_at': '2024-04-14T16:21:13', 'done': True, 'total_duration': 0, 'load_duration': 0, 'prompt_eval_count': 0, 'prompt_eval_duration': 0, 'eval_count': 0, 'eval_duration': 0}
 ```
 Amazing
 

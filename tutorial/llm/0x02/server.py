@@ -65,7 +65,7 @@ if __name__ == '__main__':
     server = Server(port=9527,
                     model_class=Qwen,
                     model_kwargs={
-                        "model_name": "Qwen/Qwen1.5-0.5B"
+                        "model_name": "Qwen/Qwen1.5-0.5B-Chat"
                     })
 
     server.run()
