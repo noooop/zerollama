@@ -1,2 +1,5 @@
 torch>=2.2
 transformers>=4.37.0
+accelerate
+auto-gptq
+autoawq
