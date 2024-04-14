@@ -17,8 +17,11 @@ def config_setup():
     if "huggingface" in config_global:
         config_huggingface = config_global["huggingface"]
 
-        for k, v in config_huggingface:
-            os.environ[k] = v
+        if "HF_ENDPOINT" in config_huggingface:
+            os.environ["HF_ENDPOINT"] = config_huggingface["HF_ENDPOINT"]
+
+        if 'HF_HOME' in config_huggingface:
+            os.environ['HF_HOME'] = config_huggingface["HF_HOME"]
 
     return config_global
 
