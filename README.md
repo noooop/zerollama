@@ -15,12 +15,15 @@
 
 相当于，扔两块木板到太平洋，看我们能到多远吧
 
+# [安装指南](./setup)
 
 
-# Todo
-1. 最小可用产品，将tenser 客户端->服务器->客户端 传一遍
-2. llm 服务器&客户端 huggingface backend
+# 应用
+1. [与大模型对话](./applications/chat_server)
 
+# 特性
+1. 推理后端支持 huggingface transformers
+2. 支持流式推理
 
 ## Contribute
 贡献代码请交逻辑清晰思路、简单直接的代码、不要有魔法，甚至可以牺牲一部分性能换取可读性
