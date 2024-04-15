@@ -2,8 +2,8 @@
 
 import torch
 from threading import Thread
-from src.core.models.chat import ChatInterfaces
-from src.core.config.main import config_setup
+from zerollama.core.models.chat import ChatInterfaces
+from zerollama.core.config.main import config_setup
 
 
 class Qwen1_5(ChatInterfaces):
@@ -42,7 +42,7 @@ class Qwen1_5(ChatInterfaces):
     @torch.no_grad()
     def chat(self, messages, options=None):
         options = options or dict()
-        max_new_tokens = options.get("max_new_tokens", 128)
+        max_new_tokens = options.get("max_new_tokens", 512)
 
         messages = [{"role": "system", "content": "你是一个有用的助手。"}] + messages
 
@@ -67,19 +67,12 @@ class Qwen1_5(ChatInterfaces):
 
         response_length = len(generated_ids[0])
 
-        result = {
-            "response_text": response,
-            "response_length": response_length,
-            "prompt_length": prompt_length,
-            "finish_reason": "stop" if response_length < max_new_tokens else "length"
-        }
-
-        return result
+        return response
 
     @torch.no_grad()
     def stream_chat(self, messages, options=None):
         options = options or dict()
-        max_new_tokens = options.get("max_new_tokens", 128)
+        max_new_tokens = options.get("max_new_tokens", 512)
 
         messages = [{"role": "system", "content": "你是一个有用的助手。"}] + messages
 
