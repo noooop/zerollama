@@ -13,6 +13,9 @@ class ChatClient(object):
         self.context = context
         self.nameserver_client = NameServerClient()
 
+    def get_service_names(self):
+        return self.nameserver_client.get_service_names(self.protocol)
+
     def chat(self, name, messages, options=None):
         response = self.nameserver_client.get_services(self.protocol, name)
 
@@ -81,7 +84,7 @@ if __name__ == '__main__':
 
     client = ChatClient()
     print("=" * 80)
-    print(client.nameserver_client.get_service_names(client.protocol))
+    print(client.get_service_names())
 
     prompt = "给我介绍一下大型语言模型。"
 
