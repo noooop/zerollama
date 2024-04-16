@@ -1,6 +1,8 @@
 
 
 class ChatInterfaces(object):
+    protocol = "chat"
+
     def load(self):
         """
         Load everything in memory.
