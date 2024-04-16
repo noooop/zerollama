@@ -239,7 +239,7 @@ class ZeroNameServer(object):
 def nameserver(nameserver_class=None):
     nameserver_class = nameserver_class or InMemoryNameServer
     server = ZeroNameServer(nameserver_class=nameserver_class)
-    print("nameserver running!")
+    print(f"ZeroNameServer: {nameserver_class.__name__} running!")
     server.run()
 
 
