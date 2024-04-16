@@ -2,13 +2,11 @@
 import json
 import datetime
 from flask import Flask, request, jsonify, Response
-from applications.chat_server.client import Client
+from zerollama.core.framework.inference_engine.client import ChatClient
 
 
-client = Client()
+chat_client = ChatClient()
 app = Flask(__name__)
-
-PORT = 9527
 
 
 def get_timestamp():
@@ -22,12 +20,13 @@ def hello_world():
 
 @app.route("/api/tags", methods=['GET'])
 def tags():
+    response = chat_client.get_service_names()
+    services = response["msg"]["service_names"]
+
     msg = {
         "models": [
-            {
-                "name": "Qwen/Qwen1.5-0.5B-Chat",
-                "model": "Qwen/Qwen1.5-0.5B-Chat"
-            }
+            {"name": s, "model": s}
+            for s in services
         ]
     }
     return jsonify(msg)
@@ -41,23 +40,16 @@ def chat():
         result = {"error": "model is required"}
         return jsonify(result)
 
-    model = msg["model"]
+    name = msg["model"]
     messages = msg.get("messages", list())
     options = msg.get("options", dict())
     stream = msg.get("stream", True)
 
-    data = json.dumps({
-        "model": model,
-        "messages": messages,
-        "options": options,
-        "stream": stream
-    }).encode('utf8')
-
     if stream:
         def generate():
-            for msg in client.stream_query(port=PORT, data=data):
+            for msg in chat_client.stream_chat(name, messages, options):
                 content = msg["content"]
-                response = json.dumps({"model": model,
+                response = json.dumps({"model": name,
                                        "created_at": get_timestamp(),
                                        "message": {"role": "assistant", "content": content},
                                        "done": False
@@ -75,9 +67,9 @@ def chat():
 
         return Response(generate(), mimetype="application/x-ndjson")
     else:
-        msg = client.query(port=PORT, data=data)
+        msg = chat_client.chat(name, messages, options)
         content = msg["content"]
-        response = json.dumps({"model": model,
+        response = json.dumps({"model": name,
                                "created_at": get_timestamp(),
                                "message": {"role": "assistant", "content": content},
                                "done": True
