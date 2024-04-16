@@ -28,7 +28,7 @@ None
 ```
 第一个窗口
 $ python -m zerollama.core.framework.nameserver.server
-nameserver running!
+ZeroNameServer: InMemoryNameServer running!
 
 第二个窗口
 $ python -m zerollama.core.framework.nameserver.client
