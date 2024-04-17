@@ -135,4 +135,4 @@ sudo apt  install nvtop -y
 ```
 
 # 之后的操作
-[跳转链接](././setup#安装依赖)
+[跳转链接](../setup#安装依赖)
