@@ -13,6 +13,9 @@
 
 pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
 
+**注意**
+[PyTorch 2.2](https://github.com/pytorch/pytorch/releases/tag/v2.2.0) SDPA 已经集成 FlashAttention-2，不需要单独安装，毕竟这货编译起来非常慢。
+
 以下版本经过测试
 
 torch-2.2.2+cu121
@@ -53,3 +56,17 @@ auto-gptq-0.7.1
 以下版本经过测试
 
 autoawq-0.2.4 (Pin transformers>=4.35.0,<=4.38.2) [详情](https://github.com/casper-hansen/AutoAWQ/releases/tag/v0.2.4)
+
+# clone工程代码
+```
+$ git clone https://github.com/noooop/zerollama.git
+```
+
+# 切换到工作目录
+项目默认的工作目录是项目根目录
+```
+$ cd zerollama
+```
+
+ 
+

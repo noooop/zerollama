@@ -1,5 +1,4 @@
 # 安装wsl2
-
 ```
 PowerShell 或 Windows 命令提示符中输入
 
@@ -135,3 +134,5 @@ sudo apt install build-essential -y
 sudo apt  install nvtop -y
 ```
 
+# 之后的操作
+[跳转链接](./setup#安装依赖)
