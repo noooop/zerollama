@@ -34,7 +34,7 @@ class ChatClient(object):
         socket.connect(f"tcp://{host}:{port}")
 
         data = json.dumps({
-            "model": "Qwen/Qwen1.5-0.5B-Chat",
+            "model": name,
             "messages": messages,
             "options": options,
             "stream": False
@@ -64,7 +64,7 @@ class ChatClient(object):
         socket.connect(f"tcp://{host}:{port}")
 
         data = json.dumps({
-            "model": "Qwen/Qwen1.5-0.5B-Chat",
+            "model": name,
             "messages": messages,
             "options": options,
             "stream": True
