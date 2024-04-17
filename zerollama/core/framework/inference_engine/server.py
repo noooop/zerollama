@@ -1,10 +1,11 @@
 import zmq
 import json
 import datetime
+from multiprocessing import Event
 
 
 class ZeroInferenceEngine(object):
-    def __init__(self, model_class, model_kwargs):
+    def __init__(self, model_class, model_kwargs, event=None):
         context = zmq.Context()
         socket = context.socket(zmq.REP)
         port = socket.bind_to_random_port("tcp://*", min_port=50000, max_port=60000)
@@ -19,6 +20,8 @@ class ZeroInferenceEngine(object):
         self.model_kwargs = model_kwargs
 
         self.model = self.model_class(**self.model_kwargs)
+        self.event = event if event is not None else Event()
+        self.event.set()
 
     def register(self):
         from zerollama.core.framework.nameserver.client import NameServerClient
@@ -27,54 +30,72 @@ class ZeroInferenceEngine(object):
         server = {"host": "localhost", "port": self.port, "name": self.name, "protocol": self.protocol}
         client.register(server)
 
+    def deregister(self):
+        from zerollama.core.framework.nameserver.client import NameServerClient
+        client = NameServerClient()
+
+        server = {"host": "localhost", "port": self.port, "name": self.name, "protocol": self.protocol}
+        client.deregister(server)
+
     def run(self):
         self.model.load()
         self.register()
 
-        while True:
-            msg = self.socket.recv()
-            msg = json.loads(msg)
+        while self.event.is_set():
+            try:
+                msg = self.socket.recv()
+                msg = json.loads(msg)
 
-            if "model" not in msg:
-                response = json.dumps({"error": "model is required"}).encode('utf8')
-                self.socket.send(response)
-                continue
+                if "model" not in msg:
+                    self.handle_error(err_msg="'model' not in msg")
+                    continue
 
-            model = msg["model"]
+                model = msg["model"]
 
-            if model != self.model.model_name:
-                response = json.dumps({"error": f"model '{model}' not supported!"}).encode('utf8')
-                self.socket.send(response)
-                continue
+                if model != self.model.model_name:
+                    self.handle_error(err_msg=f"model '{model}' not supported!")
+                    continue
 
-            messages = msg.get("messages", list())
-            options = msg.get("options", dict())
-            stream = msg.get("stream", True)
+                messages = msg.get("messages", list())
+                options = msg.get("options", dict())
+                stream = msg.get("stream", True)
 
-            if stream:
-                try:
-                    for content in self.model.stream_chat(messages, options):
+                if stream:
+                    try:
+                        for content in self.model.stream_chat(messages, options):
+                            response = json.dumps({
+                                "model": model,
+                                "content": content,
+                                "done": False,
+                            }).encode('utf8')
+                            self.socket.send(response, zmq.SNDMORE)
+                    finally:
                         response = json.dumps({
                             "model": model,
-                            "content": content,
-                            "done": False,
+                            "content": "",
+                            "done": True,
                         }).encode('utf8')
-                        self.socket.send(response, zmq.SNDMORE)
-                finally:
+                        self.socket.send(response)
+                else:
+                    content = self.model.chat(messages, options)
                     response = json.dumps({
                         "model": model,
-                        "content": "",
-                        "done": True,
+                        "content": content,
                     }).encode('utf8')
-                    self.socket.send(response)
-            else:
-                content = self.model.chat(messages, options)
-                response = json.dumps({
-                    "model": model,
-                    "content": content,
-                }).encode('utf8')
 
-                self.socket.send(response)
+                    self.socket.send(response)
+            except Exception:
+                self.handle_error(err_msg="ZeroInferenceEngine error")
+
+        self.deregister()
+
+    def handle_error(self, err_msg):
+        response = json.dumps({
+            "state": "error",
+            "msg": err_msg
+        }).encode('utf8')
+
+        self.socket.send(response)
 
 
 if __name__ == '__main__':
@@ -96,3 +117,4 @@ if __name__ == '__main__':
     print("ZeroInferenceEngine: ", engine.name, "is running!")
     engine.run()
     h.join()
+
