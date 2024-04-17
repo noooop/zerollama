@@ -1,7 +1,7 @@
 
 import zmq
 import json
-
+from zerollama.core.framework.zeroserver.server import ZeroServer
 
 NameServerPort = 9527
 
@@ -68,55 +68,51 @@ class InMemoryNameServer(NameServerInterfaces):
         return list(self.domain.get(protocol, dict()).keys())
 
 
-class ZeroNameServer(object):
-    def __init__(self, nameserver_class):
-        context = zmq.Context()
-        socket = context.socket(zmq.REP)
-        socket.bind(f"tcp://*:{NameServerPort}")
+class ZeroNameServer(ZeroServer):
+    def __init__(self, nameserver_class=None, event=None):
+        ZeroServer.__init__(self, port=NameServerPort, event=event, do_register=False)
 
-        self.context = context
-        self.socket = socket
-        self._nameserver = nameserver_class()
+        if nameserver_class is None:
+            self.nameserver_class = InMemoryNameServer
+        else:
+            self.nameserver_class = nameserver_class
 
-    def run(self):
-        while True:
-            try:
-                msg = self.socket.recv()
-                msg = json.loads(msg)
+        self._nameserver = None
 
-                if "method" not in msg:
-                    self.handle_error(err_msg="'method' not in msg")
-                    continue
+    def init(self):
+        self._nameserver = self.nameserver_class()
+        print(f"ZeroNameServer: {self.nameserver_class.__name__} running!")
 
-                method = msg["method"]
+    def process(self):
+        msg = self.socket.recv()
+        try:
+            msg = json.loads(msg)
 
-                if method == "register":
-                    self.register(msg)
-                    continue
+            if "method" not in msg:
+                self.handle_error(err_msg="'method' not in msg")
+                return
 
-                if method == "deregister" or method == "unregister":
-                    self.deregister(msg)
-                    continue
+            method = msg["method"]
 
-                if method == "get_services":
-                    self.get_services(msg)
-                    continue
+            if method == "register":
+                self.register(msg)
+                return
 
-                if method == "get_service_names":
-                    self.get_service_names(msg)
-                    continue
+            if method == "deregister" or method == "unregister":
+                self.deregister(msg)
+                return
 
-                self.handle_error(err_msg=f"method [{method}] not supported.")
-            except Exception:
-                self.handle_error(err_msg="NameServer error")
+            if method == "get_services":
+                self.get_services(msg)
+                return
 
-    def handle_error(self, err_msg):
-        response = json.dumps({
-            "state": "error",
-            "msg": err_msg
-        }).encode('utf8')
+            if method == "get_service_names":
+                self.get_service_names(msg)
+                return
 
-        self.socket.send(response)
+            self.handle_error(err_msg=f"method [{method}] not supported.")
+        except Exception:
+            self.handle_error(err_msg="NameServer error")
 
     def clean(self, msg):
         ok = False

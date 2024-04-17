@@ -1,120 +1,92 @@
 import zmq
 import json
-import datetime
-from multiprocessing import Event
+from zerollama.core.framework.zeroserver.server import ZeroServer
 
 
-class ZeroInferenceEngine(object):
+class ZeroInferenceEngine(ZeroServer):
     def __init__(self, model_class, model_kwargs, event=None):
-        context = zmq.Context()
-        socket = context.socket(zmq.REP)
-        port = socket.bind_to_random_port("tcp://*", min_port=50000, max_port=60000)
+        ZeroServer.__init__(self, port=None, event=event, do_register=True)
 
-        self.port = port
         self.name = model_kwargs["model_name"]
-        self.protocol = model_class.protocol
-
-        self.context = context
-        self.socket = socket
         self.model_class = model_class
         self.model_kwargs = model_kwargs
 
+        if isinstance(self.model_class, str):
+            module_name, class_name = self.model_class.split(":")
+            import importlib
+            module = importlib.import_module(module_name)
+            self.model_class = getattr(module, class_name)
+
         self.model = self.model_class(**self.model_kwargs)
-        self.event = event if event is not None else Event()
-        self.event.set()
+        self.protocol = self.model_class.protocol
 
-    def register(self):
-        from zerollama.core.framework.nameserver.client import NameServerClient
-        client = NameServerClient()
-
-        server = {"host": "localhost", "port": self.port, "name": self.name, "protocol": self.protocol}
-        client.register(server)
-
-    def deregister(self):
-        from zerollama.core.framework.nameserver.client import NameServerClient
-        client = NameServerClient()
-
-        server = {"host": "localhost", "port": self.port, "name": self.name, "protocol": self.protocol}
-        client.deregister(server)
-
-    def run(self):
+    def init(self):
+        print("ZeroInferenceEngine: ", self.name, "is running!")
         self.model.load()
-        self.register()
 
-        while self.event.is_set():
-            try:
-                msg = self.socket.recv()
-                msg = json.loads(msg)
+    def process(self):
+        msg = self.socket.recv()
+        try:
+            msg = json.loads(msg)
 
-                if "model" not in msg:
-                    self.handle_error(err_msg="'model' not in msg")
-                    continue
+            if "model" not in msg:
+                self.handle_error(err_msg="'model' not in msg")
+                return
 
-                model = msg["model"]
+            model = msg["model"]
 
-                if model != self.model.model_name:
-                    self.handle_error(err_msg=f"model '{model}' not supported!")
-                    continue
+            if model != self.model.model_name:
+                self.handle_error(err_msg=f"model '{model}' not supported!")
+                return
 
-                messages = msg.get("messages", list())
-                options = msg.get("options", dict())
-                stream = msg.get("stream", True)
+            messages = msg.get("messages", list())
+            options = msg.get("options", dict())
+            stream = msg.get("stream", True)
 
-                if stream:
-                    try:
-                        for content in self.model.stream_chat(messages, options):
-                            response = json.dumps({
-                                "model": model,
-                                "content": content,
-                                "done": False,
-                            }).encode('utf8')
-                            self.socket.send(response, zmq.SNDMORE)
-                    finally:
+            if stream:
+                try:
+                    for content in self.model.stream_chat(messages, options):
                         response = json.dumps({
                             "model": model,
-                            "content": "",
-                            "done": True,
+                            "content": content,
+                            "done": False,
                         }).encode('utf8')
-                        self.socket.send(response)
-                else:
-                    content = self.model.chat(messages, options)
+                        self.socket.send(response, zmq.SNDMORE)
+                finally:
                     response = json.dumps({
                         "model": model,
-                        "content": content,
+                        "content": "",
+                        "done": True,
                     }).encode('utf8')
-
                     self.socket.send(response)
-            except Exception:
-                self.handle_error(err_msg="ZeroInferenceEngine error")
+            else:
+                content = self.model.chat(messages, options)
+                response = json.dumps({
+                    "model": model,
+                    "content": content,
+                }).encode('utf8')
 
-        self.deregister()
+                self.socket.send(response)
 
-    def handle_error(self, err_msg):
-        response = json.dumps({
-            "state": "error",
-            "msg": err_msg
-        }).encode('utf8')
-
-        self.socket.send(response)
+        except Exception:
+            self.handle_error(err_msg="ZeroInferenceEngine error")
 
 
 if __name__ == '__main__':
-    from multiprocess import Process
+    from zerollama.core.framework.zeroserver.server import ZeroServerProcess, Event
 
-    def run_nameserver():
-        from zerollama.core.framework.nameserver.server import nameserver
-        nameserver()
-
-    h = Process(target=run_nameserver)
-    h.start()
-
-    from zerollama.models.qwen.qwen1_5 import Qwen1_5
-
-    engine = ZeroInferenceEngine(model_class=Qwen1_5,
-                                 model_kwargs={
+    h = ZeroServerProcess("zerollama.core.framework.nameserver.server:ZeroNameServer", event=Event())
+    engine = ZeroServerProcess("zerollama.core.framework.inference_engine.server:ZeroInferenceEngine",
+                               server_kwargs={
+                                   "model_class": "zerollama.models.qwen.qwen1_5:Qwen1_5",
+                                   "model_kwargs": {
                                      "model_name": "Qwen/Qwen1.5-0.5B-Chat"
-                                 })
-    print("ZeroInferenceEngine: ", engine.name, "is running!")
-    engine.run()
+                                   }
+                               },
+                               event=Event())
+
+    h.start()
+    engine.start()
     h.join()
+    engine.join()
 
