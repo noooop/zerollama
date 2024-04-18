@@ -90,9 +90,11 @@ if __name__ == '__main__':
         engine.join()
         nameserver.join()
     except (KeyboardInterrupt, EOFError):
-        print("quit gracefully")
+        pass
+    finally:
         engine.terminate()
         nameserver.terminate()
+        print("quit gracefully")
 
 
 
