@@ -56,7 +56,10 @@ class ZeroServer(object):
         poller.register(self.socket, zmq.POLLIN)
 
         while self.event.is_set():
-            socks = dict(poller.poll(self.POLL_INTERVAL))
+            try:
+                socks = dict(poller.poll(self.POLL_INTERVAL))
+            except KeyboardInterrupt:
+                break
 
             if socks.get(self.socket) == zmq.POLLIN:
                 self.process()
