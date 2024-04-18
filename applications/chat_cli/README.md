@@ -1,5 +1,7 @@
 # 客户端
 
+[配置环境](https://github.com/noooop/zerollama/tree/main/setup)
+
 ## pull 下载模型
 ```
 $ python -m applications.chat_cli pull Qwen/Qwen1.5-1.8B-Chat-GPTQ-Int4
