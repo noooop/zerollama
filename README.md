@@ -19,7 +19,8 @@
 
 
 # 应用
-1. [与大模型对话](./applications/chat_server)
+1. [与大模型对话 客户端](./applications/chat_cli)
+2. [与大模型对话 webui](./applications/chat_webui)
 
 # 特性
 1. 推理后端支持 huggingface transformers

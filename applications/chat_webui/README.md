@@ -4,7 +4,7 @@
 
 
 ```
-$ python -m applications.chat_server.main
+$ python -m applications.chat_webui.main
 ```
 
 将服务中中心，模型推理引擎和http网关启动
