@@ -86,6 +86,10 @@ if __name__ == '__main__':
 
     h.start()
     engine.start()
-    h.join()
-    engine.join()
+    try:
+        h.join()
+        engine.join()
+    except KeyboardInterrupt:
+        h.terminate()
+        engine.terminate()
 
