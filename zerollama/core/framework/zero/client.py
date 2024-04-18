@@ -4,6 +4,8 @@ import traceback
 from uuid import uuid4
 from queue import Queue
 
+RCVTIMEO = 100000
+
 
 class Socket(object):
     def __init__(self, context, addr):
@@ -11,7 +13,10 @@ class Socket(object):
         self.socket = context.socket(zmq.REQ)
         self.socket.set_string(zmq.IDENTITY, uuid4().hex)
         self.socket.connect(addr)
-        self.socket.RCVTIMEO = 1000
+        self.socket.RCVTIMEO = RCVTIMEO
+
+    def set_timeout(self, timeout):
+        self.socket.RCVTIMEO = timeout
 
     def send(self, data):
         self.socket.send(data, copy=False)
@@ -52,6 +57,8 @@ class SocketPool(object):
         if addr not in self.queue:
             self.queue[addr] = Queue()
         queue = self.queue[addr]
+
+        socket.set_timeout(RCVTIMEO)
         queue.put(socket)
 
     def delete(self, socket):
@@ -66,9 +73,12 @@ class Timeout(Exception):
 
 
 class Client(object):
-    def _query(self, addr, data):
+    def _query(self, addr, data, timeout=None):
         for i in range(3):
             socket = socket_pool.get(addr)
+            if timeout is not None:
+                socket.set_timeout(timeout)
+
             try:
                 socket.send(data)
                 msg = socket.recv()
@@ -79,9 +89,12 @@ class Client(object):
 
         raise Timeout(f"{addr} timeout")
 
-    def _stream_query(self, addr, data):
+    def _stream_query(self, addr, data, timeout=None):
         for i in range(3):
             socket = socket_pool.get(addr)
+            if timeout is not None:
+                socket.set_timeout(timeout)
+
             try:
                 socket.send(data)
 
@@ -90,6 +103,7 @@ class Client(object):
                     yield socket.recv()
 
                 socket_pool.put(socket, addr)
+                return
             except zmq.error.Again:
                 socket_pool.delete(socket)
 

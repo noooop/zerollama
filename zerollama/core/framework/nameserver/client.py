@@ -16,7 +16,8 @@ class NameServerClient(Client):
     def query(self, data):
         data = json.dumps(data).encode('utf8')
         msg = self._query(addr=f"tcp://localhost:{self.port}",
-                          data=data)
+                          data=data,
+                          timeout=100)
 
         msg = json.loads(msg)
         return msg
