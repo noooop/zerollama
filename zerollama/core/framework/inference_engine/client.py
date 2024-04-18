@@ -1,17 +1,19 @@
 
 import zmq
 import json
+from zerollama.core.framework.zero.client import Client
 from zerollama.core.framework.nameserver.client import NameServerClient
+
 from random import choice
 
 
-class ChatClient(object):
+class ChatClient(Client):
     protocol = "chat"
 
-    def __init__(self):
+    def __init__(self, nameserver_port=None):
         context = zmq.Context()
         self.context = context
-        self.nameserver_client = NameServerClient()
+        self.nameserver_client = NameServerClient(nameserver_port)
 
     def get_service_names(self):
         return self.nameserver_client.get_service_names(self.protocol)
@@ -30,9 +32,6 @@ class ChatClient(object):
         host = server["host"]
         port = server["port"]
 
-        socket = self.context.socket(zmq.REQ)
-        socket.connect(f"tcp://{host}:{port}")
-
         data = json.dumps({
             "model": name,
             "messages": messages,
@@ -40,9 +39,8 @@ class ChatClient(object):
             "stream": False
         }).encode('utf8')
 
-        socket.send(data)
-
-        msg = socket.recv()
+        msg = self._query(addr=f"tcp://{host}:{port}",
+                          data=data)
         msg = json.loads(msg)
         return msg
 
@@ -60,9 +58,6 @@ class ChatClient(object):
         host = server["host"]
         port = server["port"]
 
-        socket = self.context.socket(zmq.REQ)
-        socket.connect(f"tcp://{host}:{port}")
-
         data = json.dumps({
             "model": name,
             "messages": messages,
@@ -70,12 +65,7 @@ class ChatClient(object):
             "stream": True
         }).encode('utf8')
 
-        socket.send(data)
-
-        part0 = socket.recv()
-        yield json.loads(part0)
-        while socket.getsockopt(zmq.RCVMORE):
-            part = socket.recv()
+        for part in self._stream_query(addr=f"tcp://{host}:{port}", data=data):
             yield json.loads(part)
 
 

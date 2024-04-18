@@ -1,7 +1,6 @@
 
-import zmq
 import json
-from zerollama.core.framework.zeroserver.server import ZeroServer
+from zerollama.core.framework.zero.server import ZeroServer
 
 NameServerPort = 9527
 
@@ -69,8 +68,8 @@ class InMemoryNameServer(NameServerInterfaces):
 
 
 class ZeroNameServer(ZeroServer):
-    def __init__(self, nameserver_class=None, event=None):
-        ZeroServer.__init__(self, port=NameServerPort, event=event, do_register=False)
+    def __init__(self, port=None, nameserver_class=None, event=None):
+        ZeroServer.__init__(self, port=port or NameServerPort, event=event, do_register=False)
 
         if nameserver_class is None:
             self.nameserver_class = InMemoryNameServer

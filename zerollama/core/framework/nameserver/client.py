@@ -1,24 +1,23 @@
 
 import zmq
 import json
-
+from zerollama.core.framework.zero.client import Client
 
 NameServerPort = 9527
 
 
-class NameServerClient(object):
-    def __init__(self):
-        context = zmq.Context()
-        self.context = context
+class NameServerClient(Client):
+    def __init__(self, port=None):
+        if port is None:
+            self.port = NameServerPort
+        else:
+            self.port = port
 
     def query(self, data):
-        socket = self.context.socket(zmq.REQ)
-        socket.connect(f"tcp://localhost:{NameServerPort}")
-
         data = json.dumps(data).encode('utf8')
-        socket.send(data)
+        msg = self._query(addr=f"tcp://localhost:{self.port}",
+                          data=data)
 
-        msg = socket.recv()
         msg = json.loads(msg)
         return msg
 

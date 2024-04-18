@@ -1,6 +1,6 @@
 import zmq
 import json
-from zerollama.core.framework.zeroserver.server import ZeroServer
+from zerollama.core.framework.zero.server import ZeroServer
 
 
 class ZeroInferenceEngine(ZeroServer):
@@ -21,8 +21,8 @@ class ZeroInferenceEngine(ZeroServer):
         self.protocol = self.model_class.protocol
 
     def init(self):
-        print("ZeroInferenceEngine: ", self.name, "is running!")
         self.model.load()
+        print("ZeroInferenceEngine: ", self.name, "is running!")
 
     def process(self):
         msg = self.socket.recv()
@@ -73,17 +73,16 @@ class ZeroInferenceEngine(ZeroServer):
 
 
 if __name__ == '__main__':
-    from zerollama.core.framework.zeroserver.server import ZeroServerProcess, Event
+    from zerollama.core.framework.zero.server import ZeroServerProcess, Event
 
-    h = ZeroServerProcess("zerollama.core.framework.nameserver.server:ZeroNameServer", event=Event())
+    h = ZeroServerProcess("zerollama.core.framework.nameserver.server:ZeroNameServer")
     engine = ZeroServerProcess("zerollama.core.framework.inference_engine.server:ZeroInferenceEngine",
                                server_kwargs={
                                    "model_class": "zerollama.models.qwen.qwen1_5:Qwen1_5",
                                    "model_kwargs": {
                                      "model_name": "Qwen/Qwen1.5-0.5B-Chat"
                                    }
-                               },
-                               event=Event())
+                               })
 
     h.start()
     engine.start()

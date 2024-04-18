@@ -42,7 +42,9 @@ class ZeroServer(object):
         print(f"{self.__class__.__name__} clean_up!")
 
     def process(self):
-        pass
+        msg = self.socket.recv()
+        print(msg)
+        self.socket.send(b"ok")
 
     def run(self):
         self.init()
@@ -76,7 +78,11 @@ class ZeroServer(object):
 class ZeroServerProcess(Process):
     def __init__(self, server_class, server_kwargs=None, event=None):
         Process.__init__(self)
-        self.event = event
+        if event is None:
+            self.event = Event()
+        else:
+            self.event = event
+
         self.server_class = server_class
         self.server_kwargs = server_kwargs or dict()
         self.server = None
@@ -101,7 +107,7 @@ class ZeroServerProcess(Process):
 if __name__ == '__main__':
     import time
 
-    server_class = "zerollama.core.framework.zeroserver.server:ZeroServer"
+    server_class = "zerollama.core.framework.zero.server:ZeroServer"
 
     h1 = ZeroServerProcess(server_class, {"do_register": False}, Event())
     h2 = ZeroServerProcess(server_class, {"do_register": False}, Event())
