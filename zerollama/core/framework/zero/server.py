@@ -1,6 +1,7 @@
 import zmq
 import json
 from multiprocessing import Event, Process
+from .client import Timeout
 
 
 class ZeroServer(object):
@@ -65,7 +66,10 @@ class ZeroServer(object):
                 self.process()
 
         if self.do_register:
-            self._deregister()
+            try:
+                self._deregister()
+            except Timeout:
+                pass
 
         self.clean_up()
 

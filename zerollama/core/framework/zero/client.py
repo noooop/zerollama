@@ -1,5 +1,6 @@
 
 import zmq
+import traceback
 from uuid import uuid4
 from queue import Queue
 
@@ -10,6 +11,7 @@ class Socket(object):
         self.socket = context.socket(zmq.REQ)
         self.socket.set_string(zmq.IDENTITY, uuid4().hex)
         self.socket.connect(addr)
+        self.socket.RCVTIMEO = 1000
 
     def send(self, data):
         self.socket.send(data, copy=False)
@@ -53,38 +55,42 @@ class SocketPool(object):
         queue.put(socket)
 
     def delete(self, socket):
-        try:
-            print("delete_socket", socket.addr)
-            socket.close()
-        except Exception:
-            pass
+        socket.close()
 
 
 socket_pool = SocketPool()
 
 
+class Timeout(Exception):
+    pass
+
+
 class Client(object):
     def _query(self, addr, data):
-        socket = socket_pool.get(addr)
+        for i in range(3):
+            socket = socket_pool.get(addr)
+            try:
+                socket.send(data)
+                msg = socket.recv()
+                socket_pool.put(socket, addr)
+                return msg
+            except zmq.error.Again:
+                socket_pool.delete(socket)
 
-        try:
-            socket.send(data)
-            msg = socket.recv()
-            socket_pool.put(socket, addr)
-            return msg
-        except Exception:
-            socket_pool.delete(socket)
+        raise Timeout(f"{addr} timeout")
 
     def _stream_query(self, addr, data):
-        socket = socket_pool.get(addr)
+        for i in range(3):
+            socket = socket_pool.get(addr)
+            try:
+                socket.send(data)
 
-        try:
-            socket.send(data)
-
-            yield socket.recv()
-            while socket.getsockopt(zmq.RCVMORE):
                 yield socket.recv()
+                while socket.getsockopt(zmq.RCVMORE):
+                    yield socket.recv()
 
-            socket_pool.put(socket, addr)
-        except Exception:
-            socket_pool.delete(socket)
+                socket_pool.put(socket, addr)
+            except zmq.error.Again:
+                socket_pool.delete(socket)
+
+        raise Timeout(f"{addr} timeout")

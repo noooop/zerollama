@@ -87,9 +87,12 @@ if __name__ == '__main__':
     h.start()
     engine.start()
     try:
-        h.join()
         engine.join()
-    except KeyboardInterrupt:
-        h.terminate()
+        h.join()
+    except (KeyboardInterrupt, EOFError):
+        print("quit gracefully")
         engine.terminate()
+        h.terminate()
+
+
 
