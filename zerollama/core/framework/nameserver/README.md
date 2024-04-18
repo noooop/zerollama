@@ -28,7 +28,7 @@ None
 ```
 第一个窗口
 $ python -m zerollama.core.framework.nameserver.server
-ZeroNameServer: InMemoryNameServer running!
+ZeroNameServer: InMemoryNameServer running! port: 9527
 
 第二个窗口
 $ python -m zerollama.core.framework.nameserver.client
@@ -44,4 +44,8 @@ register
 deregister
 {'state': 'ok', 'msg': {'service_names': []}}
 {'state': 'ok', 'msg': {'services': None}}
+
+
+# 第一个窗口 Control-C 关闭 
+ZeroNameServer clean_up!
 ```

@@ -68,8 +68,8 @@ class InMemoryNameServer(NameServerInterfaces):
 
 
 class ZeroNameServer(ZeroServer):
-    def __init__(self, port=None, nameserver_class=None, event=None):
-        ZeroServer.__init__(self, port=port or NameServerPort, event=event, do_register=False)
+    def __init__(self, port=None, nameserver_class=None, **kwargs):
+        ZeroServer.__init__(self, port=port or NameServerPort, do_register=False, **kwargs)
 
         if nameserver_class is None:
             self.nameserver_class = InMemoryNameServer
@@ -80,7 +80,7 @@ class ZeroNameServer(ZeroServer):
 
     def init(self):
         self._nameserver = self.nameserver_class()
-        print(f"ZeroNameServer: {self.nameserver_class.__name__} running!")
+        print(f"ZeroNameServer: {self.nameserver_class.__name__} running!", "port:", self.port)
 
     def process(self):
         msg = self.socket.recv()

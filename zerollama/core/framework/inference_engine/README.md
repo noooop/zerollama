@@ -5,8 +5,8 @@
 ```
 第一个窗口
 $ python -m zerollama.core.framework.inference_engine.server
-ZeroNameServer: InMemoryNameServer running!
-ZeroInferenceEngine:  Qwen/Qwen1.5-0.5B-Chat is running!
+ZeroNameServer: InMemoryNameServer running! port: 9527
+ZeroInferenceEngine:  Qwen/Qwen1.5-0.5B-Chat is running! port: 59296
 
 
 第二个窗口
@@ -28,4 +28,9 @@ stream == True
 {'content': '等', 'done': False, 'model': 'Qwen/Qwen1.5-0.5B-Chat'}
 {'content': '。', 'done': False, 'model': 'Qwen/Qwen1.5-0.5B-Chat'}
 {'content': '', 'done': True, 'model': 'Qwen/Qwen1.5-0.5B-Chat'}
+
+# 第一个窗口 Control-C 关闭 
+ZeroNameServer clean_up!
+ZeroInferenceEngine clean_up!
+quit gracefully
 ```

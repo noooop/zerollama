@@ -4,8 +4,8 @@ from zerollama.core.framework.zero.server import ZeroServer
 
 
 class ZeroInferenceEngine(ZeroServer):
-    def __init__(self, model_class, model_kwargs, event=None):
-        ZeroServer.__init__(self, port=None, event=event, do_register=True)
+    def __init__(self, model_class, model_kwargs, **kwargs):
+        ZeroServer.__init__(self, port=None, do_register=True, **kwargs)
 
         self.name = model_kwargs["model_name"]
         self.model_class = model_class
@@ -22,7 +22,7 @@ class ZeroInferenceEngine(ZeroServer):
 
     def init(self):
         self.model.load()
-        print("ZeroInferenceEngine: ", self.name, "is running!")
+        print("ZeroInferenceEngine: ", self.name, "is running!", "port:", self.port)
 
     def process(self):
         msg = self.socket.recv()
@@ -73,9 +73,9 @@ class ZeroInferenceEngine(ZeroServer):
 
 
 if __name__ == '__main__':
-    from zerollama.core.framework.zero.server import ZeroServerProcess, Event
+    from zerollama.core.framework.zero.server import ZeroServerProcess
 
-    h = ZeroServerProcess("zerollama.core.framework.nameserver.server:ZeroNameServer")
+    nameserver = ZeroServerProcess("zerollama.core.framework.nameserver.server:ZeroNameServer")
     engine = ZeroServerProcess("zerollama.core.framework.inference_engine.server:ZeroInferenceEngine",
                                server_kwargs={
                                    "model_class": "zerollama.models.qwen.qwen1_5:Qwen1_5",
@@ -84,15 +84,15 @@ if __name__ == '__main__':
                                    }
                                })
 
-    h.start()
+    nameserver.start()
     engine.start()
     try:
         engine.join()
-        h.join()
+        nameserver.join()
     except (KeyboardInterrupt, EOFError):
         print("quit gracefully")
         engine.terminate()
-        h.terminate()
+        nameserver.terminate()
 
 
 

@@ -1,21 +1,25 @@
 import zmq
 import json
-from multiprocessing import Event, Process
-from .client import Timeout
+from multiprocessing import Event, Process, Value
+from zerollama.core.framework.zero.client import Timeout
 
 
 class ZeroServer(object):
     POLL_INTERVAL = 1000
 
-    def __init__(self, port=None, event=None, do_register=True):
+    def __init__(self, port=None, event=None, do_register=True, share_port=None, nameserver_port=None):
         context = zmq.Context()
         socket = context.socket(zmq.REP)
-        if port is None:
+        if port is None or port == "random":
             port = socket.bind_to_random_port("tcp://*", min_port=50000, max_port=60000)
         else:
             socket.bind(f"tcp://*:{port}")
 
         self.port = port
+        if share_port is not None:
+            share_port.value = port
+
+        self.nameserver_port = nameserver_port
         self.context = context
         self.socket = socket
         self.event = event if event is not None else Event()
@@ -24,20 +28,20 @@ class ZeroServer(object):
 
     def _register(self):
         from zerollama.core.framework.nameserver.client import NameServerClient
-        client = NameServerClient()
+        client = NameServerClient(self.nameserver_port)
 
         server = {"host": "localhost", "port": self.port, "name": self.name, "protocol": self.protocol}
         client.register(server)
 
     def _deregister(self):
         from zerollama.core.framework.nameserver.client import NameServerClient
-        client = NameServerClient()
+        client = NameServerClient(self.nameserver_port)
 
         server = {"host": "localhost", "port": self.port, "name": self.name, "protocol": self.protocol}
         client.deregister(server)
 
     def init(self):
-        print(f"{self.__class__.__name__} is running!")
+        print(f"{self.__class__.__name__} is running!", "port:", self.port)
 
     def clean_up(self):
         print(f"{self.__class__.__name__} clean_up!")
@@ -93,9 +97,11 @@ class ZeroServerProcess(Process):
         self.server_class = server_class
         self.server_kwargs = server_kwargs or dict()
         self.server = None
+        self.share_port = Value('i', -1)
 
     def run(self):
         self.server_kwargs["event"] = self.event
+        self.server_kwargs["share_port"] = self.share_port
 
         if isinstance(self.server_class, str):
             module_name, class_name = self.server_class.split(":")
