@@ -1,13 +1,20 @@
+from multiprocess import Process
 
-def run_gateway():
-    import subprocess
-    h = subprocess.Popen("python -m applications.chat_webui.http_gateway", shell=True)
-    print("gateway running!")
-    h.wait()
+
+class HttpGateway(Process):
+    def run(self):
+        import subprocess
+        h = subprocess.Popen("python -m applications.chat_webui.http_gateway", shell=True)
+        print("gateway running!")
+        try:
+            h.wait()
+        except (KeyboardInterrupt, EOFError):
+            pass
+        finally:
+            print("HttpGateway clean_up!")
 
 
 if __name__ == '__main__':
-    from multiprocess import Process
     from zerollama.core.framework.zero.server import ZeroServerProcess
 
     nameserver = ZeroServerProcess("zerollama.core.framework.nameserver.server:ZeroNameServer")
@@ -19,9 +26,9 @@ if __name__ == '__main__':
                                    }
                                },
                                ignore_warnings=True)
-    h3 = Process(target=run_gateway)
+    gateway = HttpGateway()
 
-    handle = [nameserver, engine, h3]
+    handle = [nameserver, engine, gateway]
     for h in handle:
         h.start()
 
