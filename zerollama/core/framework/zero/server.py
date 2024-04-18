@@ -87,7 +87,7 @@ class ZeroServer(object):
 
 
 class ZeroServerProcess(Process):
-    def __init__(self, server_class, server_kwargs=None, event=None):
+    def __init__(self, server_class, server_kwargs=None, event=None, ignore_warnings=False):
         Process.__init__(self)
         if event is None:
             self.event = Event()
@@ -98,8 +98,13 @@ class ZeroServerProcess(Process):
         self.server_kwargs = server_kwargs or dict()
         self.server = None
         self.share_port = Value('i', -1)
+        self.ignore_warnings = ignore_warnings
 
     def run(self):
+        if self.ignore_warnings:
+            import warnings
+            warnings.filterwarnings("ignore")
+
         self.server_kwargs["event"] = self.event
         self.server_kwargs["share_port"] = self.share_port
 
