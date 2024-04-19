@@ -9,7 +9,7 @@ from zerollama.core.framework.zero.client import Timeout
 class ZeroServer(object):
     POLL_INTERVAL = 1000
 
-    def __init__(self, port=None, event=None, do_register=True, share_port=None, nameserver_port=None):
+    def __init__(self, name=None, protocol=None, port=None, event=None, do_register=True, share_port=None, nameserver_port=None):
         context = zmq.Context()
         socket = context.socket(zmq.REP)
         if port is None or port == "random":
@@ -27,6 +27,8 @@ class ZeroServer(object):
         if share_port is not None:
             share_port.value = port
 
+        self.name = name
+        self.protocol = protocol
         self.nameserver_port = nameserver_port
         self.context = context
         self.socket = socket

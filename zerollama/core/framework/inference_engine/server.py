@@ -5,9 +5,6 @@ from zerollama.core.framework.zero.server import Z_MethodZeroServer
 
 class ZeroInferenceEngine(Z_MethodZeroServer):
     def __init__(self, model_class, model_kwargs, **kwargs):
-        Z_MethodZeroServer.__init__(self, port=None, do_register=True, **kwargs)
-
-        self.name = model_kwargs["model_name"]
         self.model_class = model_class
         self.model_kwargs = model_kwargs
 
@@ -18,7 +15,11 @@ class ZeroInferenceEngine(Z_MethodZeroServer):
             self.model_class = getattr(module, class_name)
 
         self.model = self.model_class(**self.model_kwargs)
-        self.protocol = self.model_class.protocol
+
+        Z_MethodZeroServer.__init__(self,
+                                    name=model_kwargs["model_name"],
+                                    protocol=self.model_class.protocol,
+                                    port=None, do_register=True, **kwargs)
 
     def init(self):
         self.model.load()
