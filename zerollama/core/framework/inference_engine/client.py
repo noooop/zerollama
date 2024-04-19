@@ -40,24 +40,24 @@ if __name__ == '__main__':
         {"role": "user", "content": prompt}
     ]
 
-    name = "Qwen/Qwen1.5-0.5B-Chat"
+    model_name = "Qwen/Qwen1.5-0.5B-Chat"
 
     client = ChatClient()
     print("=" * 80)
-    print("Wait service available")
-    client.wait_service_available(name)
-    print(client.get_service_names())
+    print(f"Wait {model_name} available")
+    client.wait_service_available(model_name)
+    print(client.get_services(model_name))
 
     print("=" * 80)
     print('ZeroInferenceEngine support_methods')
-    print(client.support_methods(name))
+    print(client.support_methods(model_name))
 
     print("="*80)
     print("stream == False")
-    msg = client.chat(name, messages)
+    msg = client.chat(model_name, messages)
     pprint(msg)
 
     print("="*80)
     print("stream == True")
-    for msg in client.stream_chat(name, messages):
+    for msg in client.stream_chat(model_name, messages):
         pprint(msg)

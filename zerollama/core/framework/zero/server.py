@@ -28,7 +28,7 @@ class ZeroServer(object):
             share_port.value = port
 
         self.name = name
-        self.protocol = protocol
+        self.protocol = protocol or getattr(self, "protocol", None)
         self.nameserver_port = nameserver_port
         self.context = context
         self.socket = socket
