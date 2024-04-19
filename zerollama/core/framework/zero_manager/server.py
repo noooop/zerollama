@@ -109,14 +109,12 @@ class ZeroManager(Z_MethodZeroServer):
 
 if __name__ == '__main__':
     name = "ZeroInferenceManager"
-    protocol = "manager"
     server_class = "zerollama.core.framework.inference_engine.server:ZeroInferenceEngine"
 
     nameserver = ZeroServerProcess("zerollama.core.framework.nameserver.server:ZeroNameServer")
     manager = ZeroServerProcess("zerollama.core.framework.zero_manager.server:ZeroManager",
                                 server_kwargs={
                                     "name": name,
-                                    "protocol": protocol,
                                     "server_class": server_class
                                 })
 
