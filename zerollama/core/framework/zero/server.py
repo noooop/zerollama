@@ -1,3 +1,4 @@
+import time
 import zmq
 import json
 import traceback
@@ -32,6 +33,7 @@ class ZeroServer(object):
         self.event = event if event is not None else Event()
         self.event.set()
         self.do_register = do_register
+        self.share_port = share_port
 
     def _register(self):
         from zerollama.core.framework.nameserver.client import NameServerClient
@@ -148,6 +150,14 @@ class ZeroServerProcess(Process):
         self.share_port = Value('i', -1)
         self.ignore_warnings = ignore_warnings
 
+    def wait_port_available(self, timeout=10000):
+        t = timeout + time.time()
+
+        while time.time() < t:
+            time.sleep(0.1)
+            if self.share_port.value != -1:
+                return self.share_port.value
+
     def run(self):
         if self.ignore_warnings:
             import warnings
@@ -179,8 +189,6 @@ class ZeroServerProcess(Process):
 
 
 if __name__ == '__main__':
-    import time
-
     server_class = "zerollama.core.framework.zero.server:ZeroServer"
 
     h1 = ZeroServerProcess(server_class, {"do_register": False})
