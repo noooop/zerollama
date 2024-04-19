@@ -12,12 +12,7 @@ def run(model_name):
     nameserver = ZeroServerProcess("zerollama.core.framework.nameserver.server:ZeroNameServer",
                                    server_kwargs={"port": "random"})
     nameserver.start()
-
-    while True:
-        time.sleep(0.1)
-        if nameserver.share_port.value != -1:
-            nameserver_port = nameserver.share_port.value
-            break
+    nameserver_port = nameserver.wait_port_available()
 
     engine = ZeroServerProcess("zerollama.core.framework.inference_engine.server:ZeroInferenceEngine",
                                server_kwargs={
@@ -34,12 +29,7 @@ def run(model_name):
     chat_client = ChatClient(nameserver_port=nameserver_port)
 
     print("正在加载模型...")
-    while True:
-        time.sleep(0.1)
-        response = chat_client.get_service_names()
-        services = response["msg"]["service_names"]
-        if model_name in services:
-            break
+    chat_client.wait_service_available(model_name)
     print("加载完成!")
     print("!quit 退出, !next 开启新一轮对话。玩的开心！")
 
