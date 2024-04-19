@@ -12,12 +12,14 @@ ZeroInferenceEngine:  Qwen/Qwen1.5-0.5B-Chat is running! port: 59296
 第二个窗口
 $ python -m zerollama.core.framework.inference_engine.client
 ================================================================================
+Wait service available
 {'state': 'ok', 'msg': {'service_names': ['Qwen/Qwen1.5-0.5B-Chat']}}
 ================================================================================
+ZeroInferenceEngine support_methods
+{'state': 'ok', 'support_methods': ['inference', 'support_methods']}
+================================================================================
 stream == False
-{'content': '大型语言模型是一种复杂的计算机程序，它可以生成大量的文本，例如故事、文章、诗歌等，并从中提取有价值的信息和知识。这些大模型通常使用深度学习技术，它们能够自动从大量数据中学习，从而实现更高的准确性和精度。\n'
-            '\n'
-            '大型语言模型可以应用于各种领域，例如自然语言处理、机器翻译、语音识别、图像分类等。它们也可以用于搜索引擎、聊天机器人、智能客服等领域。此外，大型语言模型还可以用于金融风控、医疗诊断、自动驾驶等领域。',
+{'content': '大型语言模型是一种具有大量文本数据的模型，它可以理解和生成高质量的语言文本。它们通常由多种不同的语言模型组成，包括基于规则、基于神经网络和基于深度学习等。大型语言模型可以用来处理大量的自然语言输入，并且在特定任务上表现出色，例如文本分类、语义分析和机器翻译等。',
  'model': 'Qwen/Qwen1.5-0.5B-Chat'}
 ================================================================================
 stream == True
@@ -32,5 +34,4 @@ stream == True
 # 第一个窗口 Control-C 关闭 
 ZeroNameServer clean_up!
 ZeroInferenceEngine clean_up!
-quit gracefully
 ```

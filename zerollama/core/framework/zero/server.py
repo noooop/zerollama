@@ -1,5 +1,6 @@
 import zmq
 import json
+import traceback
 from multiprocessing import Event, Process, Value
 from zerollama.core.framework.zero.client import Timeout
 
@@ -13,9 +14,15 @@ class ZeroServer(object):
         if port is None or port == "random":
             port = socket.bind_to_random_port("tcp://*", min_port=50000, max_port=60000)
         else:
-            socket.bind(f"tcp://*:{port}")
+            try:
+                socket.bind(f"tcp://*:{port}")
+            except zmq.error.ZMQError as e:
+                self.port = port
+                self.address_in_use = True
+                return
 
         self.port = port
+        self.address_in_use = False
         if share_port is not None:
             share_port.value = port
 
@@ -53,6 +60,9 @@ class ZeroServer(object):
 
     def run(self):
         self.init()
+        if self.address_in_use:
+            print(f"Address in use (addr='tcp://*:{self.port}')")
+            return
 
         if self.do_register:
             self._register()
@@ -63,7 +73,7 @@ class ZeroServer(object):
         while self.event.is_set():
             try:
                 socks = dict(poller.poll(self.POLL_INTERVAL))
-            except KeyboardInterrupt:
+            except (KeyboardInterrupt, EOFError):
                 break
 
             if socks.get(self.socket) == zmq.POLLIN:
@@ -81,6 +91,44 @@ class ZeroServer(object):
         response = json.dumps({
             "state": "error",
             "msg": err_msg
+        }).encode('utf8')
+
+        self.socket.send(response)
+
+
+class Z_MethodZeroServer(ZeroServer):
+    def process(self):
+        msg = self.socket.recv()
+        try:
+            msg = json.loads(msg)
+        except json.JSONDecodeError as e:
+            traceback.print_exc()
+            self.handle_error(err_msg=str(e))
+            return
+
+        if "method" not in msg:
+            self.handle_error(err_msg="'method' not in msg")
+            return
+
+        method_name = msg["method"]
+        method = getattr(self, "z_"+method_name, self.default)
+
+        try:
+            method(msg)
+        except Exception as e:
+            self.handle_error(err_msg=str(e))
+            return
+
+    def default(self, msg):
+        method_name = msg["method"]
+        self.handle_error(err_msg=f"method [{method_name}] not supported.")
+
+    def z_support_methods(self, msg):
+        support_methods = [m[2:] for m in dir(self) if m.startswith('z_')]
+
+        response = json.dumps({
+            "state": "ok",
+            "support_methods": support_methods
         }).encode('utf8')
 
         self.socket.send(response)
@@ -121,15 +169,23 @@ class ZeroServerProcess(Process):
         self.event.clear()
         self.join()
 
+    def wait(self):
+        try:
+            self.join()
+        except (KeyboardInterrupt, EOFError):
+            pass
+        finally:
+            self.terminate()
+
 
 if __name__ == '__main__':
     import time
 
     server_class = "zerollama.core.framework.zero.server:ZeroServer"
 
-    h1 = ZeroServerProcess(server_class, {"do_register": False}, Event())
-    h2 = ZeroServerProcess(server_class, {"do_register": False}, Event())
-    h3 = ZeroServerProcess(server_class, {"do_register": False}, Event())
+    h1 = ZeroServerProcess(server_class, {"do_register": False})
+    h2 = ZeroServerProcess(server_class, {"do_register": False})
+    h3 = ZeroServerProcess(server_class, {"do_register": False})
 
     h1.start()
     h2.start()
@@ -140,3 +196,9 @@ if __name__ == '__main__':
     h1.terminate()
     h2.terminate()
     h3.terminate()
+
+    server_class = "zerollama.core.framework.zero.server:Z_MethodZeroServer"
+    h = ZeroServerProcess(server_class, {"do_register": False, "port": 9527})
+    h.start()
+    h.wait()
+

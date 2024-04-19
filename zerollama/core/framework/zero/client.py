@@ -1,10 +1,8 @@
 
 import zmq
-import traceback
+import json
 from uuid import uuid4
 from queue import Queue
-
-RCVTIMEO = 100000
 
 
 class Socket(object):
@@ -13,7 +11,6 @@ class Socket(object):
         self.socket = context.socket(zmq.REQ)
         self.socket.set_string(zmq.IDENTITY, uuid4().hex)
         self.socket.connect(addr)
-        self.socket.RCVTIMEO = RCVTIMEO
 
     def set_timeout(self, timeout):
         self.socket.RCVTIMEO = timeout
@@ -57,8 +54,6 @@ class SocketPool(object):
         if addr not in self.queue:
             self.queue[addr] = Queue()
         queue = self.queue[addr]
-
-        socket.set_timeout(RCVTIMEO)
         queue.put(socket)
 
     def delete(self, socket):
@@ -73,25 +68,34 @@ class Timeout(Exception):
 
 
 class Client(object):
-    def _query(self, addr, data, timeout=None):
+    timeout = 100000
+
+    def __init__(self, addr):
+        self.addr = addr
+
+    def _query(self, data, timeout=None):
         for i in range(3):
-            socket = socket_pool.get(addr)
+            socket = socket_pool.get(self.addr)
+
+            if getattr(self, "timeout", None) is not None:
+                socket.set_timeout(self.timeout)
+
             if timeout is not None:
                 socket.set_timeout(timeout)
 
             try:
                 socket.send(data)
                 msg = socket.recv()
-                socket_pool.put(socket, addr)
+                socket_pool.put(socket, self.addr)
                 return msg
             except zmq.error.Again:
                 socket_pool.delete(socket)
 
-        raise Timeout(f"{addr} timeout")
+        raise Timeout(f"{self.addr} timeout")
 
-    def _stream_query(self, addr, data, timeout=None):
+    def _stream_query(self, data, timeout=None):
         for i in range(3):
-            socket = socket_pool.get(addr)
+            socket = socket_pool.get(self.addr)
             if timeout is not None:
                 socket.set_timeout(timeout)
 
@@ -102,9 +106,45 @@ class Client(object):
                 while socket.getsockopt(zmq.RCVMORE):
                     yield socket.recv()
 
-                socket_pool.put(socket, addr)
+                socket_pool.put(socket, self.addr)
                 return
             except zmq.error.Again:
                 socket_pool.delete(socket)
 
-        raise Timeout(f"{addr} timeout")
+        raise Timeout(f"{self.addr} timeout")
+
+    def json_query(self, data, debug=False, **kwargs):
+        data = json.dumps(data).encode('utf8')
+
+        if debug:
+            print(data)
+
+        msg = self._query(data=data, **kwargs)
+        msg = json.loads(msg)
+        return msg
+
+    def json_stream_query(self, data, debug=False, **kwargs):
+        data = json.dumps(data).encode('utf8')
+
+        if debug:
+            print(data)
+
+        for part in self._stream_query(data=data, **kwargs):
+            yield json.loads(part)
+
+
+class Z_Client(Client):
+    def support_methods(self):
+        data = {"method": "support_methods"}
+        return self.json_query(data)
+
+
+if __name__ == '__main__':
+    from pprint import pprint
+    client = Z_Client("tcp://localhost:9527")
+
+    pprint(client.support_methods())
+
+    data = {"method": "method_not_supported"}
+    pprint(client.json_query(data))
+

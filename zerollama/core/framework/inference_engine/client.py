@@ -1,80 +1,38 @@
 
-import zmq
-import json
-from zerollama.core.framework.zero.client import Client
-from zerollama.core.framework.nameserver.client import NameServerClient
-
-from random import choice
+from zerollama.core.framework.nameserver.client import ZeroClient
 
 
-class ChatClient(Client):
+class ChatClient(ZeroClient):
     protocol = "chat"
 
     def __init__(self, nameserver_port=None):
-        context = zmq.Context()
-        self.context = context
-        self.nameserver_client = NameServerClient(nameserver_port)
+        ZeroClient.__init__(self, self.protocol, nameserver_port)
 
-    def get_service_names(self):
-        return self.nameserver_client.get_service_names(self.protocol)
-
-    def chat(self, name, messages, options=None):
-        response = self.nameserver_client.get_services(self.protocol, name)
-
-        if response["state"] == "error":
-            return None
-
-        services = response["msg"]["services"]
-        if not services:
-            return None
-
-        server = choice(services)
-        host = server["host"]
-        port = server["port"]
-
-        data = json.dumps({
+    def chat(self, name, messages, options=None, **kwargs):
+        data = {
+            "method": "inference",
             "model": name,
             "messages": messages,
             "options": options,
             "stream": False
-        }).encode('utf8')
+        }
+        return self.json_query(name, data, **kwargs)
 
-        msg = self._query(addr=f"tcp://{host}:{port}",
-                          data=data)
-        msg = json.loads(msg)
-        return msg
-
-    def stream_chat(self, name, messages, options=None):
-        response = self.nameserver_client.get_services(self.protocol, name)
-
-        if response["state"] == "error":
-            return None
-
-        services = response["msg"]["services"]
-        if not services:
-            return None
-
-        server = choice(services)
-        host = server["host"]
-        port = server["port"]
-
-        data = json.dumps({
+    def stream_chat(self, name, messages, options=None, **kwargs):
+        data = {
+            "method": "inference",
             "model": name,
             "messages": messages,
             "options": options,
             "stream": True
-        }).encode('utf8')
+        }
 
-        for part in self._stream_query(addr=f"tcp://{host}:{port}", data=data):
-            yield json.loads(part)
+        for part in self.json_stream_query(name, data, **kwargs):
+            yield part
 
 
 if __name__ == '__main__':
     from pprint import pprint
-
-    client = ChatClient()
-    print("=" * 80)
-    print(client.get_service_names())
 
     prompt = "给我介绍一下大型语言模型。"
 
@@ -83,6 +41,16 @@ if __name__ == '__main__':
     ]
 
     name = "Qwen/Qwen1.5-0.5B-Chat"
+
+    client = ChatClient()
+    print("=" * 80)
+    print("Wait service available")
+    client.wait_service_available(name)
+    print(client.get_service_names())
+
+    print("=" * 80)
+    print('ZeroInferenceEngine support_methods')
+    print(client.support_methods(name))
 
     print("="*80)
     print("stream == False")

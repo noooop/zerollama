@@ -1,6 +1,6 @@
 
 import json
-from zerollama.core.framework.zero.server import ZeroServer
+from zerollama.core.framework.zero.server import Z_MethodZeroServer
 
 NameServerPort = 9527
 
@@ -67,9 +67,9 @@ class InMemoryNameServer(NameServerInterfaces):
         return list(self.domain.get(protocol, dict()).keys())
 
 
-class ZeroNameServer(ZeroServer):
+class ZeroNameServer(Z_MethodZeroServer):
     def __init__(self, port=None, nameserver_class=None, **kwargs):
-        ZeroServer.__init__(self, port=port or NameServerPort, do_register=False, **kwargs)
+        Z_MethodZeroServer.__init__(self, port=port or NameServerPort, do_register=False, **kwargs)
 
         if nameserver_class is None:
             self.nameserver_class = InMemoryNameServer
@@ -81,37 +81,6 @@ class ZeroNameServer(ZeroServer):
     def init(self):
         self._nameserver = self.nameserver_class()
         print(f"ZeroNameServer: {self.nameserver_class.__name__} running!", "port:", self.port)
-
-    def process(self):
-        msg = self.socket.recv()
-        try:
-            msg = json.loads(msg)
-
-            if "method" not in msg:
-                self.handle_error(err_msg="'method' not in msg")
-                return
-
-            method = msg["method"]
-
-            if method == "register":
-                self.register(msg)
-                return
-
-            if method == "deregister" or method == "unregister":
-                self.deregister(msg)
-                return
-
-            if method == "get_services":
-                self.get_services(msg)
-                return
-
-            if method == "get_service_names":
-                self.get_service_names(msg)
-                return
-
-            self.handle_error(err_msg=f"method [{method}] not supported.")
-        except Exception:
-            self.handle_error(err_msg="NameServer error")
 
     def clean(self, msg):
         ok = False
@@ -162,7 +131,7 @@ class ZeroNameServer(ZeroServer):
 
         return ok, server
 
-    def register(self, msg):
+    def z_register(self, msg):
         ok, out = self.clean(msg)
         if not ok:
             self.handle_error(err_msg=out)
@@ -178,7 +147,7 @@ class ZeroNameServer(ZeroServer):
 
         self.socket.send(response)
 
-    def deregister(self, msg):
+    def z_deregister(self, msg):
         ok, out = self.clean(msg)
         if not ok:
             self.handle_error(err_msg=out)
@@ -194,7 +163,7 @@ class ZeroNameServer(ZeroServer):
 
         self.socket.send(response)
 
-    def get_services(self, msg):
+    def z_get_services(self, msg):
         if "protocol" not in msg:
             err_msg = "'protocol' not in msg"
             self.handle_error(err_msg)
@@ -215,7 +184,7 @@ class ZeroNameServer(ZeroServer):
         }).encode('utf8')
         self.socket.send(response)
 
-    def get_service_names(self, msg):
+    def z_get_service_names(self, msg):
         if "protocol" not in msg:
             err_msg = "'protocol' not in msg"
             self.handle_error(err_msg)

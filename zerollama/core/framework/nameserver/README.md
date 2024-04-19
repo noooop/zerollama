@@ -33,6 +33,9 @@ ZeroNameServer: InMemoryNameServer running! port: 9527
 第二个窗口
 $ python -m zerollama.core.framework.nameserver.client
 ================================================================================
+NameServer support_methods
+{'state': 'ok', 'support_methods': ['deregister', 'get_service_names', 'get_services', 'register', 'support_methods']}
+================================================================================
 init
 {'state': 'ok', 'msg': {'service_names': []}}
 {'state': 'ok', 'msg': {'services': None}}
@@ -44,7 +47,6 @@ register
 deregister
 {'state': 'ok', 'msg': {'service_names': []}}
 {'state': 'ok', 'msg': {'services': None}}
-
 
 # 第一个窗口 Control-C 关闭 
 ZeroNameServer clean_up!

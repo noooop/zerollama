@@ -1,11 +1,11 @@
 import zmq
 import json
-from zerollama.core.framework.zero.server import ZeroServer
+from zerollama.core.framework.zero.server import Z_MethodZeroServer
 
 
-class ZeroInferenceEngine(ZeroServer):
+class ZeroInferenceEngine(Z_MethodZeroServer):
     def __init__(self, model_class, model_kwargs, **kwargs):
-        ZeroServer.__init__(self, port=None, do_register=True, **kwargs)
+        Z_MethodZeroServer.__init__(self, port=None, do_register=True, **kwargs)
 
         self.name = model_kwargs["model_name"]
         self.model_class = model_class
@@ -24,25 +24,22 @@ class ZeroInferenceEngine(ZeroServer):
         self.model.load()
         print("ZeroInferenceEngine: ", self.name, "is running!", "port:", self.port)
 
-    def process(self):
-        msg = self.socket.recv()
+    def z_inference(self, msg):
+        if "model" not in msg:
+            self.handle_error(err_msg="'model' not in msg")
+            return
+
+        model = msg["model"]
+
+        if model != self.model.model_name:
+            self.handle_error(err_msg=f"model '{model}' not supported!")
+            return
+
+        messages = msg.get("messages", list())
+        options = msg.get("options", dict())
+        stream = msg.get("stream", True)
+
         try:
-            msg = json.loads(msg)
-
-            if "model" not in msg:
-                self.handle_error(err_msg="'model' not in msg")
-                return
-
-            model = msg["model"]
-
-            if model != self.model.model_name:
-                self.handle_error(err_msg=f"model '{model}' not supported!")
-                return
-
-            messages = msg.get("messages", list())
-            options = msg.get("options", dict())
-            stream = msg.get("stream", True)
-
             if stream:
                 try:
                     for content in self.model.stream_chat(messages, options):
@@ -86,15 +83,9 @@ if __name__ == '__main__':
 
     nameserver.start()
     engine.start()
-    try:
-        engine.join()
-        nameserver.join()
-    except (KeyboardInterrupt, EOFError):
-        pass
-    finally:
-        engine.terminate()
-        nameserver.terminate()
-        print("quit gracefully")
+
+    engine.wait()
+    nameserver.wait()
 
 
 
