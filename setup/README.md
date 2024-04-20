@@ -18,6 +18,10 @@ $ conda env create -f environment_linux.yml
 # windows
 $ conda env create -f environment_windows.yml
 ```
+区别是 ubuntu&wsl2 使用pip安装pytorch， windows使用conda安装pytorch
+
+网络问题多试几次，找找代理，比如[TUNA](https://mirrors.tuna.tsinghua.edu.cn/help/anaconda/),自己克服一下吧，叹气
+
 下面的配置都已经一键安装好了
 
 ## 手动配置

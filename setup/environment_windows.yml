@@ -7,10 +7,10 @@ channels:
 dependencies:
   - python=3.11
   - anaconda
+  - pytorch-cuda=12.1
+  - pytorch
   - pip
   - pip:
-      - --index-url https://download.pytorch.org/whl/cu121
-      - torch==2.2.2
       - transformers==4.38.2
       - accelerate==0.29.2
       - optimum==1.18.1
