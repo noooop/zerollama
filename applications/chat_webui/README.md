@@ -19,6 +19,17 @@ HttpGateway clean_up!
 ZeroManager clean_up!
 ```
 
+## list 列出支持的模型
+```
+$ python -m applications.chat_webui.cli list
++----------------------------------+---------+------+------+--------------+------+
+| name                             | family  | type | size | quantization | bits |
++----------------------------------+---------+------+------+--------------+------+
+| Qwen/Qwen1.5-0.5B-Chat           | Qwen1.5 | Chat | 0.5B |              |      |
+...
++----------------------------------+---------+------+------+--------------+------+
+```
+
 ## 下载模型 pull
 ```
 $ python -m applications.chat_webui.cli pull Qwen/Qwen1.5-1.8B-Chat-GPTQ-Int4

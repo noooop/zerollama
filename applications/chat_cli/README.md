@@ -2,6 +2,17 @@
 
 [配置环境](https://github.com/noooop/zerollama/tree/main/setup)
 
+## list 列出支持的模型
+```
+$ python -m applications.chat_cli list
++----------------------------------+---------+------+------+--------------+------+
+| name                             | family  | type | size | quantization | bits |
++----------------------------------+---------+------+------+--------------+------+
+| Qwen/Qwen1.5-0.5B-Chat           | Qwen1.5 | Chat | 0.5B |              |      |
+...
++----------------------------------+---------+------+------+--------------+------+
+```
+
 ## pull 下载模型
 ```
 $ python -m applications.chat_cli pull Qwen/Qwen1.5-1.8B-Chat-GPTQ-Int4
