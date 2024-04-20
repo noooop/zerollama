@@ -18,7 +18,7 @@ $ conda env create -f environment_linux.yml
 # windows
 $ conda env create -f environment_windows.yml
 ```
-下面的配置都已经一键安装好了，查看具体的安装版本
+下面的配置都已经一键安装好了
 
 ## 手动配置
 ```

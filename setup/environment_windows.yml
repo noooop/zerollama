@@ -16,3 +16,4 @@ dependencies:
       - optimum==1.18.1
       - auto-gptq==0.7.1
       - autoawq==0.2.4
+      - prettytable==3.10.0

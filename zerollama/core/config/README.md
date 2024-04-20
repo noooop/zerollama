@@ -6,7 +6,7 @@ windows
 C:\Users\%USERNAME%\.zerollama\config
 
 linux
-~/.zerollama\config
+~/.zerollama/config
 
 ```
 
