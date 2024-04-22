@@ -1,13 +1,14 @@
 
-
+import traceback
 import torch
+import requests
 from threading import Thread
 from zerollama.core.config.main import config_setup
 from zerollama.core.models.chat import ChatInterfaces
 
 
 class HuggingFaceTransformers(object):
-    def __init__(self, model_name, info_dict, local_files_only=True, device="cuda"):
+    def __init__(self, model_name, info_dict, device="cuda", **kwargs):
         if model_name not in info_dict:
             raise KeyError(f"{model_name} not in model family.")
 
@@ -17,7 +18,9 @@ class HuggingFaceTransformers(object):
         self.model = None
         self.tokenizer = None
         self.streamer = None
-        self.local_files_only = local_files_only
+        self.thread = None
+        self.local_files_only = kwargs.get("local_files_only", True)
+        self.trust_remote_code = kwargs.get("trust_remote_code", False)
 
     def _load(self):
         pass
@@ -31,16 +34,30 @@ class HuggingFaceTransformers(object):
         else:
             from transformers import AutoModelForCausalLM, AutoTokenizer, TextIteratorStreamer
 
-        torch_dtype = torch.float16 if self.info["quantization"] != "" else "auto"
+        torch_dtype = "auto"
+        if self.info["quantization"] != "":
+            torch_dtype = torch.float16
+
+        if "torch_dtype" in self.info:
+            if self.info["torch_dtype"] == "fp32":
+                torch_dtype = torch.float32
+            elif self.info["torch_dtype"] == "bf16":
+                torch_dtype = torch.bfloat16
+            elif self.info["torch_dtype"] == "fp16":
+                torch_dtype = torch.float16
 
         try:
             model = AutoModelForCausalLM.from_pretrained(
                 self.model_name,
                 torch_dtype=torch_dtype,
                 device_map="auto",
-                local_files_only=self.local_files_only
+                local_files_only=self.local_files_only,
+                trust_remote_code=self.trust_remote_code
             )
+        except requests.exceptions.HTTPError:
+            raise FileNotFoundError(f"model '{self.model_name}' not found.")
         except EnvironmentError:
+            traceback.print_exc()
             raise FileNotFoundError(f"model '{self.model_name}' not found, try pulling it first")
 
         tokenizer = AutoTokenizer.from_pretrained(self.model_name)
@@ -50,6 +67,9 @@ class HuggingFaceTransformers(object):
         self.tokenizer = tokenizer
         self.streamer = streamer
         self._load()
+
+    def __del__(self):
+        pass
 
     @property
     def model_info(self):
@@ -109,6 +129,5 @@ class HuggingFaceTransformersChat(HuggingFaceTransformers, ChatInterfaces):
             if not new_text:
                 continue
             yield new_text
-
 
 
