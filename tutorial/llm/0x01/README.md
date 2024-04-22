@@ -22,7 +22,7 @@ $ python model.py
 > 
 > 默认模型下载到c盘，如果空间紧张
 > 
-> 打开 os.environ['HF_HOME'] = 'D:/.cache/' 注释
+> 打开 os.environ['HF_HOME'] = 'D:/.cache/huggingface/' 注释
 
 
 # 服务端和客户端
