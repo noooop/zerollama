@@ -36,7 +36,7 @@ $ vim ~/.zerollama/config/global.yml
 huggingface:
   HF_ENDPOINT: https://hf-mirror.com
   HF_HOME: /mnt/d/.cache/huggingface/
- modelscope:
+modelscope:
   USE_MODELSCOPE: True
   MODELSCOPE_CACHE: D:/.cache/modelscope/
 ```
