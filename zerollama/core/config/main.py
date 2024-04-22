@@ -1,6 +1,8 @@
-import yaml
+
 import os
+import yaml
 from pathlib import Path
+from easydict import EasyDict as edict
 
 
 def config_setup():
@@ -9,10 +11,13 @@ def config_setup():
     config_global_path = home / ".zerollama/config" / "global.yml"
 
     if config_global_path.exists():
-        with open(config_global_path, 'r') as f:
+        with open(config_global_path, 'r', encoding="utf-8") as f:
             config_global = yaml.safe_load(f)
     else:
         config_global = {}
+
+    config = edict({})
+    config.use_modelscope = True
 
     if "huggingface" in config_global:
         config_huggingface = config_global["huggingface"]
@@ -23,7 +28,16 @@ def config_setup():
         if 'HF_HOME' in config_huggingface:
             os.environ['HF_HOME'] = config_huggingface["HF_HOME"]
 
-    return config_global
+    if "modelscope" in config_global:
+        config_modelscope = config_global["modelscope"]
+        if "USE_MODELSCOPE" in config_modelscope:
+            if not config_modelscope["USE_MODELSCOPE"]:
+                config.use_modelscope = False
+
+        if "MODELSCOPE_CACHE" in config_modelscope:
+            os.environ["MODELSCOPE_CACHE"] = config_modelscope["MODELSCOPE_CACHE"]
+
+    return config
 
 
 if __name__ == '__main__':

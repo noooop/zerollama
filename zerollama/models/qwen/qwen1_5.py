@@ -7,9 +7,6 @@ class Qwen1_5(HuggingFaceTransformersChat):
     def __init__(self, model_name, device="cuda"):
         HuggingFaceTransformersChat.__init__(self, model_name, info_dict, device)
 
-    def _load(self):
-        self.eos_token_id = self.tokenizer.encode('<|im_end|>')
-
 
 info_header = ["name", "family", "type", "size", "quantization", "bits"]
 info = [

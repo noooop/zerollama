@@ -112,4 +112,5 @@ $ cd zerollama
 ```
 
  
-
+# 配置文件
+[跳转链接](https://github.com/noooop/zerollama/tree/main/zerollama/core/config)

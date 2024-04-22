@@ -9,7 +9,7 @@ from zerollama.core.models.chat import ChatInterfaces
 class HuggingFaceTransformers(object):
     def __init__(self, model_name, info_dict, local_files_only=True, device="cuda"):
         if model_name not in info_dict:
-            raise KeyError(f"{model_name} not in Qwen1.5 model family.")
+            raise KeyError(f"{model_name} not in model family.")
 
         self.device = device
         self.model_name = model_name
@@ -17,15 +17,19 @@ class HuggingFaceTransformers(object):
         self.model = None
         self.tokenizer = None
         self.streamer = None
-        self.eos_token_id = None
         self.local_files_only = local_files_only
 
     def _load(self):
         pass
 
     def load(self):
-        config_setup()
-        from transformers import AutoModelForCausalLM, AutoTokenizer, TextIteratorStreamer
+        config = config_setup()
+
+        if config.use_modelscope:
+            from modelscope import AutoModelForCausalLM, AutoTokenizer
+            from transformers import TextIteratorStreamer
+        else:
+            from transformers import AutoModelForCausalLM, AutoTokenizer, TextIteratorStreamer
 
         torch_dtype = torch.float16 if self.info["quantization"] != "" else "auto"
 
@@ -46,7 +50,6 @@ class HuggingFaceTransformers(object):
         self.tokenizer = tokenizer
         self.streamer = streamer
         self._load()
-        self.eos_token_id = tokenizer.encode('<|im_end|>')
 
     @property
     def model_info(self):
@@ -69,8 +72,7 @@ class HuggingFaceTransformersChat(HuggingFaceTransformers, ChatInterfaces):
         model_inputs = self.tokenizer([text], return_tensors="pt").to(self.device)
         generated_ids = self.model.generate(
             model_inputs.input_ids,
-            max_new_tokens=max_new_tokens,
-            eos_token_id=self.eos_token_id
+            max_new_tokens=max_new_tokens
         )
         generated_ids = [
             output_ids[len(input_ids):] for input_ids, output_ids in zip(model_inputs.input_ids, generated_ids)
@@ -94,12 +96,11 @@ class HuggingFaceTransformersChat(HuggingFaceTransformers, ChatInterfaces):
         text = self.tokenizer.apply_chat_template(
             messages,
             tokenize=False,
-            add_generation_prompt=True,
+            add_generation_prompt=True
         )
         model_inputs = self.tokenizer([text], return_tensors="pt").to(self.device)
 
-        generation_kwargs = dict(model_inputs, streamer=self.streamer,
-                                 max_new_tokens=max_new_tokens, eos_token_id=self.eos_token_id)
+        generation_kwargs = dict(model_inputs, streamer=self.streamer, max_new_tokens=max_new_tokens)
 
         thread = Thread(target=self.model.generate, kwargs=generation_kwargs)
         thread.start()
