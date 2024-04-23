@@ -1,4 +1,5 @@
 
+import gc
 import traceback
 import torch
 import requests
@@ -18,7 +19,6 @@ class HuggingFaceTransformers(object):
         self.model = None
         self.tokenizer = None
         self.streamer = None
-        self.thread = None
         self.local_files_only = kwargs.get("local_files_only", True)
         self.trust_remote_code = kwargs.get("trust_remote_code", False)
 
@@ -69,7 +69,12 @@ class HuggingFaceTransformers(object):
         self._load()
 
     def __del__(self):
-        pass
+        self.model = None
+        self.tokenizer = None
+        self.streamer = None
+
+        gc.collect()
+        torch.cuda.empty_cache()
 
     @property
     def model_info(self):

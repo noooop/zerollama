@@ -35,73 +35,39 @@ The models and weights of MiniCPM are completely free for academic research.
 If you intend to utilize the model for commercial purposes, please reach out to cpm@modelbest.cn to obtain the certificate of authorization.
 
 ### Todo
-卸载第一个模型没清空缓存，加载第二个模型不成功
+stream_chat 显存泄露，析构时没有释放显存
 
 ```
-|===========================================================================|
-|                  PyTorch CUDA memory summary, device ID 0                 |
-|---------------------------------------------------------------------------|
-|            CUDA OOMs: 0            |        cudaMalloc retries: 0         |
-|===========================================================================|
-|        Metric         | Cur Usage  | Peak Usage | Tot Alloc  | Tot Freed  |
-|---------------------------------------------------------------------------|
-| Allocated memory      |   5624 MiB |   5673 MiB |  22536 MiB |  16911 MiB |
-|       from large pool |   5543 MiB |   5589 MiB |   8875 MiB |   3332 MiB |
-|       from small pool |     81 MiB |    243 MiB |  13660 MiB |  13579 MiB |
-|---------------------------------------------------------------------------|
-| Active memory         |   5624 MiB |   5673 MiB |  22536 MiB |  16911 MiB |
-|       from large pool |   5543 MiB |   5589 MiB |   8875 MiB |   3332 MiB |
-|       from small pool |     81 MiB |    243 MiB |  13660 MiB |  13579 MiB |
-|---------------------------------------------------------------------------|
-| Requested memory      |   5434 MiB |   5464 MiB |  20916 MiB |  15481 MiB |
-|       from large pool |   5353 MiB |   5380 MiB |   7310 MiB |   1957 MiB |
-|       from small pool |     81 MiB |    243 MiB |  13606 MiB |  13524 MiB |
-|---------------------------------------------------------------------------|
-| GPU reserved memory   |   5684 MiB |   5868 MiB |   5870 MiB | 190464 KiB |
-|       from large pool |   5600 MiB |   5620 MiB |   5620 MiB |  20480 KiB |
-|       from small pool |     84 MiB |    248 MiB |    250 MiB | 169984 KiB |
-|---------------------------------------------------------------------------|
-| Non-releasable memory |  60505 KiB | 376319 KiB |  20059 MiB |  20000 MiB |
-|       from large pool |  58240 KiB | 331208 KiB |   3647 MiB |   3590 MiB |
-|       from small pool |   2265 KiB |  56959 KiB |  16412 MiB |  16409 MiB |
-|---------------------------------------------------------------------------|
-| Allocations           |     629    |     670    |  487593    |  486964    |
-|       from large pool |     418    |     443    |    2195    |    1777    |
-|       from small pool |     211    |     388    |  485398    |  485187    |
-|---------------------------------------------------------------------------|
-| Active allocs         |     629    |     670    |  487593    |  486964    |
-|       from large pool |     418    |     443    |    2195    |    1777    |
-|       from small pool |     211    |     388    |  485398    |  485187    |
-|---------------------------------------------------------------------------|
-| GPU reserved segments |     324    |     407    |     408    |      84    |
-|       from large pool |     282    |     283    |     283    |       1    |
-|       from small pool |      42    |     124    |     125    |      83    |
-|---------------------------------------------------------------------------|
-| Non-releasable allocs |      32    |     256    |  222866    |  222834    |
-|       from large pool |      25    |     162    |    1917    |    1892    |
-|       from small pool |       7    |      95    |  220949    |  220942    |
-|---------------------------------------------------------------------------|
-| Oversize allocations  |       0    |       0    |       0    |       0    |
-|---------------------------------------------------------------------------|
-| Oversize GPU segments |       0    |       0    |       0    |       0    |
-|===========================================================================|
-5529.2880859375
+C:\Users\noooop\anaconda3\python.exe E:\PycharmProjects\zerollama\zerollama\models\openbmb\minicpm.py 
+================================================================================
+{'name': 'openbmb/MiniCPM-2B-sft-bf16', 'family': 'MiniCPM', 'type': 'Chat', 'size': '2B', 'quantization': '', 'bits': '', 'torch_dtype': 'bf16'}
+....
+8.125
+================================================================================
+{'name': 'openbmb/MiniCPM-2B-dpo-bf16', 'family': 'MiniCPM', 'type': 'Chat', 'size': '2B', 'quantization': '', 'bits': '', 'torch_dtype': 'bf16'}
+....
+8.125
+================================================================================
+{'name': 'openbmb/MiniCPM-2B-sft-bf16', 'family': 'MiniCPM', 'type': 'Chat', 'size': '2B', 'quantization': '', 'bits': '', 'torch_dtype': 'bf16'}
+....
+5608.5380859375
 ================================================================================
 WARNING:root:Some parameters are on the meta device device because they were offloaded to the cpu.
 WARNING:accelerate.big_modeling:You shouldn't move a model that is dispatched using accelerate hooks.
 Traceback (most recent call last):
-  File "<frozen runpy>", line 198, in _run_module_as_main
-  File "<frozen runpy>", line 88, in _run_code
-  File "/mnt/e/PycharmProjects/zerollama/zerollama/models/openbmb/minicpm.py", line 58, in <module>
-    run(model_name)
-  File "/mnt/e/PycharmProjects/zerollama/zerollama/models/openbmb/minicpm.py", line 43, in run
+  File "E:\PycharmProjects\zerollama\zerollama\models\openbmb\minicpm.py", line 66, in <module>
+    run(model_name, MiniCPM, stream=True)
+  File "E:\PycharmProjects\zerollama\zerollama\models\openbmb\minicpm.py", line 42, in run
     model.load()
-  File "/mnt/e/PycharmProjects/zerollama/zerollama/inference_backend/hf_transformers/main.py", line 66, in load
+  File "E:\PycharmProjects\zerollama\zerollama\inference_backend\hf_transformers\main.py", line 66, in load
     self.model = model.to(self.device)
                  ^^^^^^^^^^^^^^^^^^^^^
-  File "/root/anaconda3/lib/python3.11/site-packages/accelerate/big_modeling.py", line 455, in wrapper
+  File "C:\Users\noooop\anaconda3\Lib\site-packages\accelerate\big_modeling.py", line 455, in wrapper
     raise RuntimeError("You can't move a model that has some modules offloaded to cpu or disk.")
 RuntimeError: You can't move a model that has some modules offloaded to cpu or disk.
+
+Process finished with exit code 1
+
 ```
 
 ### Reference

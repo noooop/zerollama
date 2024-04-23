@@ -32,14 +32,13 @@ info_dict = {x[0]: {k: v for k, v in zip(info_header, x)} for x in info}
 
 
 if __name__ == '__main__':
-    import time
     import gc
     import torch
 
-    def run(model_name):
+    def run(model_name, model_class, stream=False):
         print("=" * 80)
 
-        model = MiniCPM(model_name, local_files_only=False)
+        model = model_class(model_name, local_files_only=False)
         model.load()
         print(model.model_info)
 
@@ -49,16 +48,21 @@ if __name__ == '__main__':
             {"role": "user", "content": prompt}
         ]
 
-        for response in model.stream_chat(messages):
-            print(response, end="")
-        print()
+        if stream:
+            for response in model.stream_chat(messages):
+                print(response, end="")
+            print()
+        else:
+            print(model.chat(messages))
 
     for model_name in ["openbmb/MiniCPM-2B-sft-bf16",
                        "openbmb/MiniCPM-2B-dpo-bf16"]:
-        run(model_name)
+        run(model_name, MiniCPM, stream=False)
 
-        gc.collect()
-        torch.cuda.empty_cache()
+        print(torch.cuda.memory_allocated() / 1024 ** 2)
 
-        print(torch.cuda.memory_summary())
+    for model_name in ["openbmb/MiniCPM-2B-sft-bf16",
+                       "openbmb/MiniCPM-2B-dpo-bf16"]:
+        run(model_name, MiniCPM, stream=True)
+
         print(torch.cuda.memory_allocated() / 1024 ** 2)

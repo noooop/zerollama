@@ -4,8 +4,8 @@ from zerollama.inference_backend.hf_transformers.main import HuggingFaceTransfor
 
 
 class Qwen1_5(HuggingFaceTransformersChat):
-    def __init__(self, model_name, device="cuda"):
-        HuggingFaceTransformersChat.__init__(self, model_name, info_dict, device)
+    def __init__(self, model_name, device="cuda", **kwargs):
+        HuggingFaceTransformersChat.__init__(self, model_name, info_dict, device, **kwargs)
 
 
 info_header = ["name", "family", "type", "size", "quantization", "bits"]
@@ -51,15 +51,14 @@ info_dict = {x[0]: {k: v for k, v in zip(info_header, x)} for x in info}
 
 
 if __name__ == '__main__':
-    for model_name in ["Qwen/Qwen1.5-0.5B-Chat",
-                      #"Qwen/Qwen1.5-0.5B-Chat-GPTQ-Int8",
-                       "Qwen/Qwen1.5-0.5B-Chat-GPTQ-Int4",
-                       "Qwen/Qwen1.5-0.5B-Chat-AWQ"]:
-        print("\n\n")
+    import torch
+
+    def run(model_name, model_class, stream=False):
         print("=" * 80)
-        qwen = Qwen1_5(model_name)
-        qwen.load()
-        print(qwen.model_info)
+
+        model = model_class(model_name, local_files_only=False)
+        model.load()
+        print(model.model_info)
 
         prompt = "给我介绍一下大型语言模型。"
 
@@ -67,5 +66,25 @@ if __name__ == '__main__':
             {"role": "user", "content": prompt}
         ]
 
-        for response in qwen.stream_chat(messages):
-            print(response, end="")
+        if stream:
+            for response in model.stream_chat(messages):
+                print(response, end="")
+            print()
+        else:
+            print(model.chat(messages))
+
+    for model_name in ["Qwen/Qwen1.5-0.5B-Chat",
+                      #"Qwen/Qwen1.5-0.5B-Chat-GPTQ-Int8",
+                       "Qwen/Qwen1.5-0.5B-Chat-GPTQ-Int4",
+                       "Qwen/Qwen1.5-0.5B-Chat-AWQ"]:
+        run(model_name, Qwen1_5, stream=False)
+
+        print(torch.cuda.memory_allocated() / 1024 ** 2)
+
+    for model_name in ["Qwen/Qwen1.5-0.5B-Chat",
+                      #"Qwen/Qwen1.5-0.5B-Chat-GPTQ-Int8",
+                       "Qwen/Qwen1.5-0.5B-Chat-GPTQ-Int4",
+                       "Qwen/Qwen1.5-0.5B-Chat-AWQ"]:
+        run(model_name, Qwen1_5, stream=True)
+
+        print(torch.cuda.memory_allocated() / 1024 ** 2)
