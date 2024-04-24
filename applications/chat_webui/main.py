@@ -1,24 +1,8 @@
-from multiprocess import Process
-
-
-class HttpGateway(Process):
-    def run(self):
-        import subprocess
-        h = subprocess.Popen("python -m applications.chat_webui.http_gateway", shell=True)
-        print("gateway running!")
-        try:
-            h.wait()
-        except (KeyboardInterrupt, EOFError):
-            pass
-        finally:
-            print("HttpGateway clean_up!")
-
-    def wait(self):
-        pass
 
 
 if __name__ == '__main__':
     from zerollama.core.framework.zero.server import ZeroServerProcess
+    from zerollama.entrypoints.main import HttpEntrypoint
 
     name = "ZeroInferenceManager"
     server_class = "zerollama.core.framework.inference_engine.server:ZeroInferenceEngine"
@@ -29,9 +13,13 @@ if __name__ == '__main__':
                                     "name": name,
                                     "server_class": server_class
                                 })
-    gateway = HttpGateway()
+    entrypoint1 = HttpEntrypoint(server_class="zerollama.entrypoints.ollama_compatible.api:app",
+                                 server_kwargs={"port": 11434})
 
-    handle = [nameserver, manager, gateway]
+    entrypoint2 = HttpEntrypoint(server_class="zerollama.entrypoints.openai_compatible.api:app",
+                                 server_kwargs={"port": 8080})
+
+    handle = [nameserver, manager, entrypoint1, entrypoint2]
     for h in handle:
         h.start()
 
