@@ -8,7 +8,8 @@ from queue import Queue
 class Socket(object):
     def __init__(self, context, addr):
         self.addr = addr
-        self.socket = context.socket(zmq.REQ)
+        self.uuid = uuid4().hex.encode("utf-8")
+        self.socket = context.socket(zmq.DEALER)
         self.socket.set_string(zmq.IDENTITY, uuid4().hex)
         self.socket.connect(addr)
 
@@ -102,9 +103,17 @@ class Client(object):
             try:
                 socket.send(data)
 
-                yield socket.recv()
-                while socket.getsockopt(zmq.RCVMORE):
-                    yield socket.recv()
+                data = socket.recv()
+                data = json.loads(data)
+                yield data
+
+                while not data["done"]:
+                    data = socket.recv()
+                    data = json.loads(data)
+                    yield data
+
+                    if data["done"]:
+                        break
 
                 socket_pool.put(socket, self.addr)
                 return
@@ -130,7 +139,7 @@ class Client(object):
             print(data)
 
         for part in self._stream_query(data=data, **kwargs):
-            yield json.loads(part)
+            yield part
 
 
 class Z_Client(Client):

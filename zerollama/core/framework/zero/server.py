@@ -11,7 +11,7 @@ class ZeroServer(object):
 
     def __init__(self, name=None, protocol=None, port=None, event=None, do_register=True, share_port=None, nameserver_port=None):
         context = zmq.Context()
-        socket = context.socket(zmq.REP)
+        socket = context.socket(zmq.ROUTER)
         if port is None or port == "random":
             port = socket.bind_to_random_port("tcp://*", min_port=50000, max_port=60000)
         else:
@@ -58,9 +58,9 @@ class ZeroServer(object):
         print(f"{self.__class__.__name__} clean_up!")
 
     def process(self):
-        msg = self.socket.recv()
+        uuid, msg = self.socket.recv_multipart()
         print(msg)
-        self.socket.send(b"ok")
+        self.socket.send_multipart(uuid+[b"ok"])
 
     def run(self):
         self.init()
@@ -91,43 +91,46 @@ class ZeroServer(object):
 
         self.clean_up()
 
-    def handle_error(self, err_msg):
+    def handle_error(self, uuid, err_msg):
         response = json.dumps({
             "state": "error",
             "msg": err_msg
         }).encode('utf8')
 
-        self.socket.send(response)
+        self.socket.send_multipart(uuid+[response])
 
 
 class Z_MethodZeroServer(ZeroServer):
     def process(self):
-        msg = self.socket.recv()
+        uuid, msg = self.socket.recv_multipart()
+        uuid = [uuid]
+
         try:
             msg = json.loads(msg)
         except json.JSONDecodeError as e:
             traceback.print_exc()
-            self.handle_error(err_msg=str(e))
+            self.handle_error(uuid, err_msg=str(e))
             return
 
         if "method" not in msg:
-            self.handle_error(err_msg="'method' not in msg")
+            self.handle_error(uuid, err_msg="'method' not in msg")
             return
 
         method_name = msg["method"]
         method = getattr(self, "z_"+method_name, self.default)
 
         try:
-            method(msg)
+            method(uuid, msg)
         except Exception as e:
-            self.handle_error(err_msg=str(e))
+            traceback.print_exc()
+            self.handle_error(uuid, err_msg=str(e))
             return
 
-    def default(self, msg):
+    def default(self, uuid, msg):
         method_name = msg["method"]
-        self.handle_error(err_msg=f"method [{method_name}] not supported.")
+        self.handle_error(uuid, err_msg=f"method [{method_name}] not supported.")
 
-    def z_support_methods(self, msg):
+    def z_support_methods(self, uuid, msg):
         support_methods = [m[2:] for m in dir(self) if m.startswith('z_')]
 
         response = json.dumps({
@@ -135,7 +138,7 @@ class Z_MethodZeroServer(ZeroServer):
             "support_methods": support_methods
         }).encode('utf8')
 
-        self.socket.send(response)
+        self.socket.send_multipart(uuid+[response])
 
 
 class ZeroServerProcess(Process):

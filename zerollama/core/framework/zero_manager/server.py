@@ -25,22 +25,22 @@ class ZeroManager(Z_MethodZeroServer):
                 pass
         super().clean_up()
 
-    def z_start(self, msg):
+    def z_start(self, uuid, msg):
         if "model_class" not in msg:
             err_msg = "'model_class' not in msg"
-            self.handle_error(err_msg)
+            self.handle_error(uuid, err_msg)
             return
         model_class = msg['model_class']
 
         if "model_kwargs" not in msg:
             err_msg = "'model_kwargs' not in msg"
-            self.handle_error(err_msg)
+            self.handle_error(uuid, err_msg)
             return
         model_kwargs = msg['model_kwargs']
 
         if "name" not in msg:
             err_msg = "'name' not in msg"
-            self.handle_error(err_msg)
+            self.handle_error(uuid, err_msg)
             return
 
         name = msg["name"]
@@ -50,7 +50,7 @@ class ZeroManager(Z_MethodZeroServer):
                 "state": "ok",
                 "msg": {"already_started": True}
             }).encode('utf8')
-            self.socket.send(response)
+            self.socket.send_multipart(uuid+[response])
             return
 
         try:
@@ -61,7 +61,7 @@ class ZeroManager(Z_MethodZeroServer):
                                        })
             engine.start()
         except Exception as e:
-            self.handle_error(err_msg=str(e))
+            self.handle_error(uuid, err_msg=str(e))
             return
 
         self._inference_engines[name] = engine
@@ -69,12 +69,12 @@ class ZeroManager(Z_MethodZeroServer):
             "state": "ok",
             "msg": {"already_started": False}
         }).encode('utf8')
-        self.socket.send(response)
+        self.socket.send_multipart(uuid+[response])
 
-    def z_terminate(self, msg):
+    def z_terminate(self, uuid, msg):
         if "name" not in msg:
             err_msg = "'name' not in msg"
-            self.handle_error(err_msg)
+            self.handle_error(uuid, err_msg)
             return
         name = msg["name"]
 
@@ -83,28 +83,28 @@ class ZeroManager(Z_MethodZeroServer):
                 "state": "ok",
                 "msg": {"founded": False}
             }).encode('utf8')
-            self.socket.send(response)
+            self.socket.send_multipart(uuid+[response])
             return
 
         try:
             engine = self._inference_engines.pop(name)
             engine.terminate()
         except Exception as e:
-            self.handle_error(err_msg=str(e))
+            self.handle_error(uuid, err_msg=str(e))
             return
 
         response = json.dumps({
             "state": "ok",
             "msg": {"founded": True}
         }).encode('utf8')
-        self.socket.send(response)
+        self.socket.send_multipart(uuid+[response])
 
-    def z_list(self, msg):
+    def z_list(self, uuid, msg):
         response = json.dumps({
             "state": "ok",
             "msg": list(self._inference_engines.keys())
         }).encode('utf8')
-        self.socket.send(response)
+        self.socket.send_multipart(uuid+[response])
 
 
 if __name__ == '__main__':

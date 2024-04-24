@@ -131,10 +131,10 @@ class ZeroNameServer(Z_MethodZeroServer):
 
         return ok, server
 
-    def z_register(self, msg):
+    def z_register(self, uuid, msg):
         ok, out = self.clean(msg)
         if not ok:
-            self.handle_error(err_msg=out)
+            self.handle_error(uuid, err_msg=out)
             return
 
         server = out
@@ -145,12 +145,12 @@ class ZeroNameServer(Z_MethodZeroServer):
             "msg": "register success"
         }).encode('utf8')
 
-        self.socket.send(response)
+        self.socket.send_multipart(uuid+[response])
 
-    def z_deregister(self, msg):
+    def z_deregister(self, uuid, msg):
         ok, out = self.clean(msg)
         if not ok:
-            self.handle_error(err_msg=out)
+            self.handle_error(uuid, err_msg=out)
             return
 
         server = out
@@ -161,18 +161,18 @@ class ZeroNameServer(Z_MethodZeroServer):
             "msg": {"founded": founded}
         }).encode('utf8')
 
-        self.socket.send(response)
+        self.socket.send_multipart(uuid+[response])
 
-    def z_get_services(self, msg):
+    def z_get_services(self, uuid, msg):
         if "protocol" not in msg:
             err_msg = "'protocol' not in msg"
-            self.handle_error(err_msg)
+            self.handle_error(uuid, err_msg)
             return
         protocol = msg['protocol']
 
         if "name" not in msg:
             err_msg = "'name' not in msg"
-            self.handle_error(err_msg)
+            self.handle_error(uuid, err_msg)
             return
 
         name = msg['name']
@@ -182,12 +182,12 @@ class ZeroNameServer(Z_MethodZeroServer):
             "state": "ok",
             "msg": {"services": services}
         }).encode('utf8')
-        self.socket.send(response)
+        self.socket.send_multipart(uuid+[response])
 
-    def z_get_service_names(self, msg):
+    def z_get_service_names(self, uuid, msg):
         if "protocol" not in msg:
             err_msg = "'protocol' not in msg"
-            self.handle_error(err_msg)
+            self.handle_error(uuid, err_msg)
             return
 
         protocol = msg['protocol']
@@ -197,7 +197,7 @@ class ZeroNameServer(Z_MethodZeroServer):
             "state": "ok",
             "msg": {"service_names": service_names}
         }).encode('utf8')
-        self.socket.send(response)
+        self.socket.send_multipart(uuid+[response])
 
 
 def nameserver(nameserver_class=None):

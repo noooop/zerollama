@@ -25,15 +25,15 @@ class ZeroInferenceEngine(Z_MethodZeroServer):
         self.model.load()
         print("ZeroInferenceEngine: ", self.name, "is running!", "port:", self.port)
 
-    def z_inference(self, msg):
+    def z_inference(self, uuid, msg):
         if "model" not in msg:
-            self.handle_error(err_msg="'model' not in msg")
+            self.handle_error(uuid, err_msg="'model' not in msg")
             return
 
         model = msg["model"]
 
         if model != self.model.model_name:
-            self.handle_error(err_msg=f"model '{model}' not supported!")
+            self.handle_error(uuid, err_msg=f"model '{model}' not supported!")
             return
 
         messages = msg.get("messages", list())
@@ -44,13 +44,13 @@ class ZeroInferenceEngine(Z_MethodZeroServer):
             if stream:
                 for rep in self.model.stream_chat(messages, options):
                     response = json.dumps(rep).encode('utf8')
-                    self.socket.send(response, zmq.SNDMORE)
+                    self.socket.send_multipart(uuid + [response])
             else:
                 rep = self.model.chat(messages, options)
                 response = json.dumps(rep).encode('utf8')
-                self.socket.send(response)
+                self.socket.send_multipart(uuid + [response])
         except Exception:
-            self.handle_error(err_msg="ZeroInferenceEngine error")
+            self.handle_error(uuid, err_msg="ZeroInferenceEngine error")
 
 
 if __name__ == '__main__':
