@@ -63,12 +63,13 @@ def run(model_name):
 
                 messages.append({"role": "user", "content": prompt})
 
-                print(f"({model_name}:)\n")
+                print(f"({model_name}:)\n", flush=True)
                 content = ""
                 for response in chat_client.stream_chat(model_name, messages):
-                    print(response["content"], end="")
-                    content += response["content"]
-                print("\n")
+                    if not response["done"]:
+                        print(response["content"], end="", flush=True)
+                        content += response["content"]
+                print("\n", flush=True)
                 messages.append({"role": "assistant", "content": content})
                 i += 1
     except (KeyboardInterrupt, EOFError):
