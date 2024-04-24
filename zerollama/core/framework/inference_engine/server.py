@@ -42,30 +42,13 @@ class ZeroInferenceEngine(Z_MethodZeroServer):
 
         try:
             if stream:
-                try:
-                    for content in self.model.stream_chat(messages, options):
-                        response = json.dumps({
-                            "model": model,
-                            "content": content,
-                            "done": False,
-                        }).encode('utf8')
-                        self.socket.send(response, zmq.SNDMORE)
-                finally:
-                    response = json.dumps({
-                        "model": model,
-                        "content": "",
-                        "done": True,
-                    }).encode('utf8')
-                    self.socket.send(response)
+                for rep in self.model.stream_chat(messages, options):
+                    response = json.dumps(rep).encode('utf8')
+                    self.socket.send(response, zmq.SNDMORE)
             else:
-                content = self.model.chat(messages, options)
-                response = json.dumps({
-                    "model": model,
-                    "content": content,
-                }).encode('utf8')
-
+                rep = self.model.chat(messages, options)
+                response = json.dumps(rep).encode('utf8')
                 self.socket.send(response)
-
         except Exception:
             self.handle_error(err_msg="ZeroInferenceEngine error")
 

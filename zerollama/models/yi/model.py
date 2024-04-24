@@ -25,37 +25,18 @@ info_dict = {x[0]: {k: v for k, v in zip(info_header, x)} for x in info}
 
 if __name__ == '__main__':
     import torch
-
-    def run(model_name, model_class, stream=False):
-        print("=" * 80)
-
-        model = model_class(model_name, local_files_only=False)
-        model.load()
-        print(model.model_info)
-
-        prompt = "给我介绍一下大型语言模型。"
-
-        messages = [
-            {"role": "user", "content": prompt}
-        ]
-
-        if stream:
-            for response in model.stream_chat(messages):
-                print(response, end="")
-            print()
-        else:
-            print(model.chat(messages))
+    from zerollama.inference_backend.hf_transformers.main import run_test
 
     for model_name in [#"01-ai/Yi-6B-Chat",
                        #"01-ai/Yi-6B-Chat-8bits",
                        "01-ai/Yi-6B-Chat-4bits"]:
-        run(model_name, Yi, stream=False)
+        run_test(model_name, Yi, stream=False)
 
         print(torch.cuda.memory_allocated() / 1024 ** 2)
 
     for model_name in [#"01-ai/Yi-6B-Chat",
                        #"01-ai/Yi-6B-Chat-8bits",
                        "01-ai/Yi-6B-Chat-4bits"]:
-        run(model_name, Yi, stream=True)
+        run_test(model_name, Yi, stream=True)
 
         print(torch.cuda.memory_allocated() / 1024 ** 2)
