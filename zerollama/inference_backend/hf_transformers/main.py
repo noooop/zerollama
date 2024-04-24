@@ -87,8 +87,6 @@ class HuggingFaceTransformersChat(HuggingFaceTransformers, ChatInterfaces):
         options = options or dict()
         max_new_tokens = options.get("max_new_tokens", 512)
 
-        messages = [{"role": "system", "content": "你是一个有用的助手。"}] + messages
-
         text = self.tokenizer.apply_chat_template(
             messages,
             tokenize=False,
@@ -105,18 +103,20 @@ class HuggingFaceTransformersChat(HuggingFaceTransformers, ChatInterfaces):
 
         prompt_length = len(model_inputs.input_ids[0])
 
-        response = self.tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]
+        content = self.tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]
 
         response_length = len(generated_ids[0])
 
-        return response
+        return {"model": self.model_name,
+                "prompt_length": prompt_length,
+                "content": content,
+                "response_length": response_length,
+                "finish_reason": "stop" if response_length < max_new_tokens else "length"}
 
     @torch.no_grad()
     def stream_chat(self, messages, options=None):
         options = options or dict()
         max_new_tokens = options.get("max_new_tokens", 512)
-
-        messages = [{"role": "system", "content": "你是一个有用的助手。"}] + messages
 
         text = self.tokenizer.apply_chat_template(
             messages,
@@ -125,14 +125,47 @@ class HuggingFaceTransformersChat(HuggingFaceTransformers, ChatInterfaces):
         )
         model_inputs = self.tokenizer([text], return_tensors="pt").to(self.device)
 
+        prompt_length = len(model_inputs.input_ids[0])
+
         generation_kwargs = dict(model_inputs, streamer=self.streamer, max_new_tokens=max_new_tokens)
 
         thread = Thread(target=self.model.generate, kwargs=generation_kwargs)
         thread.start()
 
-        for new_text in self.streamer:
-            if not new_text:
-                continue
-            yield new_text
+        response_length = 0
+
+        for content in self.streamer:
+            response_length += 1
+            yield {"model": self.model_name, "content": content, "done": False}
+
+        yield {"model": self.model_name,
+               "prompt_length": prompt_length,
+               "response_length": response_length,
+               "finish_reason": "stop" if response_length < max_new_tokens else "length",
+               "done": True}
 
 
+def run_test(model_name, model_class, stream=False):
+    print("=" * 80)
+
+    model = model_class(model_name, local_files_only=False)
+    model.load()
+    print(model.model_info)
+
+    prompt = "给我介绍一下大型语言模型。"
+
+    messages = [
+        {"role": "user", "content": prompt}
+    ]
+
+    if stream:
+        for response in model.stream_chat(messages):
+            if not response["done"]:
+                print(response["content"], end="")
+            else:
+                print()
+                print("response_length:", response["response_length"])
+    else:
+        response = model.chat(messages)
+        print(response["content"])
+        print("response_length:", response["response_length"])
