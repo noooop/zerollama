@@ -135,6 +135,8 @@ class HuggingFaceTransformersChat(HuggingFaceTransformers, ChatInterfaces):
         response_length = 0
 
         for content in self.streamer:
+            if not content:
+                continue
             response_length += 1
             yield {"model": self.model_name, "content": content, "done": False}
 
