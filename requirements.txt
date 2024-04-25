@@ -9,3 +9,4 @@ modelscope==1.13.3
 easydict==1.13
 uvicorn==0.29.0
 fastapi==0.110.2
+pydantic==2.7.1

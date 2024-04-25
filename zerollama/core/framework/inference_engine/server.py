@@ -1,6 +1,8 @@
-import zmq
+
 import json
 from zerollama.core.framework.zero.server import Z_MethodZeroServer
+from zerollama.core.framework.inference_engine.protocol import ChatCompletionRequest
+from zerollama.core.framework.inference_engine.protocol import ZeroServerResponseOk, ZeroServerStreamResponseOk
 
 
 class ZeroInferenceEngine(Z_MethodZeroServer):
@@ -25,32 +27,16 @@ class ZeroInferenceEngine(Z_MethodZeroServer):
         self.model.load()
         print("ZeroInferenceEngine: ", self.name, "is running!", "port:", self.port)
 
-    def z_inference(self, uuid, msg):
-        if "model" not in msg:
-            self.handle_error(uuid, err_msg="'model' not in msg")
-            return
-
-        model = msg["model"]
-
-        if model != self.model.model_name:
-            self.handle_error(uuid, err_msg=f"model '{model}' not supported!")
-            return
-
-        messages = msg.get("messages", list())
-        options = msg.get("options", dict())
-        stream = msg.get("stream", True)
-
-        try:
-            if stream:
-                for rep in self.model.stream_chat(messages, options):
-                    response = json.dumps(rep).encode('utf8')
-                    self.socket.send_multipart(uuid + [response])
-            else:
-                rep = self.model.chat(messages, options)
-                response = json.dumps(rep).encode('utf8')
-                self.socket.send_multipart(uuid + [response])
-        except Exception:
-            self.handle_error(uuid, err_msg="ZeroInferenceEngine error")
+    def z_inference(self, req):
+        ccr = ChatCompletionRequest(**req.data)
+        if ccr.stream:
+            for rep_id, response in enumerate(self.model.stream_chat(ccr.messages, ccr.options)):
+                rep = ZeroServerStreamResponseOk(msg=response, snd_more=not response.done, rep_id=rep_id)
+                self.zero_send(req, rep)
+        else:
+            response = self.model.chat(ccr.messages, ccr.options)
+            rep = ZeroServerResponseOk(msg=response)
+            self.zero_send(req, rep)
 
 
 if __name__ == '__main__':

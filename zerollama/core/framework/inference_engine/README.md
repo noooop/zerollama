@@ -13,35 +13,39 @@ ZeroInferenceEngine:  Qwen/Qwen1.5-0.5B-Chat is running! port: 59296
 $ python -m zerollama.core.framework.inference_engine.client
 ================================================================================
 Wait Qwen/Qwen1.5-0.5B-Chat available
-[{'name': 'Qwen/Qwen1.5-0.5B-Chat', 'host': 'localhost', 'port': 57220, 'protocol': 'chat'}]
+[ServerInfo(name='Qwen/Qwen1.5-0.5B-Chat', host='localhost', port=51335, protocol='chat')]
 ================================================================================
 ZeroInferenceEngine support_methods
-{'state': 'ok', 'support_methods': ['inference', 'support_methods']}
+state='ok' msg={'support_methods': ['inference', 'support_methods']}
 ================================================================================
 stream == False
-{'content': '大型语言模型是一种强大的计算模型，它可以理解和生成人类可以使用的文本，并且能够处理大量的数据。它们通常由多层神经网络组成，这些神经网络可以模拟人类的自然语言处理能力。\n'
-            '\n'
-            '在大型语言模型中，训练集是用于训练和优化模型的大量数据。训练集中的数据通常包含已知的句子，模型需要学习如何从这些句子中提取有用的特征，以产生有效的输出。模型会通过不断迭代和调整来提高其性能。\n'
-            '\n'
-            '大型语言模型在许多领域都有应用，包括但不限于语音识别、机器翻译、聊天机器人、自动问答系统等。它们也可以用于预测和分析复杂的模式，帮助人们更好地理解复杂的信息。',
- 'finish_reason': 'stop',
- 'model': 'Qwen/Qwen1.5-0.5B-Chat',
- 'prompt_length': 24,
- 'response_length': 143}
+大型语言模型是指具有大量训练数据的深度学习模型，它能够处理和理解复杂的自然语言任务，包括生成文本、问答、对话系统等。
+
+它们可以使用各种不同的技术来实现，例如卷积神经网络（CNN）、循环神经网络（RNN）、长短期记忆网络（LSTM）等。这些模型在处理复杂自然语言问题时通常可以比传统的机器学习模型更快、更准确地完成任务。
+
+常见的大型语言模型有：
+
+1. spaCy：这是一个开源的预训练深度学习模型，用于处理中文文本。它包含了大量的语料库，并且支持多种语言。
+
+2. Gensim：一个基于深度强化学习的自然语言处理模型，它可以理解和生成人类写作风格的高质量文本。
+
+3. Word2Vec：这是一个基于词向量的文本分类和识别模型，它可以从大规模的数据中提取出词语的表示模式，从而帮助我们理解文本的意义。
+
+4. BERT：这是Bert的升级版本，它的学习能力更强，可以在大量的语言数据上进行训练。
+
+5. Yann LeCun：这是LeCun教授开发的一种深度学习方法，可以帮助我们建立一个高效的自动问答系统。
+
+以上只是一些大型语言模型的例子，实际上还有很多其他的大规模语言模型也在不断出现和发展。
+response_length: 267
 ================================================================================
 stream == True
-{'content': '大型', 'done': False, 'model': 'Qwen/Qwen1.5-0.5B-Chat'}
-{'content': '语言', 'done': False, 'model': 'Qwen/Qwen1.5-0.5B-Chat'}
-{'content': '模型', 'done': False, 'model': 'Qwen/Qwen1.5-0.5B-Chat'}
+ZeroServerResponse(state='ok', msg=ChatCompletionStreamResponse(model='Qwen/Qwen1.5-0.5B-Chat', prompt_length=24, response_length=1, finish_reason=None, content='大型', done=False))
+ZeroServerResponse(state='ok', msg=ChatCompletionStreamResponse(model='Qwen/Qwen1.5-0.5B-Chat', prompt_length=24, response_length=2, finish_reason=None, content='语言', done=False))
+ZeroServerResponse(state='ok', msg=ChatCompletionStreamResponse(model='Qwen/Qwen1.5-0.5B-Chat', prompt_length=24, response_length=3, finish_reason=None, content='模型', done=False))
 ...
-{'content': '', 'done': False, 'model': 'Qwen/Qwen1.5-0.5B-Chat'}
-{'content': '', 'done': False, 'model': 'Qwen/Qwen1.5-0.5B-Chat'}
-{'content': '。', 'done': False, 'model': 'Qwen/Qwen1.5-0.5B-Chat'}
-{'done': True,
- 'finish_reason': 'stop',
- 'model': 'Qwen/Qwen1.5-0.5B-Chat',
- 'prompt_length': 24,
- 'response_length': 172}
+ZeroServerResponse(state='ok', msg=ChatCompletionStreamResponse(model='Qwen/Qwen1.5-0.5B-Chat', prompt_length=24, response_length=152, finish_reason=None, content='利用', done=False))
+ZeroServerResponse(state='ok', msg=ChatCompletionStreamResponse(model='Qwen/Qwen1.5-0.5B-Chat', prompt_length=24, response_length=153, finish_reason=None, content='。', done=False))
+ZeroServerResponse(state='ok', msg=ChatCompletionStreamResponse(model='Qwen/Qwen1.5-0.5B-Chat', prompt_length=24, response_length=153, finish_reason='stop', content=None, done=True))
 
 # 第一个窗口 Control-C 关闭 
 ZeroNameServer clean_up!

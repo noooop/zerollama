@@ -49,7 +49,7 @@ def health():
 @app.get("/v1/models")
 async def show_available_models() -> ModelList:
     response = chat_client.get_service_names()
-    services = response["msg"]["service_names"]
+    services = response.msg["service_names"]
     services.sort()
 
     model_cards = [

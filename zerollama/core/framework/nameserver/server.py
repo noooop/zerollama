@@ -1,15 +1,16 @@
 
-import json
 from zerollama.core.framework.zero.server import Z_MethodZeroServer
+from zerollama.core.framework.nameserver.protocol import ZeroServerRequest, ZeroServerResponseOk
+from zerollama.core.framework.nameserver.protocol import ServerInfo, GetServicesRequest, GetServiceNamesRequest
 
 NameServerPort = 9527
 
 
 class NameServerInterfaces(object):
-    def register(self, server):
+    def register(self, server_info: ServerInfo):
         raise NotImplementedError
 
-    def deregister(self, server):
+    def deregister(self, server_info: ServerInfo):
         # https://english.stackexchange.com/questions/25931/unregister-vs-deregister
         raise NotImplementedError
 
@@ -24,9 +25,9 @@ class InMemoryNameServer(NameServerInterfaces):
     def __init__(self):
         self.domain = dict()
 
-    def register(self, server):
-        name = server["name"]
-        protocol = server["protocol"]
+    def register(self, server_info: ServerInfo):
+        name = server_info.name
+        protocol = server_info.protocol
 
         if protocol not in self.domain:
             self.domain[protocol] = {}
@@ -34,11 +35,11 @@ class InMemoryNameServer(NameServerInterfaces):
         if name not in self.domain[protocol]:
             self.domain[protocol][name] = []
 
-        self.domain[protocol][name].append(server)
+        self.domain[protocol][name].append(server_info)
 
-    def deregister(self, server):
-        name = server["name"]
-        protocol = server["protocol"]
+    def deregister(self, server_info: ServerInfo):
+        name = server_info.name
+        protocol = server_info.protocol
 
         if protocol not in self.domain:
             return False
@@ -48,10 +49,10 @@ class InMemoryNameServer(NameServerInterfaces):
 
         services = self.domain[protocol][name]
 
-        if server not in services:
+        if server_info not in services:
             return False
 
-        services = [s for s in services if s != server]
+        services = [s for s in services if s != server_info]
         if len(services) > 0:
             self.domain[protocol][name] = services
         else:
@@ -60,11 +61,12 @@ class InMemoryNameServer(NameServerInterfaces):
         return True
 
     def get_services(self, protocol, name):
-        services = self.domain.get(protocol, dict()).get(name, None)
+        services = self.domain.get(protocol, dict()).get(name, list())
         return services
 
     def get_service_names(self, protocol):
-        return list(self.domain.get(protocol, dict()).keys())
+        service_names = list(self.domain.get(protocol, dict()).keys())
+        return service_names
 
 
 class ZeroNameServer(Z_MethodZeroServer):
@@ -82,122 +84,31 @@ class ZeroNameServer(Z_MethodZeroServer):
         self._nameserver = self.nameserver_class()
         print(f"ZeroNameServer: {self.nameserver_class.__name__} running!", "port:", self.port)
 
-    def clean(self, msg):
-        ok = False
+    def z_register(self, req: ZeroServerRequest):
+        server_info = ServerInfo(**req.data)
+        self._nameserver.register(server_info)
 
-        if "server" not in msg:
-            err_msg = "'server' not in msg"
-            return ok, err_msg
+        rep = ZeroServerResponseOk(msg={"register": "success"})
+        self.zero_send(req, rep)
 
-        server = msg["server"]
+    def z_deregister(self, req):
+        server_info = ServerInfo(**req.data)
+        founded = self._nameserver.deregister(server_info)
+        rep = ZeroServerResponseOk(msg={"founded": founded})
+        self.zero_send(req, rep)
 
-        if "name" not in server:
-            err_msg = "'name' not in msg.server"
-            return ok, err_msg
+    def z_get_services(self, req):
+        kwargs = GetServicesRequest(**req.data)
+        services = self._nameserver.get_services(kwargs.protocol, kwargs.name)
 
-        name = server["name"]
+        rep = ZeroServerResponseOk(msg={"services": services})
+        self.zero_send(req, rep)
 
-        if "host" not in server:
-            err_msg = "'host' not in msg.server"
-            return ok, err_msg
-
-        host = server["host"]
-
-        if "port" not in server:
-            err_msg = "'port' not in msg.server"
-            return ok, err_msg
-
-        port = server["port"]
-
-        try:
-            port = int(port)
-        except ValueError:
-            err_msg = f"'port' must be int, [{port}] founded."
-            return ok, err_msg
-
-        if 'protocol' not in server:
-            err_msg = "'protocol' not in msg.server"
-            return ok, err_msg
-
-        protocol = server["protocol"]
-
-        ok = True
-        server = {
-            "name": name,
-            "host": host,
-            "port": port,
-            "protocol": protocol
-        }
-
-        return ok, server
-
-    def z_register(self, uuid, msg):
-        ok, out = self.clean(msg)
-        if not ok:
-            self.handle_error(uuid, err_msg=out)
-            return
-
-        server = out
-        self._nameserver.register(server)
-
-        response = json.dumps({
-            "state": "ok",
-            "msg": "register success"
-        }).encode('utf8')
-
-        self.socket.send_multipart(uuid+[response])
-
-    def z_deregister(self, uuid, msg):
-        ok, out = self.clean(msg)
-        if not ok:
-            self.handle_error(uuid, err_msg=out)
-            return
-
-        server = out
-        founded = self._nameserver.deregister(server)
-
-        response = json.dumps({
-            "state": "ok",
-            "msg": {"founded": founded}
-        }).encode('utf8')
-
-        self.socket.send_multipart(uuid+[response])
-
-    def z_get_services(self, uuid, msg):
-        if "protocol" not in msg:
-            err_msg = "'protocol' not in msg"
-            self.handle_error(uuid, err_msg)
-            return
-        protocol = msg['protocol']
-
-        if "name" not in msg:
-            err_msg = "'name' not in msg"
-            self.handle_error(uuid, err_msg)
-            return
-
-        name = msg['name']
-
-        services = self._nameserver.get_services(protocol, name)
-        response = json.dumps({
-            "state": "ok",
-            "msg": {"services": services}
-        }).encode('utf8')
-        self.socket.send_multipart(uuid+[response])
-
-    def z_get_service_names(self, uuid, msg):
-        if "protocol" not in msg:
-            err_msg = "'protocol' not in msg"
-            self.handle_error(uuid, err_msg)
-            return
-
-        protocol = msg['protocol']
-
-        service_names = self._nameserver.get_service_names(protocol)
-        response = json.dumps({
-            "state": "ok",
-            "msg": {"service_names": service_names}
-        }).encode('utf8')
-        self.socket.send_multipart(uuid+[response])
+    def z_get_service_names(self, req):
+        kwargs = GetServiceNamesRequest(**req.data)
+        service_names = self._nameserver.get_service_names(kwargs.protocol)
+        rep = ZeroServerResponseOk(msg={"service_names": service_names})
+        self.zero_send(req, rep)
 
 
 def nameserver(nameserver_class=None):

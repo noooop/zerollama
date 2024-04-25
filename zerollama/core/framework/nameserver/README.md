@@ -13,15 +13,15 @@ $ python -m zerollama.core.framework.nameserver.test.InMemoryNameServer
 ================================================================================
 init
 []
-None
+[]
 ================================================================================
 register
 ['Qwen/Qwen1.5-0.5B-Chat']
-[{'host': 'localhost', 'port': 9527, 'name': 'Qwen/Qwen1.5-0.5B-Chat', 'protocol': 'chat'}]
+[ServerInfo(name='Qwen/Qwen1.5-0.5B-Chat', host='localhost', port=9527, protocol='chat')]
 ================================================================================
 deregister
 []
-None
+[]
 ```
 
 ## NameServer客户端
@@ -34,19 +34,21 @@ ZeroNameServer: InMemoryNameServer running! port: 9527
 $ python -m zerollama.core.framework.nameserver.client
 ================================================================================
 NameServer support_methods
-{'state': 'ok', 'support_methods': ['deregister', 'get_service_names', 'get_services', 'register', 'support_methods']}
+state='ok' msg={'support_methods': ['deregister', 'get_service_names', 'get_services', 'register', 'support_methods']}
 ================================================================================
 init
-{'state': 'ok', 'msg': {'service_names': []}}
-{'state': 'ok', 'msg': {'services': None}}
+state='ok' msg={'service_names': []}
+state='ok' msg={'services': []}
 ================================================================================
 register
-{'state': 'ok', 'msg': {'service_names': ['Qwen/Qwen1.5-0.5B-Chat']}}
-{'state': 'ok', 'msg': {'services': [{'name': 'Qwen/Qwen1.5-0.5B-Chat', 'host': 'localhost', 'port': 9527, 'protocol': 'chat'}]}}
+state='ok' msg={'register': 'success'}
+state='ok' msg={'service_names': ['Qwen/Qwen1.5-0.5B-Chat']}
+state='ok' msg={'services': [ServerInfo(name='Qwen/Qwen1.5-0.5B-Chat', host='localhost', port=9527, protocol='chat')]}
 ================================================================================
 deregister
-{'state': 'ok', 'msg': {'service_names': []}}
-{'state': 'ok', 'msg': {'services': None}}
+state='ok' msg={'founded': True}
+state='ok' msg={'service_names': []}
+state='ok' msg={'services': []}
 
 # 第一个窗口 Control-C 关闭 
 ZeroNameServer clean_up!

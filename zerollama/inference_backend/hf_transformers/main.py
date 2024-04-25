@@ -5,7 +5,7 @@ import torch
 import requests
 from threading import Thread
 from zerollama.core.config.main import config_setup
-from zerollama.core.models.chat import ChatInterfaces
+from zerollama.core.models.chat import ChatInterfaces, ChatCompletionResponse, ChatCompletionStreamResponse
 
 
 class HuggingFaceTransformers(object):
@@ -107,11 +107,11 @@ class HuggingFaceTransformersChat(HuggingFaceTransformers, ChatInterfaces):
 
         response_length = len(generated_ids[0])
 
-        return {"model": self.model_name,
-                "prompt_length": prompt_length,
-                "content": content,
-                "response_length": response_length,
-                "finish_reason": "stop" if response_length < max_new_tokens else "length"}
+        return ChatCompletionResponse(**{"model": self.model_name,
+                                         "prompt_length": prompt_length,
+                                         "content": content,
+                                         "response_length": response_length,
+                                         "finish_reason": "stop" if response_length < max_new_tokens else "length"})
 
     @torch.no_grad()
     def stream_chat(self, messages, options=None):
@@ -138,13 +138,17 @@ class HuggingFaceTransformersChat(HuggingFaceTransformers, ChatInterfaces):
             if not content:
                 continue
             response_length += 1
-            yield {"model": self.model_name, "content": content, "done": False}
+            yield ChatCompletionStreamResponse(**{"model": self.model_name,
+                                                  "prompt_length": prompt_length,
+                                                  "response_length": response_length,
+                                                  "content": content,
+                                                  "done": False})
 
-        yield {"model": self.model_name,
-               "prompt_length": prompt_length,
-               "response_length": response_length,
-               "finish_reason": "stop" if response_length < max_new_tokens else "length",
-               "done": True}
+        yield ChatCompletionStreamResponse(**{"model": self.model_name,
+                                              "prompt_length": prompt_length,
+                                              "response_length": response_length,
+                                              "finish_reason": "stop" if response_length < max_new_tokens else "length",
+                                              "done": True})
 
 
 def run_test(model_name, model_class, stream=False):
@@ -162,12 +166,12 @@ def run_test(model_name, model_class, stream=False):
 
     if stream:
         for response in model.stream_chat(messages):
-            if not response["done"]:
-                print(response["content"], end="")
+            if not response.done:
+                print(response.content, end="")
             else:
                 print()
-                print("response_length:", response["response_length"])
+                print("response_length:", response.response_length)
     else:
         response = model.chat(messages)
-        print(response["content"])
-        print("response_length:", response["response_length"])
+        print(response.content)
+        print("response_length:", response.response_length)

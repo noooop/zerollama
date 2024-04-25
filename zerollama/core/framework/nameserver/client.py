@@ -2,8 +2,10 @@
 import time
 from random import choice
 from zerollama.core.framework.zero.client import Z_Client, Timeout
+from zerollama.core.framework.nameserver.protocol import ServerInfo, GetServicesRequest, GetServiceNamesRequest
 
 NameServerPort = 9527
+CLIENT_VALIDATION = True
 
 
 class NameServerClient(Z_Client):
@@ -16,34 +18,53 @@ class NameServerClient(Z_Client):
             self.port = port
         Z_Client.__init__(self, f"tcp://localhost:{self.port}")
 
-    def register(self, server):
+    def register(self, server_info):
+        if CLIENT_VALIDATION:
+            server_info = ServerInfo(**server_info).dict()
+
         data = {
             "method": "register",
-            "server": server
+            "data": server_info
         }
-        return self.json_query(data)
+        return self.query(data)
 
-    def deregister(self, server):
+    def deregister(self, server_info):
+        if CLIENT_VALIDATION:
+            server_info = ServerInfo(**server_info).dict()
+
         data = {
             "method": "deregister",
-            "server": server
+            "data": server_info
         }
-        return self.json_query(data)
+        return self.query(data)
 
     def get_services(self, protocol, name):
+        data = {"protocol": protocol, "name": name}
+
+        if CLIENT_VALIDATION:
+            data = GetServicesRequest(**data).dict()
+
         data = {
             "method": "get_services",
-            "protocol": protocol,
-            "name": name,
+            "data": data
         }
-        return self.json_query(data)
+
+        rep = self.query(data)
+        if rep.state == "ok":
+            rep.msg["services"] = [ServerInfo(**x) for x in rep.msg["services"]]
+        return rep
 
     def get_service_names(self, protocol):
+        data = {"protocol": protocol}
+
+        if CLIENT_VALIDATION:
+            data = GetServiceNamesRequest(**data).dict()
+
         data = {
             "method": "get_service_names",
-            "protocol": protocol,
+            "data": data
         }
-        return self.json_query(data)
+        return self.query(data)
 
 
 class ZeroClient(object):
@@ -55,12 +76,12 @@ class ZeroClient(object):
         return self.nameserver_client.get_service_names(self.protocol)
 
     def get_services(self, name):
-        response = self.nameserver_client.get_services(self.protocol, name)
+        rep = self.nameserver_client.get_services(self.protocol, name)
 
-        if response["state"] == "error":
+        if rep.state == "error":
             return None
 
-        services = response["msg"]["services"]
+        services = rep.msg["services"]
         if not services:
             return None
 
@@ -86,41 +107,45 @@ class ZeroClient(object):
             return None
 
         server = choice(services)
-        host = server["host"]
-        port = server["port"]
-
-        client = Z_Client(f"tcp://{host}:{port}")
+        client = Z_Client(f"tcp://{server.host}:{server.port}")
         return client
 
     def support_methods(self, name):
+        method = "support_methods"
         client = self.get_client(name)
         if client is None:
             return None
 
-        data = {"method": "support_methods"}
-        return self.json_query(name, data)
+        return self.query(name, method)
 
-    def json_query(self, name, data, **kwargs):
+    def query(self, name, method, data=None, **kwargs):
         client = self.get_client(name)
         if client is None:
             return None
+        if data is None:
+            data = {}
 
-        return client.json_query(data, **kwargs)
+        _data = {"method": method, "data": data}
+        return client.query(_data, **kwargs)
 
-    def json_stream_query(self, name, data, **kwargs):
+    def stream_query(self, name, method, data=None, **kwargs):
         client = self.get_client(name)
         if client is None:
             return None
+        if data is None:
+            data = {}
 
-        for part in client.json_stream_query(data, **kwargs):
+        _data = {"method": method, "data": data}
+        for part in client.stream_query(_data, **kwargs):
             yield part
 
 
 if __name__ == '__main__':
     client = NameServerClient()
+    CLIENT_VALIDATION = False
     name = "Qwen/Qwen1.5-0.5B-Chat"
     protocol = "chat"
-    qwen_server = {"host": "localhost", "port": 9527, "name": name, "protocol": protocol}
+    server_info = {"host": "localhost", "port": 9527, "name": name, "protocol": protocol}
 
     print("=" * 80)
     print('NameServer support_methods')
@@ -133,13 +158,13 @@ if __name__ == '__main__':
 
     print("=" * 80)
     print("register")
-    client.register(qwen_server)
+    print(client.register(server_info))
     print(client.get_service_names(protocol))
     print(client.get_services(protocol, name))
 
     print("=" * 80)
     print("deregister")
-    client.deregister(qwen_server)
+    print(client.deregister(server_info))
     print(client.get_service_names(protocol))
     print(client.get_services(protocol, name))
 

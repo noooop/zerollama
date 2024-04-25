@@ -65,10 +65,14 @@ def run(model_name):
 
                 print(f"({model_name}:)\n", flush=True)
                 content = ""
-                for response in chat_client.stream_chat(model_name, messages):
-                    if not response["done"]:
-                        print(response["content"], end="", flush=True)
-                        content += response["content"]
+                for rep in chat_client.stream_chat(model_name, messages):
+                    if rep.state != "ok":
+                        return
+                    rep = rep.msg
+
+                    if not rep.done:
+                        print(rep.content, end="", flush=True)
+                        content += rep.content
                 print("\n", flush=True)
                 messages.append({"role": "assistant", "content": content})
                 i += 1

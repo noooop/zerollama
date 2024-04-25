@@ -1,6 +1,9 @@
 
 
 from zerollama.core.framework.nameserver.client import ZeroClient
+from zerollama.core.framework.zero_manager.protocol import ChatCompletionResponse, StartRequest, TerminateRequest
+
+CLIENT_VALIDATION = True
 
 
 class ZeroManagerClient(ZeroClient):
@@ -11,26 +14,28 @@ class ZeroManagerClient(ZeroClient):
         ZeroClient.__init__(self, self.protocol)
 
     def start(self, model_name, model_class, model_kwargs):
-        data = {
-            "method": "start",
-            "name": model_name,
-            "model_class": model_class,
-            "model_kwargs": model_kwargs,
-        }
-        return self.json_query(self.name, data)
+        data = {"name": model_name,
+                "model_class": model_class,
+                "model_kwargs": model_kwargs}
+        method = "start"
+
+        if CLIENT_VALIDATION:
+            data = StartRequest(**data).dict()
+
+        return self.query(self.name, method, data)
 
     def terminate(self, model_name):
+        method = "terminate"
         data = {
-            "method": "terminate",
             "name": model_name,
         }
-        return self.json_query(self.name, data)
+        if CLIENT_VALIDATION:
+            data = TerminateRequest(**data).dict()
+        return self.query(self.name, method, data)
 
     def list(self):
-        data = {
-            "method": "list",
-        }
-        return self.json_query(self.name, data)
+        method = "list"
+        return self.query(self.name, method)
 
 
 if __name__ == '__main__':

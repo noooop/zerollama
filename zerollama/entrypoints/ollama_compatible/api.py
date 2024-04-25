@@ -24,7 +24,7 @@ def health():
 @app.get("/api/tags")
 def tags():
     response = chat_client.get_service_names()
-    services = response["msg"]["service_names"]
+    services = response.msg["service_names"]
 
     msg = {
         "models": [
@@ -39,9 +39,12 @@ def tags():
 async def chat(ccr: ChatCompletionRequest):
     if ccr.stream:
         def generate():
-            for res in chat_client.stream_chat(ccr.model, ccr.messages, ccr.options):
-                if not res["done"]:
-                    content = res["content"]
+            for rep in chat_client.stream_chat(ccr.model, ccr.messages, ccr.options):
+                if rep.state != "ok":
+                    return
+                rep = rep.msg
+                if not rep.done:
+                    content = rep.content
                     response = json.dumps({"model": ccr.model,
                                            "created_at": get_timestamp(),
                                            "message": {"role": "assistant", "content": content},
@@ -60,8 +63,11 @@ async def chat(ccr: ChatCompletionRequest):
                     break
         return StreamingResponse(generate(), media_type="application/x-ndjson")
     else:
-        res = chat_client.chat(ccr.model, ccr.messages, ccr.options)
-        content = res["content"]
+        rep = chat_client.chat(ccr.model, ccr.messages, ccr.options)
+        if rep.state != "ok":
+            return
+        rep = rep.msg
+        content = rep.content
         response = json.dumps({"model": ccr.model,
                                "created_at": get_timestamp(),
                                "message": {"role": "assistant", "content": content},

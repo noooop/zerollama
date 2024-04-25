@@ -1,5 +1,8 @@
 
 from zerollama.core.framework.nameserver.client import ZeroClient
+from zerollama.core.framework.inference_engine.protocol import ChatCompletionRequest, ChatCompletionResponse, ChatCompletionStreamResponse
+
+CLIENT_VALIDATION = True
 
 
 class ChatClient(ZeroClient):
@@ -8,31 +11,38 @@ class ChatClient(ZeroClient):
     def __init__(self, nameserver_port=None):
         ZeroClient.__init__(self, self.protocol, nameserver_port)
 
-    def chat(self, name, messages, options=None, **kwargs):
-        data = {
-            "method": "inference",
-            "model": name,
-            "messages": messages,
-            "options": options,
-            "stream": False
-        }
-        return self.json_query(name, data, **kwargs)
+    def chat(self, name, messages, options=None):
+        method = "inference"
+        data = {"model": name,
+                "messages": messages,
+                "options": options or dict(),
+                "stream": False}
+        if CLIENT_VALIDATION:
+            data = ChatCompletionRequest(**data).dict()
+
+        rep = self.query(name, method, data)
+        if rep.state == "ok":
+            rep.msg = ChatCompletionResponse(**rep.msg)
+        return rep
 
     def stream_chat(self, name, messages, options=None, **kwargs):
-        data = {
-            "method": "inference",
-            "model": name,
-            "messages": messages,
-            "options": options,
-            "stream": True
-        }
+        method = "inference"
+        data = {"model": name,
+                "messages": messages,
+                "options": options or dict(),
+                "stream": True}
+        if CLIENT_VALIDATION:
+            data = ChatCompletionRequest(**data).dict()
 
-        for part in self.json_stream_query(name, data, **kwargs):
-            yield part
+        for rep in self.stream_query(name, method, data, **kwargs):
+            if rep.state == "ok":
+                rep.msg = ChatCompletionStreamResponse(**rep.msg)
+            yield rep
 
 
 if __name__ == '__main__':
     from pprint import pprint
+    CLIENT_VALIDATION = False
 
     prompt = "给我介绍一下大型语言模型。"
 
@@ -54,8 +64,9 @@ if __name__ == '__main__':
 
     print("="*80)
     print("stream == False")
-    msg = client.chat(model_name, messages)
-    pprint(msg)
+    response = client.chat(model_name, messages)
+    print(response.msg.content)
+    print("response_length:", response.msg.response_length)
 
     print("="*80)
     print("stream == True")

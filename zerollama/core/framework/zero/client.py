@@ -1,16 +1,15 @@
 
 import zmq
 import json
-from uuid import uuid4
+import shortuuid
 from queue import Queue
+from zerollama.core.framework.zero.protocol import ZeroServerResponse
 
 
 class Socket(object):
     def __init__(self, context, addr):
         self.addr = addr
-        self.uuid = uuid4().hex.encode("utf-8")
         self.socket = context.socket(zmq.DEALER)
-        self.socket.set_string(zmq.IDENTITY, uuid4().hex)
         self.socket.connect(addr)
 
     def set_timeout(self, timeout):
@@ -85,8 +84,9 @@ class Client(object):
                 socket.set_timeout(timeout)
 
             try:
-                socket.send(data)
-                msg = socket.recv()
+                req_id = f"{shortuuid.random(length=22)}".encode("utf-8")
+                socket.send_multipart([req_id, data])
+                msg = socket.recv_multipart()
                 socket_pool.put(socket, self.addr)
                 return msg
             except zmq.error.Again:
@@ -97,63 +97,76 @@ class Client(object):
     def _stream_query(self, data, timeout=None):
         for i in range(3):
             socket = socket_pool.get(self.addr)
+
+            if getattr(self, "timeout", None) is not None:
+                socket.set_timeout(self.timeout)
+
             if timeout is not None:
                 socket.set_timeout(timeout)
 
             try:
-                socket.send(data)
+                req_id = f"{shortuuid.random(length=22)}".encode("utf-8")
+                socket.send_multipart([req_id, data])
+                out = socket.recv_multipart()
+                rep_id, msg, *payload = out
+                req_id, rcv_more, rep_id = rep_id[:22], rep_id[22:23], rep_id[23:]
 
-                data = socket.recv()
-                data = json.loads(data)
-                yield data
+                yield out
 
-                while not data["done"]:
-                    data = socket.recv()
-                    data = json.loads(data)
-                    yield data
-
-                    if data["done"]:
-                        break
+                while rcv_more == b"M":
+                    out = socket.recv_multipart()
+                    rep_id, msg, *payload = out
+                    req_id, rcv_more, rep_id = rep_id[:22], rep_id[22:23], rep_id[23:]
+                    yield out
 
                 socket_pool.put(socket, self.addr)
-                return
             except zmq.error.Again:
                 socket_pool.delete(socket)
+            else:
+                return
 
         raise Timeout(f"{self.addr} timeout")
 
-    def json_query(self, data, debug=False, **kwargs):
+    def stream_query(self, data, **kwargs):
+        data = json.dumps(data).encode('utf8')
+        for req_id, msg, *payload in self._stream_query(data=data, **kwargs):
+            msg = json.loads(msg)
+            msg = ZeroServerResponse(**msg)
+
+            if len(payload) > 0:
+                yield msg, payload
+            else:
+                yield msg
+
+    def query(self, data, **kwargs):
         data = json.dumps(data).encode('utf8')
 
-        if debug:
-            print(data)
+        req_id, msg, *payload = self._query(data=data, **kwargs)
 
-        msg = self._query(data=data, **kwargs)
         msg = json.loads(msg)
-        return msg
+        msg = ZeroServerResponse(**msg)
 
-    def json_stream_query(self, data, debug=False, **kwargs):
-        data = json.dumps(data).encode('utf8')
-
-        if debug:
-            print(data)
-
-        for part in self._stream_query(data=data, **kwargs):
-            yield part
+        if len(payload) > 0:
+            return msg, payload
+        else:
+            return msg
 
 
 class Z_Client(Client):
     def support_methods(self):
         data = {"method": "support_methods"}
-        return self.json_query(data)
+        return self.query(data)
 
 
 if __name__ == '__main__':
     from pprint import pprint
     client = Z_Client("tcp://localhost:9527")
 
-    pprint(client.support_methods())
-
+    print("="*80)
+    pprint(client.query({"no_method": ""}).dict())
+    print("=" * 80)
+    pprint(client.support_methods().dict())
+    print("=" * 80)
     data = {"method": "method_not_supported"}
-    pprint(client.json_query(data))
+    pprint(client.query(data).dict())
 

@@ -1,6 +1,8 @@
 
 import json
 from zerollama.core.framework.zero.server import ZeroServerProcess, Z_MethodZeroServer
+from zerollama.core.framework.zero_manager.protocol import ZeroServerResponseOk
+from zerollama.core.framework.zero_manager.protocol import StartRequest, TerminateRequest
 
 
 class ZeroManager(Z_MethodZeroServer):
@@ -25,86 +27,42 @@ class ZeroManager(Z_MethodZeroServer):
                 pass
         super().clean_up()
 
-    def z_start(self, uuid, msg):
-        if "model_class" not in msg:
-            err_msg = "'model_class' not in msg"
-            self.handle_error(uuid, err_msg)
-            return
-        model_class = msg['model_class']
+    def z_start(self, req):
+        kwargs = StartRequest(**req.data)
 
-        if "model_kwargs" not in msg:
-            err_msg = "'model_kwargs' not in msg"
-            self.handle_error(uuid, err_msg)
-            return
-        model_kwargs = msg['model_kwargs']
-
-        if "name" not in msg:
-            err_msg = "'name' not in msg"
-            self.handle_error(uuid, err_msg)
+        if kwargs.name in self._inference_engines:
+            rep = ZeroServerResponseOk(msg={"already_started": True})
+            self.zero_send(req, rep)
             return
 
-        name = msg["name"]
+        engine = ZeroServerProcess(self.server_class,
+                                   server_kwargs={
+                                       "model_class": kwargs.model_class,
+                                       "model_kwargs": kwargs.model_kwargs
+                                   })
+        engine.start()
 
-        if name in self._inference_engines:
-            response = json.dumps({
-                "state": "ok",
-                "msg": {"already_started": True}
-            }).encode('utf8')
-            self.socket.send_multipart(uuid+[response])
+        self._inference_engines[kwargs.name] = engine
+        rep = ZeroServerResponseOk(msg={"already_started": False})
+        self.zero_send(req, rep)
+
+    def z_terminate(self, req):
+        kwargs = TerminateRequest(**req.data)
+
+        if kwargs.name not in self._inference_engines:
+            rep = ZeroServerResponseOk(msg={"founded": False})
+            self.zero_send(req, rep)
             return
 
-        try:
-            engine = ZeroServerProcess(self.server_class,
-                                       server_kwargs={
-                                           "model_class": model_class,
-                                           "model_kwargs": model_kwargs
-                                       })
-            engine.start()
-        except Exception as e:
-            self.handle_error(uuid, err_msg=str(e))
-            return
+        engine = self._inference_engines.pop(kwargs.name)
+        engine.terminate()
 
-        self._inference_engines[name] = engine
-        response = json.dumps({
-            "state": "ok",
-            "msg": {"already_started": False}
-        }).encode('utf8')
-        self.socket.send_multipart(uuid+[response])
+        rep = ZeroServerResponseOk(msg={"founded": True})
+        self.zero_send(req, rep)
 
-    def z_terminate(self, uuid, msg):
-        if "name" not in msg:
-            err_msg = "'name' not in msg"
-            self.handle_error(uuid, err_msg)
-            return
-        name = msg["name"]
-
-        if name not in self._inference_engines:
-            response = json.dumps({
-                "state": "ok",
-                "msg": {"founded": False}
-            }).encode('utf8')
-            self.socket.send_multipart(uuid+[response])
-            return
-
-        try:
-            engine = self._inference_engines.pop(name)
-            engine.terminate()
-        except Exception as e:
-            self.handle_error(uuid, err_msg=str(e))
-            return
-
-        response = json.dumps({
-            "state": "ok",
-            "msg": {"founded": True}
-        }).encode('utf8')
-        self.socket.send_multipart(uuid+[response])
-
-    def z_list(self, uuid, msg):
-        response = json.dumps({
-            "state": "ok",
-            "msg": list(self._inference_engines.keys())
-        }).encode('utf8')
-        self.socket.send_multipart(uuid+[response])
+    def z_list(self, req):
+        rep = ZeroServerResponseOk(msg=list(self._inference_engines.keys()))
+        self.zero_send(req, rep)
 
 
 if __name__ == '__main__':
