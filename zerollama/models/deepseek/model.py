@@ -1,24 +1,19 @@
 
 
-from zerollama.inference_backend.hf_transformers.main import HuggingFaceTransformersChat
+from zerollama.core.models.chat import ChatModel
 
 
-class DeepSeek(HuggingFaceTransformersChat):
-    def __init__(self, model_name, device="cuda", **kwargs):
-        HuggingFaceTransformersChat.__init__(self, model_name, info_dict, device, **kwargs)
+class DeepSeekLLM(ChatModel):
+    family = "deepseek-llm"
+    model_kwargs = {}
+    header = ["name", "size", "quantization", "bits"]
+    info = [
+        # name                                 size      quantization(_, GPTQ, AWQ)     bits
+        ["deepseek-ai/deepseek-llm-7b-chat",   "7b",     "",                            ""],
 
+        ["deepseek-ai/deepseek-llm-67b-chat",  "67b",    "",                            ""],
 
-info_header = ["name", "family", "type", "size", "quantization", "bits"]
-info = [
-    # name                                   family               type    size      quantization(_, GPTQ, AWQ)     bits
-
-    ["deepseek-ai/deepseek-llm-7b-chat",     "deepseek-llm",      "Chat", "7b",     "",                            ""],
-
-
-    ["deepseek-ai/deepseek-llm-67b-chat",    "deepseek-llm",      "Chat", "67b",    "",                            ""],
-
-]
-info_dict = {x[0]: {k: v for k, v in zip(info_header, x)} for x in info}
+    ]
 
 
 if __name__ == '__main__':
@@ -26,11 +21,11 @@ if __name__ == '__main__':
     from zerollama.inference_backend.hf_transformers.main import run_test
 
     for model_name in ["deepseek-ai/deepseek-llm-7b-chat"]:
-        run_test(model_name, DeepSeek, stream=False)
+        run_test(model_name, stream=False)
 
         print(torch.cuda.memory_allocated() / 1024 ** 2)
 
     for model_name in ["deepseek-ai/deepseek-llm-7b-chat"]:
-        run_test(model_name, DeepSeek, stream=True)
+        run_test(model_name, stream=True)
 
         print(torch.cuda.memory_allocated() / 1024 ** 2)

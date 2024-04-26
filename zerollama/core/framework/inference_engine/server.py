@@ -45,7 +45,7 @@ if __name__ == '__main__':
     nameserver = ZeroServerProcess("zerollama.core.framework.nameserver.server:ZeroNameServer")
     engine = ZeroServerProcess("zerollama.core.framework.inference_engine.server:ZeroInferenceEngine",
                                server_kwargs={
-                                   "model_class": "zerollama.models.qwen.qwen1_5:Qwen1_5",
+                                   "model_class": "zerollama.inference_backend.hf_transformers.main:HuggingFaceTransformersChat",
                                    "model_kwargs": {
                                      "model_name": "Qwen/Qwen1.5-0.5B-Chat"
                                    }

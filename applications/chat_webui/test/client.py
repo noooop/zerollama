@@ -18,13 +18,11 @@ if __name__ == '__main__':
     print(f'init')
     print(manager_client.list())
 
-    model_names = ["Qwen/Qwen1.5-0.5B-Chat",
-                   # "Qwen/Qwen1.5-0.5B-Chat-GPTQ-Int8",
-                   "Qwen/Qwen1.5-0.5B-Chat-GPTQ-Int4",
-                   "Qwen/Qwen1.5-0.5B-Chat-AWQ"]
+    model_class = "zerollama.inference_backend.hf_transformers.main:HuggingFaceTransformersChat"
+    model_names = ["Qwen/Qwen1.5-0.5B-Chat-AWQ",
+                   "openbmb/MiniCPM-2B-sft-bf16"]
 
     for model_name in model_names:
-        model_class = "zerollama.models.qwen.qwen1_5:Qwen1_5"
         model_kwargs = {"model_name": model_name}
 
         print("=" * 80)

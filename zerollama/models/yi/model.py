@@ -1,26 +1,22 @@
 
 
-from zerollama.inference_backend.hf_transformers.main import HuggingFaceTransformersChat
+from zerollama.core.models.chat import ChatModel
 
 
-class Yi(HuggingFaceTransformersChat):
-    def __init__(self, model_name, device="cuda", **kwargs):
-        HuggingFaceTransformersChat.__init__(self, model_name, info_dict, device, **kwargs)
+class Yi(ChatModel):
+    family = "Yi"
+    model_kwargs = {}
+    header = ["name", "size", "quantization", "bits"]
+    info = [
+        # name                         size    quantization(_, GPTQ, AWQ)     bits
+        ["01-ai/Yi-6B-Chat",           "6B",   "",                            ""],
+        ["01-ai/Yi-6B-Chat-8bits",     "6B",   "GPTQ",                        "8bits"],
+        ["01-ai/Yi-6B-Chat-4bits",     "6B",   "AWQ",                         "4bits"],
 
-
-info_header = ["name", "family", "type", "size", "quantization", "bits"]
-info = [
-    # name                                   family     type    size      quantization(_, GPTQ, AWQ)     bits
-
-    ["01-ai/Yi-6B-Chat",                     "Yi",      "Chat", "6B",     "",                            ""],
-    ["01-ai/Yi-6B-Chat-8bits",               "Yi",      "Chat", "6B",     "GPTQ",                        "8bits"],
-    ["01-ai/Yi-6B-Chat-4bits",               "Yi",      "Chat", "6B",     "AWQ",                         "4bits"],
-
-    ["01-ai/Yi-34B-Chat",                    "Yi",      "Chat", "34B",    "",                            ""],
-    ["01-ai/Yi-34B-Chat-8bits",              "Yi",      "Chat", "34B",    "GPTQ",                        "8bits"],
-    ["01-ai/Yi-34B-Chat-4bits",              "Yi",      "Chat", "34B",    "AWQ",                         "4bits"],
-]
-info_dict = {x[0]: {k: v for k, v in zip(info_header, x)} for x in info}
+        ["01-ai/Yi-34B-Chat",          "34B",  "",                            ""],
+        ["01-ai/Yi-34B-Chat-8bits",    "34B",  "GPTQ",                        "8bits"],
+        ["01-ai/Yi-34B-Chat-4bits",    "34B",  "AWQ",                         "4bits"],
+    ]
 
 
 if __name__ == '__main__':
@@ -30,13 +26,13 @@ if __name__ == '__main__':
     for model_name in [#"01-ai/Yi-6B-Chat",
                        #"01-ai/Yi-6B-Chat-8bits",
                        "01-ai/Yi-6B-Chat-4bits"]:
-        run_test(model_name, Yi, stream=False)
+        run_test(model_name, stream=False)
 
         print(torch.cuda.memory_allocated() / 1024 ** 2)
 
     for model_name in [#"01-ai/Yi-6B-Chat",
                        #"01-ai/Yi-6B-Chat-8bits",
                        "01-ai/Yi-6B-Chat-4bits"]:
-        run_test(model_name, Yi, stream=True)
+        run_test(model_name, stream=True)
 
         print(torch.cuda.memory_allocated() / 1024 ** 2)

@@ -5,25 +5,27 @@ import torch
 import requests
 from threading import Thread
 from zerollama.core.config.main import config_setup
-from zerollama.core.models.chat import ChatInterfaces, ChatCompletionResponse, ChatCompletionStreamResponse
+from zerollama.core.models.chat import ChatInterface, ChatCompletionResponse, ChatCompletionStreamResponse
+from zerollama.models.collection.chat import get_chat_model_config_by_name
 
 
 class HuggingFaceTransformers(object):
-    def __init__(self, model_name, info_dict, device="cuda", **kwargs):
-        if model_name not in info_dict:
-            raise KeyError(f"{model_name} not in model family.")
+    def __init__(self, model_name, local_files_only=True, device="cuda"):
+        model_config = get_chat_model_config_by_name(model_name)
+
+        if model_config is None:
+            raise KeyError(f"{model_name} not support.")
 
         self.device = device
         self.model_name = model_name
-        self.info = info_dict[self.model_name]
+        self.model_config = model_config
+        self.model_info = self.model_config.info
+        self.local_files_only = local_files_only
+        self.trust_remote_code = self.model_config.model_kwargs.get("trust_remote_code", False)
+
         self.model = None
         self.tokenizer = None
         self.streamer = None
-        self.local_files_only = kwargs.get("local_files_only", True)
-        self.trust_remote_code = kwargs.get("trust_remote_code", False)
-
-    def _load(self):
-        pass
 
     def load(self):
         config = config_setup()
@@ -66,7 +68,6 @@ class HuggingFaceTransformers(object):
         self.model = model.to(self.device)
         self.tokenizer = tokenizer
         self.streamer = streamer
-        self._load()
 
     def __del__(self):
         self.model = None
@@ -77,11 +78,11 @@ class HuggingFaceTransformers(object):
         torch.cuda.empty_cache()
 
     @property
-    def model_info(self):
-        return self.info
+    def info(self):
+        return self.model_info
 
 
-class HuggingFaceTransformersChat(HuggingFaceTransformers, ChatInterfaces):
+class HuggingFaceTransformersChat(HuggingFaceTransformers, ChatInterface):
     @torch.no_grad()
     def chat(self, messages, options=None):
         options = options or dict()
@@ -151,12 +152,12 @@ class HuggingFaceTransformersChat(HuggingFaceTransformers, ChatInterfaces):
                                               "done": True})
 
 
-def run_test(model_name, model_class, stream=False):
+def run_test(model_name, stream=False):
     print("=" * 80)
 
-    model = model_class(model_name, local_files_only=False)
+    model = HuggingFaceTransformersChat(model_name, local_files_only=False)
     model.load()
-    print(model.model_info)
+    print(model.info)
 
     prompt = "给我介绍一下大型语言模型。"
 
@@ -167,7 +168,7 @@ def run_test(model_name, model_class, stream=False):
     if stream:
         for response in model.stream_chat(messages):
             if not response.done:
-                print(response.content, end="")
+                print(response.content, end="", flush=True)
             else:
                 print()
                 print("response_length:", response.response_length)
