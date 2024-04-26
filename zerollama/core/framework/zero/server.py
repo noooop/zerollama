@@ -149,6 +149,7 @@ class Z_MethodZeroServer(ZeroServer):
 
         req.uuid = uuid
         req.req_id = req_id
+        req.payload = payload
 
         method_name = msg["method"]
         method = getattr(self, "z_" + method_name, self.default)

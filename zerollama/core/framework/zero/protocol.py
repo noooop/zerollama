@@ -30,6 +30,7 @@ class ZeroServerRequest(BaseModel):
     uuid: Optional[bytes] = None
     req_id: Optional[bytes] = None
     data: Optional[dict] = None
+    payload: Optional[list] = None
 
 
 class ZeroServerResponse(BaseModel):
