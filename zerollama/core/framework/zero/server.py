@@ -165,7 +165,7 @@ class Z_MethodZeroServer(ZeroServer):
     def default(self, req: ZeroServerRequest):
         method_name = req.method
         err_msg = f"method [{method_name}] not supported."
-        self.handle_error(err_msg, req.uuid, req.req_id)
+        self.handle_error(err_msg, req=req)
 
     def z_support_methods(self, req: ZeroServerRequest):
         support_methods = [m[2:] for m in dir(self) if m.startswith('z_')]
