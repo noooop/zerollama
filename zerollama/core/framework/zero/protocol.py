@@ -36,6 +36,7 @@ class ZeroServerRequest(BaseModel):
 class ZeroServerResponse(BaseModel):
     state: str = Literal["ok", "error"]
     msg: Any = ""
+    payload: Optional[list] = None
 
     @property
     def b(self):

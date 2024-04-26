@@ -132,11 +132,8 @@ class Client(object):
         for req_id, msg, *payload in self._stream_query(data=data, **kwargs):
             msg = json.loads(msg)
             msg = ZeroServerResponse(**msg)
-
-            if len(payload) > 0:
-                yield msg, payload
-            else:
-                yield msg
+            msg.payload = payload
+            yield msg
 
     def query(self, data, **kwargs):
         data = json.dumps(data).encode('utf8')
@@ -145,11 +142,8 @@ class Client(object):
 
         msg = json.loads(msg)
         msg = ZeroServerResponse(**msg)
-
-        if len(payload) > 0:
-            return msg, payload
-        else:
-            return msg
+        msg.payload = payload
+        return msg
 
 
 class Z_Client(Client):
