@@ -11,17 +11,15 @@ Options:
   --help  Show this message and exit.
 
 Commands:
-  list-families
-  list-family
-  pull
-  run-server
-  start
-  terminate
+  chat
+  server
 ```
 
-## 启动
+## 服务端
+
+### 启动
 ```
-$ python -m applications.chat_webui.cli run-server
+$ python -m applications.chat_webui.cli server run
 Control-C terminate
 HttpEntrypoints running! 127.0.0.1 11434
 HttpEntrypoints running! 127.0.0.1 8080
@@ -29,7 +27,7 @@ ZeroNameServer: InMemoryNameServer running! port: 9527
 ZeroManager for ZeroInferenceEngine running! port: 50755
 ```
 
-## 关闭
+### 关闭
 ```
 # Control-C 关闭
 HttpEntrypoints clean_up!
@@ -38,9 +36,10 @@ ZeroNameServer clean_up!
 ZeroManager clean_up!
 ```
 
-## list-families 列出支持的模型家族
+## chat 模型控制
+### list-families 列出支持的模型家族
 ```
-python -m applications.chat_webui.cli list-families
+$ python -m applications.chat_webui.cli chat list-families
 Supported chat families:
 deepseek-llm
 MiniCPM
@@ -48,9 +47,9 @@ Qwen1.5
 Yi
 ```
 
-## list-family 列出支持的模型家族成员
+### list-family 列出支持的模型家族成员
 ```
-$ python -m applications.chat_webui.cli list-family Qwen1.5
+$ python -m applications.chat_webui.cli chat list-family Qwen1.5
 +----------------------------------+------+--------------+-------+---------+----------+
 | name                             | size | quantization | bits  | family  | protocol |
 +----------------------------------+------+--------------+-------+---------+----------+
@@ -61,26 +60,32 @@ $ python -m applications.chat_webui.cli list-family Qwen1.5
 
 ## 下载模型 pull
 ```
-$ python -m applications.chat_webui.cli pull Qwen/Qwen1.5-1.8B-Chat-GPTQ-Int4
+$ python -m applications.chat_webui.cli chat pull Qwen/Qwen1.5-1.8B-Chat-GPTQ-Int4
 ```
 
 ## 加载模型 start
 ```
-$ python -m applications.chat_webui.cli start Qwen/Qwen1.5-0.5B-Chat
-$ python -m applications.chat_webui.cli start Qwen/Qwen1.5-0.5B-Chat-GPTQ-Int4
-$ python -m applications.chat_webui.cli start Qwen/Qwen1.5-0.5B-Chat-AWQ
+$ python -m applications.chat_webui.cli chat start Qwen/Qwen1.5-0.5B-Chat
+$ python -m applications.chat_webui.cli chat start Qwen/Qwen1.5-0.5B-Chat-GPTQ-Int4
+$ python -m applications.chat_webui.cli chat start Qwen/Qwen1.5-0.5B-Chat-AWQ
 ```
 
 ## 卸载模型 terminate
 ```
-$ python -m applications.chat_webui.cli terminate Qwen/Qwen1.5-0.5B-Chat
-$ python -m applications.chat_webui.cli terminate Qwen/Qwen1.5-0.5B-Chat-GPTQ-Int4
-$ python -m applications.chat_webui.cli terminate Qwen/Qwen1.5-0.5B-Chat-AWQ
+$ python -m applications.chat_webui.cli chat terminate Qwen/Qwen1.5-0.5B-Chat
+$ python -m applications.chat_webui.cli chat terminate Qwen/Qwen1.5-0.5B-Chat-GPTQ-Int4
+$ python -m applications.chat_webui.cli chat terminate Qwen/Qwen1.5-0.5B-Chat-AWQ
 ```
 
 # 注意
 1. 考虑到大语言模型动辄几个G，下载相当缓慢，所以默认设置了local_files_only=True， 模型必须先下载，才能加载。
 2. 因为不同模型，不同上下文长度，占用的显存不一样，尤其是加载多个模型，很有可能显存不够，暂时先手动加载卸载模型
+
+# ollama_compatible
+[支持情况](https://github.com/noooop/zerollama/tree/v0.2/applications/chat_webui/ollama_client_examples)
+
+# openai_compatible
+[支持情况]()
 
 # webui
 

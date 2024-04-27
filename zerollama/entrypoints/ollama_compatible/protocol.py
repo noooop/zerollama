@@ -7,3 +7,7 @@ class ChatCompletionRequest(BaseModel):
     messages: list = []
     options: dict = {}
     stream: bool = True
+
+
+class ShowRequest(BaseModel):
+    name: str

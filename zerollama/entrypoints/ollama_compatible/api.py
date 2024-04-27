@@ -2,10 +2,10 @@
 import json
 import datetime
 from fastapi import FastAPI
-from fastapi.responses import StreamingResponse
+from fastapi.responses import StreamingResponse, JSONResponse
 
 from zerollama.core.framework.inference_engine.client import ChatClient
-from zerollama.entrypoints.ollama_compatible.protocol import ChatCompletionRequest
+from zerollama.entrypoints.ollama_compatible.protocol import ChatCompletionRequest, ShowRequest
 
 
 chat_client = ChatClient()
@@ -26,13 +26,40 @@ def tags():
     response = chat_client.get_service_names()
     services = response.msg["service_names"]
 
-    msg = {
-        "models": [
-            {"name": s, "model": s}
-            for s in services
-        ]
+    models = []
+    for s in services:
+        #details = chat_client.info(s).msg
+        models.append({
+            'name': s,
+            'model': s,
+            'modified_at': "",
+            'size': "",
+            'digest': "",
+            "details": {}
+        })
+
+    return {"models": models}
+
+
+@app.post("/api/show")
+def show(req: ShowRequest):
+    name = req.name
+    rep = chat_client.info(name)
+
+    if rep is None:
+        return JSONResponse(status_code=404,
+                            content={"error": f"model '{name}' not found"})
+
+    details = rep.msg
+    out = {
+        'name': name,
+        'model': name,
+        'modified_at': "",
+        'size': "",
+        'digest': "",
+        "details": details
     }
-    return msg
+    return out
 
 
 @app.post("/api/chat")
@@ -40,8 +67,10 @@ async def chat(ccr: ChatCompletionRequest):
     if ccr.stream:
         def generate():
             for rep in chat_client.stream_chat(ccr.model, ccr.messages, ccr.options):
-                if rep.state != "ok":
-                    return
+                if rep is None:
+                    return JSONResponse(status_code=404,
+                                        content={"error": f"model '{ccr.model}' not found"})
+
                 rep = rep.msg
                 if not rep.done:
                     content = rep.content
@@ -64,15 +93,15 @@ async def chat(ccr: ChatCompletionRequest):
         return StreamingResponse(generate(), media_type="application/x-ndjson")
     else:
         rep = chat_client.chat(ccr.model, ccr.messages, ccr.options)
-        if rep.state != "ok":
-            return
+        if rep is None:
+            return JSONResponse(status_code=404,
+                                content={"error": f"model '{ccr.model}' not found"})
         rep = rep.msg
         content = rep.content
-        response = json.dumps({"model": ccr.model,
-                               "created_at": get_timestamp(),
-                               "message": {"role": "assistant", "content": content},
-                               "done": True
-                               })
+        response = {"model": ccr.model,
+                    "created_at": get_timestamp(),
+                    "message": {"role": "assistant", "content": content},
+                    "done": True}
         return response
 
 
