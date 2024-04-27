@@ -21,6 +21,9 @@ class ChatClient(ZeroClient):
             data = ChatCompletionRequest(**data).dict()
 
         rep = self.query(name, method, data)
+        if rep is None:
+            return rep
+
         if rep.state == "ok":
             rep.msg = ChatCompletionResponse(**rep.msg)
         return rep
@@ -35,6 +38,9 @@ class ChatClient(ZeroClient):
             data = ChatCompletionRequest(**data).dict()
 
         for rep in self.stream_query(name, method, data, **kwargs):
+            if rep is None:
+                return rep
+
             if rep.state == "ok":
                 rep.msg = ChatCompletionStreamResponse(**rep.msg)
             yield rep
