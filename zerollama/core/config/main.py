@@ -17,7 +17,7 @@ def config_setup():
         config_global = {}
 
     config = edict({})
-    config.use_modelscope = True
+    config.use_modelscope = False
 
     if "huggingface" in config_global:
         config_huggingface = config_global["huggingface"]
@@ -31,8 +31,8 @@ def config_setup():
     if "modelscope" in config_global:
         config_modelscope = config_global["modelscope"]
         if "USE_MODELSCOPE" in config_modelscope:
-            if not config_modelscope["USE_MODELSCOPE"]:
-                config.use_modelscope = False
+            if config_modelscope["USE_MODELSCOPE"]:
+                config.use_modelscope = True
 
         if "MODELSCOPE_CACHE" in config_modelscope:
             os.environ["MODELSCOPE_CACHE"] = config_modelscope["MODELSCOPE_CACHE"]
