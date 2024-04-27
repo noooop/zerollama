@@ -114,7 +114,7 @@ class ZeroNameServer(Z_MethodZeroServer):
 def nameserver(nameserver_class=None):
     nameserver_class = nameserver_class or InMemoryNameServer
     server = ZeroNameServer(nameserver_class=nameserver_class)
-    server.run()
+    server.start()
 
 
 if __name__ == '__main__':

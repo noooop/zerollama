@@ -1,8 +1,8 @@
 
 import json
 from zerollama.core.framework.zero.server import ZeroServerProcess, Z_MethodZeroServer
-from zerollama.core.framework.zero_manager.protocol import ZeroServerResponseOk
-from zerollama.core.framework.zero_manager.protocol import StartRequest, TerminateRequest
+from zerollama.core.framework.zero_manager.protocol import ZeroServerResponseOk, ZeroServerResponseError
+from zerollama.core.framework.zero_manager.protocol import StartRequest, TerminateRequest, StatusRequest
 
 
 class ZeroManager(Z_MethodZeroServer):
@@ -55,13 +55,41 @@ class ZeroManager(Z_MethodZeroServer):
             return
 
         engine = self._inference_engines.pop(kwargs.name)
-        engine.terminate()
 
-        rep = ZeroServerResponseOk(msg={"founded": True})
+        exception = engine.exception
+        if exception is not None:
+            exception = f"{self.class_name}: {str(exception[0])}"
+        msg = {"founded": True, "last_status": engine.status, "last_exception": exception}
+
+        engine.terminate()
+        rep = ZeroServerResponseOk(msg=msg)
         self.zero_send(req, rep)
 
     def z_list(self, req):
         rep = ZeroServerResponseOk(msg=list(self._inference_engines.keys()))
+        self.zero_send(req, rep)
+
+    def z_statuses(self, req):
+        msg = {k: v.status for k, v in self._inference_engines.items()}
+        rep = ZeroServerResponseOk(msg=msg)
+        self.zero_send(req, rep)
+
+    def z_status(self, req):
+        kwargs = StatusRequest(**req.data)
+        if kwargs.name not in self._inference_engines:
+            err_msg = f"[kwargs.name] not found."
+            self.handle_error(err_msg, req=req)
+            return
+
+        engine = self._inference_engines[kwargs.name]
+
+        exception = engine.exception
+
+        if exception is not None:
+            exception = f"{self.class_name}: {str(exception[0])}"
+
+        msg = {"status": engine.status, "exception": exception}
+        rep = ZeroServerResponseOk(msg=msg)
         self.zero_send(req, rep)
 
 

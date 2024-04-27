@@ -1,7 +1,7 @@
-
+import time
 
 from zerollama.core.framework.nameserver.client import ZeroClient
-from zerollama.core.framework.zero_manager.protocol import ChatCompletionResponse, StartRequest, TerminateRequest
+from zerollama.core.framework.zero_manager.protocol import StartRequest, TerminateRequest, StatusRequest
 
 CLIENT_VALIDATION = True
 
@@ -37,6 +37,19 @@ class ZeroManagerClient(ZeroClient):
         method = "list"
         return self.query(self.name, method)
 
+    def statuses(self):
+        method = "statuses"
+        return self.query(self.name, method)
+
+    def status(self, model_name):
+        method = "status"
+        data = {
+            "name": model_name,
+        }
+        if CLIENT_VALIDATION:
+            data = StatusRequest(**data).dict()
+        return self.query(self.name, method, data)
+
 
 if __name__ == '__main__':
     from pprint import pprint
@@ -55,19 +68,28 @@ if __name__ == '__main__':
     print("=" * 80)
     print(f'init')
     print(manager_client.list())
+    print(manager_client.statuses())
 
     model_class = "zerollama.inference_backend.hf_transformers.main:HuggingFaceTransformersChat"
     model_names = ["Qwen/Qwen1.5-0.5B-Chat-AWQ",
                    "openbmb/MiniCPM-2B-sft-bf16"]
 
-    for model_name in model_names:
-
+    for model_name in model_names + ["not_found", "Qwen/Qwen1.5-72B-Chat"]:
         model_kwargs = {"model_name": model_name}
 
         print("=" * 80)
         print('start', model_name)
         print(manager_client.start(model_name, model_class, model_kwargs))
         print(manager_client.list())
+        print(manager_client.statuses())
+
+    """
+    for i in range(100):
+        time.sleep(0.5)
+        rep = manager_client.statuses()
+        for k in rep.msg.keys():
+            print(manager_client.status(k))
+    """
 
     def test_inference_engine(model_name):
         prompt = "给我介绍一下大型语言模型。"
@@ -101,7 +123,7 @@ if __name__ == '__main__':
     for model_name in model_names:
         test_inference_engine(model_name)
 
-    for model_name in model_names:
+    for model_name in model_names + ["not_found", "Qwen/Qwen1.5-72B-Chat"]:
         print("=" * 80)
         print('terminate', model_name)
         print(manager_client.terminate(model_name))

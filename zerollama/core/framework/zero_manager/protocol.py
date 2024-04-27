@@ -24,3 +24,7 @@ class StartRequest(BaseModel):
 
 class TerminateRequest(BaseModel):
     name: str
+
+
+class StatusRequest(BaseModel):
+    name: str

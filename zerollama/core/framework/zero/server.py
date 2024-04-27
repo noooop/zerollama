@@ -2,7 +2,7 @@ import time
 import zmq
 import json
 import traceback
-from multiprocessing import Event, Process, Value
+from multiprocessing import Event, Process, Value, Pipe, Manager
 from zerollama.core.framework.zero.client import Timeout
 from zerollama.core.framework.zero.protocol import (
     convert_errors,
@@ -78,8 +78,11 @@ class ZeroServer(object):
 
         return self.socket.send_multipart([uuid, req_id, b"ok"])
 
-    def run(self):
+    def start(self):
         self.init()
+        self.run()
+
+    def run(self):
         if self.address_in_use:
             print(f"Address in use (addr='tcp://*:{self.port}')")
             return
@@ -174,8 +177,17 @@ class Z_MethodZeroServer(ZeroServer):
 
 
 class ZeroServerProcess(Process):
+    """
+    Class which returns child Exceptions to Parent.
+    https://stackoverflow.com/a/33599967/4992248
+
+    status:
+    prepare -> started -> initial -> running -> error or stopped
+    """
+
     def __init__(self, server_class, server_kwargs=None, event=None, ignore_warnings=False):
         Process.__init__(self)
+
         if event is None:
             self.event = Event()
         else:
@@ -187,6 +199,15 @@ class ZeroServerProcess(Process):
         self.share_port = Value('i', -1)
         self.ignore_warnings = ignore_warnings
 
+        self._status = Manager().dict()
+        self._parent_conn, self._child_conn = Pipe()
+        self._exception = None
+
+        self._set_status("prepare")
+
+    def _set_status(self, status):
+        self._status['status'] = status
+
     def wait_port_available(self, timeout=10000):
         t = timeout + time.time()
 
@@ -196,23 +217,51 @@ class ZeroServerProcess(Process):
                 return self.share_port.value
 
     def run(self):
-        if self.ignore_warnings:
-            import warnings
-            warnings.filterwarnings("ignore")
+        self._set_status("started")
 
-        self.server_kwargs["event"] = self.event
-        self.server_kwargs["share_port"] = self.share_port
+        try:
+            if self.ignore_warnings:
+                import warnings
+                warnings.filterwarnings("ignore")
 
-        if isinstance(self.server_class, str):
-            module_name, class_name = self.server_class.split(":")
-            import importlib
-            module = importlib.import_module(module_name)
-            self.server_class = getattr(module, class_name)
+            self.server_kwargs["event"] = self.event
+            self.server_kwargs["share_port"] = self.share_port
 
-        self.server = self.server_class(**self.server_kwargs)
-        self.server.run()
+            if isinstance(self.server_class, str):
+                module_name, class_name = self.server_class.split(":")
+                import importlib
+                module = importlib.import_module(module_name)
+                self.server_class = getattr(module, class_name)
+
+            self.server = self.server_class(**self.server_kwargs)
+        except Exception as e:
+            self._set_status("error")
+            tb = traceback.format_exc()
+            self._child_conn.send((e, tb))
+            return
+
+        self._set_status("initial")
+
+        try:
+            self.server.init()
+        except Exception as e:
+            self._set_status("error")
+            tb = traceback.format_exc()
+            self._child_conn.send((e, tb))
+            return
+
+        self._set_status("running")
+
+        try:
+            self.server.run()
+        except Exception as e:
+            self._set_status("error")
+            tb = traceback.format_exc()
+            self._child_conn.send((e, tb))
+            return
 
     def terminate(self):
+        self._set_status("stopped")
         self.event.clear()
         self.join()
 
@@ -223,6 +272,16 @@ class ZeroServerProcess(Process):
             pass
         finally:
             self.terminate()
+
+    @property
+    def status(self):
+        return self._status["status"]
+
+    @property
+    def exception(self):
+        if self._parent_conn.poll():
+            self._exception = self._parent_conn.recv()
+        return self._exception
 
 
 if __name__ == '__main__':

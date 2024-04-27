@@ -59,7 +59,6 @@ class HuggingFaceTransformers(object):
         except requests.exceptions.HTTPError:
             raise FileNotFoundError(f"model '{self.model_name}' not found.")
         except EnvironmentError:
-            traceback.print_exc()
             raise FileNotFoundError(f"model '{self.model_name}' not found, try pulling it first")
 
         tokenizer = AutoTokenizer.from_pretrained(self.model_name)
