@@ -7,6 +7,7 @@ import shortuuid
 from pydantic import BaseModel, Field
 from typing import Literal, Optional, List, Dict, Any, Union
 
+
 class ErrorResponse(BaseModel):
     object: str = "error"
     message: str
@@ -56,24 +57,24 @@ class LogProbs(BaseModel):
     top_logprobs: List[Optional[Dict[str, float]]] = Field(default_factory=list)
 
 
-class ChatCompletionRequest(BaseModel):
-    model: str
-    messages: list = []
-    stream: bool = True
-
-    temperature: Optional[float]
-    top_k: Optional[int]
-    top_p: Optional[float]
-    n: Optional[int] = 1
-    stop: Optional[str] = None
-    max_tokens: Optional[int] = None
-    presence_penalty: Optional[float]
-    frequency_penalty: Optional[float]
-
-
 class ChatMessage(BaseModel):
     role: str
     content: str
+
+
+class ChatCompletionRequest(BaseModel):
+    model: str
+    messages: List[ChatMessage]
+    stream: bool = False
+
+    temperature: Optional[float] = None
+    top_k: Optional[int] = None
+    top_p: Optional[float] = None
+    n: Optional[int] = 1
+    stop: Optional[str] = None
+    max_tokens: Optional[int] = None
+    presence_penalty: Optional[float] = None
+    frequency_penalty: Optional[float] = None
 
 
 class ChatCompletionResponseChoice(BaseModel):
