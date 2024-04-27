@@ -81,10 +81,10 @@ $ python -m applications.chat_webui.cli chat terminate Qwen/Qwen1.5-0.5B-Chat-AW
 1. 考虑到大语言模型动辄几个G，下载相当缓慢，所以默认设置了local_files_only=True， 模型必须先下载，才能加载。
 2. 因为不同模型，不同上下文长度，占用的显存不一样，尤其是加载多个模型，很有可能显存不够，暂时先手动加载卸载模型
 
-# ollama_compatible
+# ollama compatible
 [支持情况](https://github.com/noooop/zerollama/tree/v0.2/applications/chat_webui/ollama_client_examples)
 
-# openai_compatible
+# openai compatible
 [支持情况]()
 
 # webui
