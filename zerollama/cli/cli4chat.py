@@ -30,8 +30,8 @@ def pull(model_name):
 
 @click.command()
 @click.argument('model_name')
-@click.option("--wait", default=True)
-def start(model_name, wait):
+@click.option("--nowait", default=False)
+def start(model_name, nowait):
     from zerollama.core.framework.zero_manager.client import ZeroManagerClient
 
     name = "ZeroInferenceManager"
@@ -40,12 +40,14 @@ def start(model_name, wait):
     model_kwargs = {"model_name": model_name}
     manager_client.start(model_name, model_class, model_kwargs)
 
-    if wait:
-        from zerollama.core.framework.inference_engine.client import ChatClient
-        client = ChatClient()
-        print(f"Wait {model_name} available.")
-        client.wait_service_available(model_name)
-        print(f"{model_name} available now.")
+    if nowait:
+        return
+
+    from zerollama.core.framework.inference_engine.client import ChatClient
+    client = ChatClient()
+    print(f"Wait {model_name} available.")
+    client.wait_service_available(model_name)
+    print(f"{model_name} available now.")
 
 
 @click.command()
