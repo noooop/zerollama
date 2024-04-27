@@ -3,6 +3,8 @@
 
 # Todo
 ```
+https://towardsdatascience.com/how-to-build-an-openai-compatible-api-87c8edea2f06
+
 # 使用 curl 是好的
 $ curl http://localhost:8080/v1/chat/completions     -H "Content-Type: application/json"     -d '{
         "model": "llama2",
