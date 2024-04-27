@@ -87,6 +87,14 @@ class ZeroClient(object):
 
         return services
 
+    def info(self, name):
+        method = "info"
+        client = self.get_client(name)
+        if client is None:
+            return None
+
+        return self.query(name, method)
+
     def wait_service_available(self, name, timeout=10000):
         t = timeout + time.time()
 

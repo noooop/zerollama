@@ -61,6 +61,7 @@ if __name__ == '__main__':
     print("=" * 80)
     print('ZeroInferenceEngine support_methods')
     print(client.support_methods(model_name))
+    print(client.info(model_name))
 
     print("="*80)
     print("stream == False")

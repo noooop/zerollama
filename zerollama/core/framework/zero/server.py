@@ -175,6 +175,10 @@ class Z_MethodZeroServer(ZeroServer):
         rep = ZeroServerResponseOk(msg={"support_methods": support_methods})
         self.zero_send(req, rep)
 
+    def z_info(self, req: ZeroServerRequest):
+        rep = ZeroServerResponseOk(msg={})
+        self.zero_send(req, rep)
+
 
 class ZeroServerProcess(Process):
     """

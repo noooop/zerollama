@@ -38,6 +38,15 @@ class ZeroInferenceEngine(Z_MethodZeroServer):
             rep = ZeroServerResponseOk(msg=response)
             self.zero_send(req, rep)
 
+    def z_info(self, req):
+        if hasattr(self.model, "info"):
+            info = self.model.info
+        else:
+            info = {}
+
+        rep = ZeroServerResponseOk(msg=info)
+        self.zero_send(req, rep)
+
 
 if __name__ == '__main__':
     from zerollama.core.framework.zero.server import ZeroServerProcess
