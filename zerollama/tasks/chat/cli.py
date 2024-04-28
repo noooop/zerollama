@@ -5,7 +5,7 @@ from zerollama.tasks.chat.protocol import MANAGER_NAME
 
 @click.command()
 def list_families():
-    from zerollama.models.collection.chat import chat_families
+    from zerollama.tasks.chat.model_collection import chat_families
     click.echo("Supported chat families:")
     for name in chat_families():
         click.echo(name)
@@ -14,7 +14,7 @@ def list_families():
 @click.command()
 @click.argument('name')
 def list_family(name):
-    from zerollama.models.collection.chat import chat_family
+    from zerollama.tasks.chat.model_collection import chat_family
     c = chat_family(name)
     if c is None:
         click.echo(f"[ {name} ] not support.")
