@@ -13,9 +13,9 @@ class ZeroManagerClient(ZeroClient):
         self.name = name
         ZeroClient.__init__(self, self.protocol)
 
-    def start(self, model_name, model_class, model_kwargs):
+    def start(self, model_name, protocol, model_kwargs):
         data = {"name": model_name,
-                "model_class": model_class,
+                "protocol": protocol,
                 "model_kwargs": model_kwargs}
         method = "start"
 
@@ -95,16 +95,14 @@ if __name__ == '__main__':
     print(manager_client.list())
     print(manager_client.statuses())
 
-    model_class = "zerollama.inference_backend.hf_transformers.main:HuggingFaceTransformersChat"
+    protocol = "chat"
+    model_kwargs = {}
     model_names = ["Qwen/Qwen1.5-0.5B-Chat-AWQ",
                    "openbmb/MiniCPM-2B-sft-bf16"]
-
     for model_name in model_names + ["not_found", "Qwen/Qwen1.5-72B-Chat"]:
-        model_kwargs = {"model_name": model_name}
-
         print("=" * 80)
         print('start', model_name)
-        print(manager_client.start(model_name, model_class, model_kwargs))
+        print(manager_client.start(model_name, protocol, model_kwargs))
         print(manager_client.list())
         print(manager_client.statuses())
 

@@ -13,9 +13,9 @@ from zerollama.core.models.chat import ChatCompletionResponse, ChatCompletionStr
 
 
 class StartRequest(BaseModel):
-    model_class: str
-    model_kwargs: dict = Field(default_factory=dict)
     name: str
+    protocol: str
+    model_kwargs: dict = Field(default_factory=dict)
 
     model_config = ConfigDict(
         protected_namespaces=()

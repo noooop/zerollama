@@ -1,14 +1,19 @@
 
-import json
 from zerollama.core.framework.zero.server import Z_MethodZeroServer
 from zerollama.core.framework.inference_engine.protocol import ChatCompletionRequest
 from zerollama.core.framework.inference_engine.protocol import ZeroServerResponseOk, ZeroServerStreamResponseOk
+from zerollama.models.collection import get_model
 
 
 class ZeroInferenceEngine(Z_MethodZeroServer):
-    def __init__(self, model_class, model_kwargs, **kwargs):
-        self.model_class = model_class
-        self.model_kwargs = model_kwargs
+    def __init__(self, protocol, model_name, model_kwargs, **kwargs):
+        self.protocol = protocol
+        self.model_name = model_name
+        self.model = get_model(protocol, model_name)
+        if self.model is None:
+            raise FileNotFoundError(f"model [{model_name}] not supported.")
+
+        self.model_class = self.model.inference_backend
 
         if isinstance(self.model_class, str):
             module_name, class_name = self.model_class.split(":")
@@ -16,11 +21,9 @@ class ZeroInferenceEngine(Z_MethodZeroServer):
             module = importlib.import_module(module_name)
             self.model_class = getattr(module, class_name)
 
-        self.model = self.model_class(**self.model_kwargs)
+        self.model = self.model_class(model_name=model_name, **model_kwargs)
 
-        Z_MethodZeroServer.__init__(self,
-                                    name=model_kwargs["model_name"],
-                                    protocol=self.model_class.protocol,
+        Z_MethodZeroServer.__init__(self, name=model_name, protocol=protocol,
                                     port=None, do_register=True, **kwargs)
 
     def init(self):
@@ -54,10 +57,9 @@ if __name__ == '__main__':
     nameserver = ZeroServerProcess("zerollama.core.framework.nameserver.server:ZeroNameServer")
     engine = ZeroServerProcess("zerollama.core.framework.inference_engine.server:ZeroInferenceEngine",
                                server_kwargs={
-                                   "model_class": "zerollama.inference_backend.hf_transformers.main:HuggingFaceTransformersChat",
-                                   "model_kwargs": {
-                                     "model_name": "Qwen/Qwen1.5-0.5B-Chat"
-                                   }
+                                   "protocol": "chat",
+                                   "model_name": "Qwen/Qwen1.5-0.5B-Chat",
+                                   "model_kwargs": {}
                                })
 
     nameserver.start()

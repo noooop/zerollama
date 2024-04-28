@@ -238,7 +238,13 @@ class ZeroServerProcess(Process):
                 self.server_class = getattr(module, class_name)
 
             self.server = self.server_class(**self.server_kwargs)
+        except (FileNotFoundError, EnvironmentError) as e:
+            self._set_status("error")
+            tb = traceback.format_exc()
+            self._child_conn.send((e, tb))
+            return
         except Exception as e:
+            traceback.print_exc()
             self._set_status("error")
             tb = traceback.format_exc()
             self._child_conn.send((e, tb))
@@ -248,7 +254,13 @@ class ZeroServerProcess(Process):
 
         try:
             self.server.init()
+        except (FileNotFoundError, EnvironmentError) as e:
+            self._set_status("error")
+            tb = traceback.format_exc()
+            self._child_conn.send((e, tb))
+            return
         except Exception as e:
+            traceback.print_exc()
             self._set_status("error")
             tb = traceback.format_exc()
             self._child_conn.send((e, tb))

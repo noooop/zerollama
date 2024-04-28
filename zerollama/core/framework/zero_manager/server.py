@@ -35,11 +35,12 @@ class ZeroManager(Z_MethodZeroServer):
             self.zero_send(req, rep)
             return
 
+        server_kwargs = {"protocol": kwargs.protocol,
+                         "model_name": kwargs.name,
+                         "model_kwargs": kwargs.model_kwargs}
+
         engine = ZeroServerProcess(self.server_class,
-                                   server_kwargs={
-                                       "model_class": kwargs.model_class,
-                                       "model_kwargs": kwargs.model_kwargs
-                                   })
+                                   server_kwargs=server_kwargs)
         engine.start()
 
         self._inference_engines[kwargs.name] = engine
