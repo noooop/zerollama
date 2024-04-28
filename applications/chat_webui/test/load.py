@@ -36,7 +36,7 @@ if __name__ == '__main__':
             {"role": "user", "content": prompt}
         ]
 
-        from zerollama.core.framework.inference_engine.client import ChatClient
+        from zerollama.core.framework.inference_engine.chat.client import ChatClient
 
         client = ChatClient()
         print("=" * 80)

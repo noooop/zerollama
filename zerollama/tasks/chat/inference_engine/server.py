@@ -1,19 +1,14 @@
 
 from zerollama.core.framework.zero.server import Z_MethodZeroServer
-from zerollama.core.framework.inference_engine.protocol import ChatCompletionRequest
-from zerollama.core.framework.inference_engine.protocol import ZeroServerResponseOk, ZeroServerStreamResponseOk
-from zerollama.models.collection import get_model
+from zerollama.tasks.chat.protocol import ChatCompletionRequest
+from zerollama.tasks.chat.protocol import ZeroServerResponseOk, ZeroServerStreamResponseOk
+from zerollama.tasks.chat.interface import ChatModel
 
 
-class ZeroInferenceEngine(Z_MethodZeroServer):
-    def __init__(self, protocol, model_name, model_kwargs, **kwargs):
-        self.protocol = protocol
+class ZeroChatInferenceEngine(Z_MethodZeroServer):
+    def __init__(self, model_name, model_kwargs, **kwargs):
         self.model_name = model_name
-        self.model = get_model(protocol, model_name)
-        if self.model is None:
-            raise FileNotFoundError(f"model [{model_name}] not supported.")
-
-        self.model_class = self.model.inference_backend
+        self.model_class = ChatModel.inference_backend
 
         if isinstance(self.model_class, str):
             module_name, class_name = self.model_class.split(":")
@@ -23,7 +18,7 @@ class ZeroInferenceEngine(Z_MethodZeroServer):
 
         self.model = self.model_class(model_name=model_name, **model_kwargs)
 
-        Z_MethodZeroServer.__init__(self, name=model_name, protocol=protocol,
+        Z_MethodZeroServer.__init__(self, name=model_name, protocol=self.model.protocol,
                                     port=None, do_register=True, **kwargs)
 
     def init(self):
@@ -55,9 +50,8 @@ if __name__ == '__main__':
     from zerollama.core.framework.zero.server import ZeroServerProcess
 
     nameserver = ZeroServerProcess("zerollama.core.framework.nameserver.server:ZeroNameServer")
-    engine = ZeroServerProcess("zerollama.core.framework.inference_engine.server:ZeroInferenceEngine",
+    engine = ZeroServerProcess("zerollama.tasks.chat.inference_engine.server:ZeroChatInferenceEngine",
                                server_kwargs={
-                                   "protocol": "chat",
                                    "model_name": "Qwen/Qwen1.5-0.5B-Chat",
                                    "model_kwargs": {}
                                })

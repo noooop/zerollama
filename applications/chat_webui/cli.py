@@ -1,5 +1,5 @@
 
-from zerollama.cli.cli4chat import click, chat
+from zerollama.tasks.chat.cli import click, chat
 
 
 @click.command()

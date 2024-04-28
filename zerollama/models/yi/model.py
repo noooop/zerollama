@@ -1,6 +1,6 @@
 
 
-from zerollama.core.models.chat import ChatModel
+from zerollama.tasks.chat.interface import ChatModel
 
 
 class Yi(ChatModel):
@@ -21,7 +21,7 @@ class Yi(ChatModel):
 
 if __name__ == '__main__':
     import torch
-    from zerollama.inference_backend.hf_transformers.main import run_test
+    from zerollama.inference_backend.hf_transformers.chat import run_test
 
     for model_name in [#"01-ai/Yi-6B-Chat",
                        #"01-ai/Yi-6B-Chat-8bits",

@@ -1,5 +1,5 @@
 
-from zerollama.core.models.chat import ChatModel
+from zerollama.tasks.chat.interface import ChatModel
 
 
 class Llama3ZH(ChatModel):
@@ -14,7 +14,7 @@ class Llama3ZH(ChatModel):
 
 if __name__ == '__main__':
     import torch
-    from zerollama.inference_backend.hf_transformers.main import run_test
+    from zerollama.inference_backend.hf_transformers.chat import run_test
 
     for model_name in ["UnicomLLM/Unichat-llama3-Chinese-8B"]:
         run_test(model_name, stream=False)

@@ -1,5 +1,5 @@
 
-from zerollama.core.models.chat import ChatModel
+from zerollama.tasks.chat.interface import ChatModel
 
 
 class Llama3(ChatModel):
@@ -15,7 +15,7 @@ class Llama3(ChatModel):
 
 if __name__ == '__main__':
     import torch
-    from zerollama.inference_backend.hf_transformers.main import run_test
+    from zerollama.inference_backend.hf_transformers.chat import run_test
 
     for model_name in ["meta-llama/Meta-Llama-3-8B-Instruct"]:
         run_test(model_name, stream=False)

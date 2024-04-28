@@ -1,40 +1,11 @@
-from pydantic import BaseModel, ConfigDict
-from typing import Optional
-from zerollama.core.models.base import ModelBase
 
-
-class ChatCompletionResponse(BaseModel):
-    model: str
-    prompt_length: int
-    response_length: int
-    finish_reason: str
-    content: str
-
-
-class ChatCompletionStreamResponse(BaseModel):
-    model: str
-    prompt_length: int
-    response_length: int
-    finish_reason: Optional[str] = None
-    content: Optional[str] = None
-    done: bool
-
-
-class ChatModelConfig(BaseModel):
-    name: str
-    info: dict
-    family: str
-    protocol: str = "chat"
-    model_kwargs: dict
-
-    model_config = ConfigDict(
-        protected_namespaces=()
-    )
+from zerollama.tasks.base.interface import ModelBase
+from zerollama.tasks.chat.protocol import ChatModelConfig, ChatCompletionResponse, ChatCompletionStreamResponse
 
 
 class ChatModel(ModelBase):
     protocol = "chat"
-    inference_backend = "zerollama.inference_backend.hf_transformers.main:HuggingFaceTransformersChat"
+    inference_backend = "zerollama.inference_backend.hf_transformers.chat:HuggingFaceTransformersChat"
 
     @classmethod
     def get_model_config(cls, model_name):

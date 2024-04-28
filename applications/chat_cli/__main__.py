@@ -1,5 +1,5 @@
 
-from zerollama.cli.cli4chat import click, list_families, list_family, pull
+from zerollama.tasks.chat.cli import click, list_families, list_family, pull
 
 
 @click.command()
@@ -12,9 +12,8 @@ def run(model_name):
     nameserver.start()
     nameserver_port = nameserver.wait_port_available()
 
-    engine = ZeroServerProcess("zerollama.core.framework.inference_engine.server:ZeroInferenceEngine",
+    engine = ZeroServerProcess("zerollama.tasks.chat.inference_engine.server:ZeroChatInferenceEngine",
                                server_kwargs={
-                                   "protocol": "chat",
                                    "model_name": model_name,
                                    "model_kwargs": {},
                                    "nameserver_port": nameserver_port
@@ -22,7 +21,7 @@ def run(model_name):
                                ignore_warnings=True)
     engine.start()
 
-    from zerollama.core.framework.inference_engine.client import ChatClient
+    from zerollama.tasks.chat.inference_engine.client import ChatClient
     chat_client = ChatClient(nameserver_port=nameserver_port)
 
     print("正在加载模型...")

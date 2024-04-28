@@ -9,12 +9,11 @@ from zerollama.core.framework.zero.protocol import (
     ZeroServerResponseError
 )
 
-from zerollama.core.models.chat import ChatCompletionResponse, ChatCompletionStreamResponse
+from zerollama.tasks.chat.protocol import ChatCompletionResponse, ChatCompletionStreamResponse
 
 
 class StartRequest(BaseModel):
     name: str
-    protocol: str
     model_kwargs: dict = Field(default_factory=dict)
 
     model_config = ConfigDict(

@@ -4,7 +4,8 @@ import torch
 import requests
 from threading import Thread
 from zerollama.core.config.main import config_setup
-from zerollama.core.models.chat import ChatInterface, ChatCompletionResponse, ChatCompletionStreamResponse
+from zerollama.tasks.chat.interface import ChatInterface
+from zerollama.tasks.chat.protocol import ChatCompletionResponse, ChatCompletionStreamResponse
 from zerollama.models.collection.chat import get_chat_model_config_by_name
 
 

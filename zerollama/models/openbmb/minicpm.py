@@ -1,5 +1,5 @@
 
-from zerollama.core.models.chat import ChatModel
+from zerollama.tasks.chat.interface import ChatModel
 
 
 class MiniCPM(ChatModel):
@@ -29,7 +29,7 @@ class MiniCPM(ChatModel):
 
 if __name__ == '__main__':
     import torch
-    from zerollama.inference_backend.hf_transformers.main import run_test
+    from zerollama.inference_backend.hf_transformers.chat import run_test
 
     for model_name in ["openbmb/MiniCPM-2B-sft-bf16",
                        "openbmb/MiniCPM-2B-dpo-bf16"]:

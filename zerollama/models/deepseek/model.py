@@ -1,6 +1,6 @@
 
 
-from zerollama.core.models.chat import ChatModel
+from zerollama.tasks.chat.interface import ChatModel
 
 
 class DeepSeekLLM(ChatModel):
@@ -18,7 +18,7 @@ class DeepSeekLLM(ChatModel):
 
 if __name__ == '__main__':
     import torch
-    from zerollama.inference_backend.hf_transformers.main import run_test
+    from zerollama.inference_backend.hf_transformers.chat import run_test
 
     for model_name in ["deepseek-ai/deepseek-llm-7b-chat"]:
         run_test(model_name, stream=False)

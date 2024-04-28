@@ -1,6 +1,6 @@
 
 from zerollama.core.framework.nameserver.client import ZeroClient
-from zerollama.core.framework.inference_engine.protocol import ChatCompletionRequest, ChatCompletionResponse, ChatCompletionStreamResponse
+from zerollama.tasks.chat.protocol import ChatCompletionRequest, ChatCompletionResponse, ChatCompletionStreamResponse
 
 CLIENT_VALIDATION = True
 

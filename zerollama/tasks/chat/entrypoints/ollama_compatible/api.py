@@ -4,8 +4,8 @@ import datetime
 from fastapi import FastAPI
 from fastapi.responses import StreamingResponse, JSONResponse
 
-from zerollama.core.framework.inference_engine.client import ChatClient
-from zerollama.entrypoints.ollama_compatible.protocol import ChatCompletionRequest, ShowRequest
+from zerollama.tasks.chat.inference_engine.client import ChatClient
+from .protocol import ChatCompletionRequest, ShowRequest
 
 
 chat_client = ChatClient()

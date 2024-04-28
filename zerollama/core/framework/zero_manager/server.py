@@ -35,12 +35,10 @@ class ZeroManager(Z_MethodZeroServer):
             self.zero_send(req, rep)
             return
 
-        server_kwargs = {"protocol": kwargs.protocol,
-                         "model_name": kwargs.name,
+        server_kwargs = {"model_name": kwargs.name,
                          "model_kwargs": kwargs.model_kwargs}
 
-        engine = ZeroServerProcess(self.server_class,
-                                   server_kwargs=server_kwargs)
+        engine = ZeroServerProcess(self.server_class, server_kwargs)
         engine.start()
 
         self._inference_engines[kwargs.name] = engine
@@ -95,8 +93,8 @@ class ZeroManager(Z_MethodZeroServer):
 
 
 if __name__ == '__main__':
-    name = "ZeroInferenceManager"
-    server_class = "zerollama.core.framework.inference_engine.server:ZeroInferenceEngine"
+    name = "ZeroChatInferenceManager"
+    server_class = "zerollama.tasks.chat.inference_engine.server:ZeroChatInferenceEngine"
 
     nameserver = ZeroServerProcess("zerollama.core.framework.nameserver.server:ZeroNameServer")
     manager = ZeroServerProcess("zerollama.core.framework.zero_manager.server:ZeroManager",

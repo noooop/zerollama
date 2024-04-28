@@ -4,7 +4,7 @@ import datetime
 from fastapi import FastAPI, Response
 from fastapi.responses import StreamingResponse
 
-from zerollama.entrypoints.openai_compatible.protocol import (
+from .protocol import (
     ChatCompletionRequest,
     ChatCompletionResponse,
     ChatCompletionResponseStreamChoice,

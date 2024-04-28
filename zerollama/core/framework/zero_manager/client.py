@@ -13,9 +13,8 @@ class ZeroManagerClient(ZeroClient):
         self.name = name
         ZeroClient.__init__(self, self.protocol)
 
-    def start(self, model_name, protocol, model_kwargs):
+    def start(self, model_name, model_kwargs):
         data = {"name": model_name,
-                "protocol": protocol,
                 "model_kwargs": model_kwargs}
         method = "start"
 
@@ -78,7 +77,7 @@ class ZeroManagerClient(ZeroClient):
 
 if __name__ == '__main__':
     from pprint import pprint
-    name = "ZeroInferenceManager"
+    name = "ZeroChatInferenceManager"
     manager_client = ZeroManagerClient(name)
 
     print("=" * 80)
@@ -95,14 +94,13 @@ if __name__ == '__main__':
     print(manager_client.list())
     print(manager_client.statuses())
 
-    protocol = "chat"
     model_kwargs = {}
     model_names = ["Qwen/Qwen1.5-0.5B-Chat-AWQ",
                    "openbmb/MiniCPM-2B-sft-bf16"]
     for model_name in model_names + ["not_found", "Qwen/Qwen1.5-72B-Chat"]:
         print("=" * 80)
         print('start', model_name)
-        print(manager_client.start(model_name, protocol, model_kwargs))
+        print(manager_client.start(model_name, model_kwargs))
         print(manager_client.list())
         print(manager_client.statuses())
 
@@ -112,7 +110,7 @@ if __name__ == '__main__':
             {"role": "user", "content": prompt}
         ]
 
-        from zerollama.core.framework.inference_engine.client import ChatClient
+        from zerollama.tasks.chat.inference_engine.client import ChatClient
 
         client = ChatClient()
         print("=" * 80)

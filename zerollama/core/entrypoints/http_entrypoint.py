@@ -36,7 +36,7 @@ class HttpEntrypoint(Process):
 
 
 if __name__ == '__main__':
-    gateway = HttpEntrypoint(server_class="zerollama.gateway.openai_compatible:app",
+    gateway = HttpEntrypoint(server_class="zerollama.tasks.chat.entrypoints.ollama_compatible.api:app",
                              server_kwargs={"port": 11434, "host": "127.0.0.1"})
     gateway.start()
     gateway.wait()
