@@ -45,22 +45,7 @@ def start(model_name, nowait):
         return
     print(f"Wait {model_name} available.")
 
-    for i in range(100):
-        time.sleep(0.5)
-        rep = manager_client.status(model_name)
-        if rep.state == "error":
-            continue
-
-        state = rep.msg["status"]
-        exception = rep.msg["exception"]
-        if state in ["prepare", "started"]:
-            print(f"{model_name} {state}.")
-        elif state in ["error"]:
-            print(f"{model_name} {state}. {exception}.")
-            return
-        elif state in ["running"]:
-            print(f"{model_name} available now.")
-            return
+    manager_client.wait_service_status(model_name)
 
 
 @click.command()

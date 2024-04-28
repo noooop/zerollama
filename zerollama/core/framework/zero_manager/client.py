@@ -1,6 +1,6 @@
 import time
 
-from zerollama.core.framework.nameserver.client import ZeroClient
+from zerollama.core.framework.nameserver.client import ZeroClient, Timeout
 from zerollama.core.framework.zero_manager.protocol import StartRequest, TerminateRequest, StatusRequest
 
 CLIENT_VALIDATION = True
@@ -50,6 +50,31 @@ class ZeroManagerClient(ZeroClient):
             data = StatusRequest(**data).dict()
         return self.query(self.name, method, data)
 
+    def wait_service_status(self, model_name, timeout=10000, verbose=True):
+        t = timeout + time.time()
+
+        while time.time() < t:
+            time.sleep(0.5)
+            rep = self.status(model_name)
+            if rep.state == "error":
+                continue
+
+            status = rep.msg["status"]
+            exception = rep.msg["exception"]
+            if status in ["prepare", "started"]:
+                if verbose:
+                    print(f"{model_name} {status}.")
+            elif status in ["error"]:
+                if verbose:
+                    print(f"{model_name} {status}. {exception}.")
+                return status, exception
+            elif status in ["running"]:
+                if verbose:
+                    print(f"{model_name} available now.")
+                return status, exception
+
+        raise Timeout
+
 
 if __name__ == '__main__':
     from pprint import pprint
@@ -83,14 +108,6 @@ if __name__ == '__main__':
         print(manager_client.list())
         print(manager_client.statuses())
 
-    """
-    for i in range(100):
-        time.sleep(0.5)
-        rep = manager_client.statuses()
-        for k in rep.msg.keys():
-            print(manager_client.status(k))
-    """
-
     def test_inference_engine(model_name):
         prompt = "给我介绍一下大型语言模型。"
         messages = [
@@ -102,7 +119,7 @@ if __name__ == '__main__':
         client = ChatClient()
         print("=" * 80)
         print(f"Wait {model_name} available")
-        client.wait_service_available(model_name)
+        manager_client.wait_service_status(model_name)
         print(client.get_services(model_name))
 
         print("=" * 80)
