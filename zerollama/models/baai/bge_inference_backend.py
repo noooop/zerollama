@@ -1,22 +1,37 @@
 import torch
+import requests
 from zerollama.core.config.main import config_setup
 from zerollama.tasks.retriever.interface import RetrieverInterface
+from functools import partial
 
 
 class BGEM3(RetrieverInterface):
-    def __init__(self, model_name, device="cuda"):
+    def __init__(self, model_name, local_files_only=True, device="cuda"):
+        self.model = None
+
         self.device = device
         self.model_name = model_name
-        self.model = None
+        self.local_files_only = local_files_only
 
     def load(self):
         config = config_setup()
 
+        if self.local_files_only:
+            import huggingface_hub
+            huggingface_hub.snapshot_download = partial(huggingface_hub.snapshot_download,
+                                                        local_files_only=True)
+
         from FlagEmbedding import BGEM3FlagModel
-        self.model = BGEM3FlagModel(self.model_name,
-                                    use_fp16=True,
-                                    normalize_embeddings=True,
-                                    device=self.device)
+
+        try:
+            self.model = BGEM3FlagModel(self.model_name,
+                                        use_fp16=True,
+                                        normalize_embeddings=True,
+                                        device=self.device)
+        except requests.exceptions.HTTPError:
+            raise FileNotFoundError(f"model '{self.model_name}' not found, try pulling it first.")
+        except EnvironmentError:
+            raise FileNotFoundError(f"model '{self.model_name}' not found, try pulling it first.")
 
     @torch.no_grad()
     def encode(self, sentences, **options):

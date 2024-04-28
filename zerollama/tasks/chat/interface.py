@@ -10,22 +10,11 @@ class ChatModel(ModelBase):
 
     @classmethod
     def get_model_config(cls, model_name):
-        info_dict = {x[0]: {k: v for k, v in zip(cls.header, x)} for x in cls.info}
+        model_config = super().get_model_config(model_name)
+        if model_config is None:
+            return
 
-        if model_name not in info_dict:
-            return None
-
-        info = info_dict[model_name]
-        info.update({"family": cls.family, "protocol": cls.protocol})
-
-        chat_model_config = ChatModelConfig(**{
-            "name": model_name,
-            "info": info,
-            "family": cls.family,
-            "protocol": cls.protocol,
-            "model_kwargs": cls.model_kwargs})
-
-        return chat_model_config
+        return ChatModelConfig(**model_config)
 
 
 class ChatInterface(object):

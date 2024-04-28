@@ -6,12 +6,12 @@ from threading import Thread
 from zerollama.core.config.main import config_setup
 from zerollama.tasks.chat.interface import ChatInterface
 from zerollama.tasks.chat.protocol import ChatCompletionResponse, ChatCompletionStreamResponse
-from zerollama.tasks.chat.model_collection import get_chat_model_config_by_name
+from zerollama.tasks.chat.model_collection import get_model_config_by_name
 
 
 class HuggingFaceTransformers(object):
     def __init__(self, model_name, local_files_only=True, device="cuda"):
-        model_config = get_chat_model_config_by_name(model_name)
+        model_config = get_model_config_by_name(model_name)
 
         if model_config is None:
             raise FileNotFoundError(f"model [{model_name}] not supported.")

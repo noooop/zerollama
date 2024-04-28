@@ -5,7 +5,7 @@ from zerollama.tasks.chat.interface import ChatModel
 class Llama3(ChatModel):
     family = "llama3"
     model_kwargs = {}
-    header = ["name", "size", "quantization"]
+    header = ["name", "size", "quantization", "bits"]
     info = [
         # name                                          size    quantization(_, GPTQ, AWQ)     bits
         ["meta-llama/Meta-Llama-3-8B-Instruct",         "8B",   "",                            ""],

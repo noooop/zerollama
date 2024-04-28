@@ -1,12 +1,12 @@
 
 import click
-from zerollama.tasks.chat.protocol import MANAGER_NAME
+from zerollama.tasks.retriever.protocol import MANAGER_NAME
 
 
 @click.command()
 def list_families():
-    from zerollama.tasks.chat.model_collection import families
-    click.echo("Supported chat families:")
+    from zerollama.tasks.retriever.model_collection import families
+    click.echo("Supported retriever families:")
     for name in families():
         click.echo(name)
 
@@ -14,7 +14,7 @@ def list_families():
 @click.command()
 @click.argument('name')
 def list_family(name):
-    from zerollama.tasks.chat.model_collection import family
+    from zerollama.tasks.retriever.model_collection import family
     c = family(name)
     if c is None:
         click.echo(f"[ {name} ] not support.")
@@ -54,16 +54,16 @@ def terminate(model_name):
 
 
 @click.group()
-def chat():
+def retriever():
     pass
 
 
-chat.add_command(list_families)
-chat.add_command(list_family)
-chat.add_command(pull)
-chat.add_command(start)
-chat.add_command(terminate)
+retriever.add_command(list_families)
+retriever.add_command(list_family)
+retriever.add_command(pull)
+retriever.add_command(start)
+retriever.add_command(terminate)
 
 
 if __name__ == '__main__':
-    chat()
+    retriever()

@@ -1,14 +1,9 @@
 
 
-from zerollama.models.deepseek.model import DeepSeekLLM
-from zerollama.models.openbmb.minicpm import MiniCPM
-from zerollama.models.qwen.qwen1_5 import Qwen1_5
-from zerollama.models.yi.model import Yi
-from zerollama.models.llama.llama3 import Llama3
-from zerollama.models.llama.llama3zh import Llama3ZH
+from zerollama.models.baai.bge import BGEM3
 
 
-MODELS = [DeepSeekLLM, MiniCPM, Qwen1_5, Yi, Llama3, Llama3ZH]
+MODELS = [BGEM3]
 MODELS_NAME_MAP = dict()
 MODELS_FAMILY_MAP = {m.family: m for m in MODELS}
 
@@ -41,9 +36,9 @@ def get_model_by_name(model_name):
 if __name__ == '__main__':
     print(families())
 
-    print(family("Qwen1.5"))
+    print(family("BGE"))
 
-    model_name = "Qwen/Qwen1.5-0.5B-Chat"
+    model_name = "BAAI/bge-m3"
     config = get_model_config_by_name(model_name)
     print(config)
 

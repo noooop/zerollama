@@ -24,4 +24,19 @@ class ModelBase(object):
 
     @classmethod
     def get_model_config(cls, model_name):
-        raise NotImplementedError
+        info_dict = {x[0]: {k: v for k, v in zip(cls.header, x)} for x in cls.info}
+
+        if model_name not in info_dict:
+            return None
+
+        info = info_dict[model_name]
+        info.update({"family": cls.family, "protocol": cls.protocol})
+
+        model_config = {
+            "name": model_name,
+            "info": info,
+            "family": cls.family,
+            "protocol": cls.protocol,
+            "model_kwargs": cls.model_kwargs}
+
+        return model_config
