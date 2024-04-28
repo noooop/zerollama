@@ -15,6 +15,9 @@ class HttpEntrypoint(Process):
         host = self.server_kwargs.get("host", "0.0.0.0")
         port = self.server_kwargs.get("port", 8000)
 
+        self.server_kwargs["host"] = host
+        self.server_kwargs["host"] = port
+
         print("HttpEntrypoints running!", host, port)
 
         try:
