@@ -1,4 +1,4 @@
-name: zerollama_v0.1
+name: zerollama_v0.2
 channels:
   - conda-forge
   - pytorch
@@ -16,3 +16,8 @@ dependencies:
       - auto-gptq==0.7.1
       - autoawq==0.2.4
       - prettytable==3.10.0
+      - modelscope==1.13.3
+      - easydict==1.13
+      - uvicorn==0.29.0
+      - fastapi==0.110.2
+      - pydantic==2.7.1
