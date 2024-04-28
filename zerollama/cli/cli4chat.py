@@ -48,17 +48,19 @@ def start(model_name, nowait):
     for i in range(100):
         time.sleep(0.5)
         rep = manager_client.status(model_name)
-        if rep.state == "ok":
-            state = rep.msg["state"]
-            exception = rep.msg["state"]
-            if state in ["prepare", "started"]:
-                print(f"{model_name} {state}.")
-            elif state in ["error"]:
-                print(f"{model_name} {state} {exception}.")
-                return
-            elif state in ["running"]:
-                print(f"{model_name} available now.")
-                return
+        if rep.state == "error":
+            continue
+
+        state = rep.msg["status"]
+        exception = rep.msg["exception"]
+        if state in ["prepare", "started"]:
+            print(f"{model_name} {state}.")
+        elif state in ["error"]:
+            print(f"{model_name} {state}. {exception}.")
+            return
+        elif state in ["running"]:
+            print(f"{model_name} available now.")
+            return
 
 
 @click.command()
