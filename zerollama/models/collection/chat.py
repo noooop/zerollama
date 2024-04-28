@@ -5,9 +5,10 @@ from zerollama.models.openbmb.minicpm import MiniCPM
 from zerollama.models.qwen.qwen1_5 import Qwen1_5
 from zerollama.models.yi.model import Yi
 from zerollama.models.llama.llama3 import Llama3
+from zerollama.models.llama.llama3zh import Llama3ZH
 
 
-CHAT_MODELS = [DeepSeekLLM, MiniCPM, Qwen1_5, Yi, Llama3]
+CHAT_MODELS = [DeepSeekLLM, MiniCPM, Qwen1_5, Yi, Llama3, Llama3ZH]
 CHAT_MODELS_NAME_MAP = dict()
 CHAT_MODELS_FAMILY_MAP = {m.family: m for m in CHAT_MODELS}
 
