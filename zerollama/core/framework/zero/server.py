@@ -20,7 +20,7 @@ class ZeroServer(object):
 
     def __init__(self, name=None, protocol=None, port=None, event=None, do_register=True, share_port=None,
                  nameserver_port=None):
-        context = zmq.Context()
+        context = zmq.Context.instance()
         socket = context.socket(zmq.ROUTER)
         if port is None or port == "random":
             port = socket.bind_to_random_port("tcp://*", min_port=50000, max_port=60000)

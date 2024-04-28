@@ -2,6 +2,7 @@
 import zmq
 import json
 import shortuuid
+from os import getpid
 from queue import Queue
 from zerollama.core.framework.zero.protocol import ZeroServerResponse
 
@@ -38,26 +39,42 @@ class Socket(object):
 class SocketPool(object):
     def __init__(self):
         self.queue = {}
-        self.context = zmq.Context()
+        self.context = zmq.Context.instance()
+        self._pid = getpid()
+
+    def reinit(self):
+        self.queue = {}
+        self.context = zmq.Context.instance()
+        self._pid = getpid()
 
     def get(self, addr):
+        if self._pid != getpid():
+            self.reinit()
+
         if addr not in self.queue:
             self.queue[addr] = Queue()
 
         queue = self.queue[addr]
+
         if queue.empty():
             return Socket(self.context, addr)
         else:
             return queue.get()
 
     def put(self, socket, addr):
-        if addr not in self.queue:
-            self.queue[addr] = Queue()
-        queue = self.queue[addr]
-        queue.put(socket)
+        if self._pid != getpid():
+            self.reinit()
+        else:
+            if addr not in self.queue:
+                self.queue[addr] = Queue()
+            queue = self.queue[addr]
+            queue.put(socket)
 
     def delete(self, socket):
-        socket.close()
+        if self._pid != getpid():
+            self.reinit()
+        else:
+            socket.close()
 
 
 socket_pool = SocketPool()
