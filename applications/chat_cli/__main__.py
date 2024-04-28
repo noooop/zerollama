@@ -5,7 +5,6 @@ from zerollama.cli.cli4chat import click, list_families, list_family, pull
 @click.command()
 @click.argument('model_name')
 def run(model_name):
-    import time
     from zerollama.core.framework.zero.server import ZeroServerProcess
 
     nameserver = ZeroServerProcess("zerollama.core.framework.nameserver.server:ZeroNameServer",
@@ -15,10 +14,9 @@ def run(model_name):
 
     engine = ZeroServerProcess("zerollama.core.framework.inference_engine.server:ZeroInferenceEngine",
                                server_kwargs={
-                                   "model_class": "zerollama.inference_backend.hf_transformers.main:HuggingFaceTransformersChat",
-                                   "model_kwargs": {
-                                     "model_name": model_name
-                                   },
+                                   "protocol": "chat",
+                                   "model_name": model_name,
+                                   "model_kwargs": {},
                                    "nameserver_port": nameserver_port
                                },
                                ignore_warnings=True)

@@ -32,14 +32,13 @@ def pull(model_name):
 @click.argument('model_name')
 @click.option("--nowait", default=False)
 def start(model_name, nowait):
-    import time
     from zerollama.core.framework.zero_manager.client import ZeroManagerClient
 
     name = "ZeroInferenceManager"
     manager_client = ZeroManagerClient(name)
-    model_class = "zerollama.inference_backend.hf_transformers.main:HuggingFaceTransformersChat"
-    model_kwargs = {"model_name": model_name}
-    manager_client.start(model_name, model_class, model_kwargs)
+    protocol = "chat"
+    model_kwargs = {}
+    manager_client.start(model_name, protocol, model_kwargs)
 
     if nowait:
         return
