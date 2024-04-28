@@ -12,7 +12,7 @@ class HttpEntrypoint(Process):
     def run(self):
         import uvicorn
 
-        host = self.server_kwargs.get("host", "127.0.0.1")
+        host = self.server_kwargs.get("host", "0.0.0.0")
         port = self.server_kwargs.get("port", 8000)
 
         print("HttpEntrypoints running!", host, port)
