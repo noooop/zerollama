@@ -1,6 +1,5 @@
 
 import gc
-import traceback
 import torch
 import requests
 from threading import Thread
@@ -14,7 +13,7 @@ class HuggingFaceTransformers(object):
         model_config = get_chat_model_config_by_name(model_name)
 
         if model_config is None:
-            raise KeyError(f"model [{model_name}] not supported.")
+            raise FileNotFoundError(f"model [{model_name}] not supported.")
 
         self.device = device
         self.model_name = model_name

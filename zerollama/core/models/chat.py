@@ -1,5 +1,6 @@
 from pydantic import BaseModel, ConfigDict
 from typing import Optional
+from zerollama.core.models.base import ModelBase
 
 
 class ChatCompletionResponse(BaseModel):
@@ -31,16 +32,9 @@ class ChatModelConfig(BaseModel):
     )
 
 
-class ChatModel(object):
-    family = ""
+class ChatModel(ModelBase):
     protocol = "chat"
-    model_kwargs = {}
-    header = []
-    info = []
-
-    @classmethod
-    def model_names(cls):
-        return [x[0] for x in cls.info]
+    inference_backend = "zerollama.inference_backend.hf_transformers.main:HuggingFaceTransformersChat"
 
     @classmethod
     def get_model_config(cls, model_name):
@@ -60,16 +54,6 @@ class ChatModel(object):
             "model_kwargs": cls.model_kwargs})
 
         return chat_model_config
-
-    @classmethod
-    def prettytable(cls):
-        from prettytable import PrettyTable
-        table = PrettyTable(cls.header + ["family", "protocol"], align='l')
-
-        for x in cls.info:
-            table.add_row(x+[cls.family, cls.protocol])
-
-        return table
 
 
 class ChatInterface(object):

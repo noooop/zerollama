@@ -31,6 +31,13 @@ def get_chat_model_config_by_name(model_name):
     return CHAT_MODELS_NAME_MAP[model_name].get_model_config(model_name)
 
 
+def get_chat_model_by_name(model_name):
+    if model_name not in CHAT_MODELS_NAME_MAP:
+        return None
+
+    return CHAT_MODELS_NAME_MAP[model_name]
+
+
 if __name__ == '__main__':
     print(chat_families())
 
