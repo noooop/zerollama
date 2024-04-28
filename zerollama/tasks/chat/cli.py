@@ -1,5 +1,6 @@
 
 import click
+from zerollama.tasks.chat.protocol import MANAGER_NAME
 
 
 @click.command()
@@ -34,11 +35,8 @@ def pull(model_name):
 def start(model_name, nowait):
     from zerollama.core.framework.zero_manager.client import ZeroManagerClient
 
-    name = "ZeroChatInferenceManager"
-    manager_client = ZeroManagerClient(name)
-    protocol = "chat"
-    model_kwargs = {}
-    manager_client.start(model_name, model_kwargs)
+    manager_client = ZeroManagerClient(MANAGER_NAME)
+    manager_client.start(model_name)
 
     if nowait:
         return
@@ -51,8 +49,7 @@ def start(model_name, nowait):
 @click.argument('model_name')
 def terminate(model_name):
     from zerollama.core.framework.zero_manager.client import ZeroManagerClient
-    name = "ZeroChatInferenceManager"
-    manager_client = ZeroManagerClient(name)
+    manager_client = ZeroManagerClient(MANAGER_NAME)
     manager_client.terminate(model_name)
 
 

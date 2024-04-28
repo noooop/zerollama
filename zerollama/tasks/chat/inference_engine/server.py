@@ -1,8 +1,8 @@
 
 from zerollama.core.framework.zero.server import Z_MethodZeroServer
+from zerollama.tasks.chat.interface import ChatModel
 from zerollama.tasks.chat.protocol import ChatCompletionRequest
 from zerollama.tasks.chat.protocol import ZeroServerResponseOk, ZeroServerStreamResponseOk
-from zerollama.tasks.chat.interface import ChatModel
 
 
 class ZeroChatInferenceEngine(Z_MethodZeroServer):
@@ -23,7 +23,7 @@ class ZeroChatInferenceEngine(Z_MethodZeroServer):
 
     def init(self):
         self.model.load()
-        print("ZeroInferenceEngine: ", self.name, "is running!", "port:", self.port)
+        print(f"{self.__class__.__name__}: ", self.name, "is running!", "port:", self.port)
 
     def z_inference(self, req):
         ccr = ChatCompletionRequest(**req.data)

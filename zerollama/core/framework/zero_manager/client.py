@@ -13,9 +13,9 @@ class ZeroManagerClient(ZeroClient):
         self.name = name
         ZeroClient.__init__(self, self.protocol)
 
-    def start(self, model_name, model_kwargs):
+    def start(self, model_name, model_kwargs=None):
         data = {"name": model_name,
-                "model_kwargs": model_kwargs}
+                "model_kwargs": model_kwargs or {}}
         method = "start"
 
         if CLIENT_VALIDATION:

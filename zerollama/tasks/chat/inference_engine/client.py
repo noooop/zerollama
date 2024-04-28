@@ -1,12 +1,13 @@
 
 from zerollama.core.framework.nameserver.client import ZeroClient
+from zerollama.tasks.chat.protocol import PROTOCOL
 from zerollama.tasks.chat.protocol import ChatCompletionRequest, ChatCompletionResponse, ChatCompletionStreamResponse
 
 CLIENT_VALIDATION = True
 
 
 class ChatClient(ZeroClient):
-    protocol = "chat"
+    protocol = PROTOCOL
 
     def __init__(self, nameserver_port=None):
         ZeroClient.__init__(self, self.protocol, nameserver_port)
@@ -65,7 +66,7 @@ if __name__ == '__main__':
     print(client.get_services(model_name))
 
     print("=" * 80)
-    print('ZeroInferenceEngine support_methods')
+    print('ZeroChatInferenceEngine support_methods')
     print(client.support_methods(model_name))
     print(client.info(model_name))
 

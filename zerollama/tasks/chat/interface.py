@@ -1,10 +1,11 @@
 
 from zerollama.tasks.base.interface import ModelBase
+from zerollama.tasks.chat.protocol import PROTOCOL
 from zerollama.tasks.chat.protocol import ChatModelConfig, ChatCompletionResponse, ChatCompletionStreamResponse
 
 
 class ChatModel(ModelBase):
-    protocol = "chat"
+    protocol = PROTOCOL
     inference_backend = "zerollama.inference_backend.hf_transformers.chat:HuggingFaceTransformersChat"
 
     @classmethod
@@ -28,7 +29,7 @@ class ChatModel(ModelBase):
 
 
 class ChatInterface(object):
-    protocol = "chat"
+    protocol = PROTOCOL
 
     def load(self):
         """

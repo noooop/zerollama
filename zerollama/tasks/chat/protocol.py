@@ -9,6 +9,9 @@ from zerollama.core.framework.zero.protocol import (
     ZeroServerResponseError
 )
 
+MANAGER_NAME = "ZeroChatInferenceManager"
+PROTOCOL = "chat"
+
 
 class ChatCompletionRequest(BaseModel):
     model: str
@@ -38,7 +41,7 @@ class ChatModelConfig(BaseModel):
     name: str
     info: dict
     family: str
-    protocol: str = "chat"
+    protocol: str = PROTOCOL
     model_kwargs: dict
 
     model_config = ConfigDict(

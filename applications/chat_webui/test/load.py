@@ -1,33 +1,31 @@
 from zerollama.core.framework.zero_manager.client import ZeroManagerClient
+from zerollama.tasks.chat.protocol import MANAGER_NAME
 
 if __name__ == '__main__':
     from pprint import pprint
-    name = "ZeroInferenceManager"
-    manager_client = ZeroManagerClient(name)
+    manager_client = ZeroManagerClient(MANAGER_NAME)
 
     print("=" * 80)
-    print(f"Wait {name} available")
-    manager_client.wait_service_available(name)
+    print(f"Wait {MANAGER_NAME} available")
+    manager_client.wait_service_available(MANAGER_NAME)
     print(manager_client.get_service_names())
 
     print("=" * 80)
-    print(f'{name} support_methods')
-    print(manager_client.support_methods(name))
+    print(f'{MANAGER_NAME} support_methods')
+    print(manager_client.support_methods(MANAGER_NAME))
 
     print("=" * 80)
     print(f'init')
     print(manager_client.list())
     print(manager_client.statuses())
 
-    protocol = "chat"
-    model_kwargs = {}
     model_names = ["Qwen/Qwen1.5-0.5B-Chat-AWQ",
                    "openbmb/MiniCPM-2B-sft-bf16"]
 
     for model_name in model_names:
         print("=" * 80)
         print('start', model_name)
-        print(manager_client.start(model_name, protocol, model_kwargs))
+        print(manager_client.start(model_name))
         print(manager_client.list())
 
     def test_inference_engine(model_name):
@@ -36,7 +34,7 @@ if __name__ == '__main__':
             {"role": "user", "content": prompt}
         ]
 
-        from zerollama.core.framework.inference_engine.chat.client import ChatClient
+        from zerollama.tasks.chat.inference_engine.client import ChatClient
 
         client = ChatClient()
         print("=" * 80)
@@ -45,7 +43,7 @@ if __name__ == '__main__':
         print(client.get_services(model_name))
 
         print("=" * 80)
-        print('ZeroInferenceEngine support_methods')
+        print('ZeroChatInferenceEngine support_methods')
         print(client.support_methods(model_name))
 
         print("="*80)
