@@ -32,6 +32,7 @@ def pull(model_name):
 @click.argument('model_name')
 @click.option("--nowait", default=False)
 def start(model_name, nowait):
+    import time
     from zerollama.core.framework.zero_manager.client import ZeroManagerClient
 
     name = "ZeroInferenceManager"
@@ -42,12 +43,22 @@ def start(model_name, nowait):
 
     if nowait:
         return
-
-    from zerollama.core.framework.inference_engine.client import ChatClient
-    client = ChatClient()
     print(f"Wait {model_name} available.")
-    client.wait_service_available(model_name)
-    print(f"{model_name} available now.")
+
+    for i in range(100):
+        time.sleep(0.5)
+        rep = manager_client.status(model_name)
+        if rep.state == "ok":
+            state = rep.msg["state"]
+            exception = rep.msg["state"]
+            if state in ["prepare", "started"]:
+                print(f"{model_name} {state}.")
+            elif state in ["error"]:
+                print(f"{model_name} {state} {exception}.")
+                return
+            elif state in ["running"]:
+                print(f"{model_name} available now.")
+                return
 
 
 @click.command()
