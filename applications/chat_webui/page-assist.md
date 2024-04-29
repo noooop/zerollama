@@ -90,6 +90,7 @@ BAAI/bge-m3 available now.
 ## 8. 与当前网页聊天
 <img src="https://github.com/noooop/zerollama/blob/main/static/page-assist/chat1.png?raw=true" width="400">
 <img src="https://github.com/noooop/zerollama/blob/main/static/page-assist/chat2.png?raw=true" width="400">
+<img src="https://github.com/noooop/zerollama/blob/main/static/page-assist/retriever.png?raw=true" width="400">
 
 ## 9. 退出
 ```
