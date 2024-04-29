@@ -57,9 +57,9 @@ class HuggingFaceTransformers(object):
                 trust_remote_code=self.trust_remote_code
             )
         except requests.exceptions.HTTPError:
-            raise FileNotFoundError(f"model '{self.model_name}' not found.")
+            raise FileNotFoundError(f"model '{self.model_name}' not found, try pulling it first") from None
         except EnvironmentError:
-            raise FileNotFoundError(f"model '{self.model_name}' not found, try pulling it first")
+            raise FileNotFoundError(f"model '{self.model_name}' not found, try pulling it first") from None
 
         tokenizer = AutoTokenizer.from_pretrained(self.model_name)
         streamer = TextIteratorStreamer(tokenizer, skip_prompt=True, skip_special_tokens=True)

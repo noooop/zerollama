@@ -29,9 +29,9 @@ class BGEM3(RetrieverInterface):
                                         normalize_embeddings=True,
                                         device=self.device)
         except requests.exceptions.HTTPError:
-            raise FileNotFoundError(f"model '{self.model_name}' not found, try pulling it first.")
+            raise FileNotFoundError(f"model '{self.model_name}' not found, try pulling it first.") from None
         except EnvironmentError:
-            raise FileNotFoundError(f"model '{self.model_name}' not found, try pulling it first.")
+            raise FileNotFoundError(f"model '{self.model_name}' not found, try pulling it first.") from None
 
     @torch.no_grad()
     def encode(self, sentences, **options):
