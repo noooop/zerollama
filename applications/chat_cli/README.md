@@ -2,15 +2,42 @@
 
 [配置环境](https://github.com/noooop/zerollama/tree/main/setup)
 
-## list 列出支持的模型
+## 帮助
 ```
-$ python -m applications.chat_cli list
-+----------------------------------+---------+------+------+--------------+------+
-| name                             | family  | type | size | quantization | bits |
-+----------------------------------+---------+------+------+--------------+------+
-| Qwen/Qwen1.5-0.5B-Chat           | Qwen1.5 | Chat | 0.5B |              |      |
+$ python -m applications.chat_cli
+Usage: python -m applications.chat_cli [OPTIONS] COMMAND [ARGS]...
+
+Options:
+  --help  Show this message and exit.
+
+Commands:
+  list-families
+  list-family
+  pull
+  run
+  start
+  terminate
+```
+
+## list-families 列出支持的模型家族
+```
+$ python -m applications.chat_cli list-families
+Supported chat families:
+deepseek-llm
+MiniCPM
+Qwen1.5
+Yi
+```
+
+## list-family 列出支持的模型家族成员
+```
+$ python -m applications.chat_cli list-family Qwen1.5
++----------------------------------+------+--------------+-------+---------+----------+
+| name                             | size | quantization | bits  | family  | protocol |
++----------------------------------+------+--------------+-------+---------+----------+
+| Qwen/Qwen1.5-0.5B-Chat           | 0.5B |              |       | Qwen1.5 | chat     |
 ...
-+----------------------------------+---------+------+------+--------------+------+
++----------------------------------+------+--------------+-------+---------+----------+
 ```
 
 ## pull 下载模型

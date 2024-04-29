@@ -1,7 +1,7 @@
 
 import os
 os.environ["HF_ENDPOINT"] = "https://hf-mirror.com"
-os.environ['HF_HOME'] = 'D:/.cache/'
+os.environ['HF_HOME'] = 'D:/.cache/huggingface/'
 
 
 import torch
@@ -13,7 +13,6 @@ class Qwen(object):
         self.model_name = model_name
         self.model = None
         self.tokenizer = None
-        self.eos_token_id = None
 
     def load(self):
         from transformers import AutoModelForCausalLM, AutoTokenizer
@@ -28,7 +27,6 @@ class Qwen(object):
 
         self.model = model.to(self.device)
         self.tokenizer = tokenizer
-        self.eos_token_id = tokenizer.encode('<|im_end|>')
 
     @torch.no_grad()
     def chat(self, messages, options=None):
@@ -45,8 +43,7 @@ class Qwen(object):
         model_inputs = self.tokenizer([text], return_tensors="pt").to(self.device)
         generated_ids = self.model.generate(
             model_inputs.input_ids,
-            max_new_tokens=max_new_tokens,
-            eos_token_id=self.eos_token_id
+            max_new_tokens=max_new_tokens
         )
         generated_ids = [
             output_ids[len(input_ids):] for input_ids, output_ids in zip(model_inputs.input_ids, generated_ids)

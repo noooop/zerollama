@@ -27,13 +27,13 @@ $ conda env create -f environment_windows.yml
 ## 手动配置
 ```
 # 创建虚拟环境
-$ conda create -n zerollama_v0.1 python=3.11 anaconda
+$ conda create -n zerollama_v0.2 python=3.11 anaconda
 
 # 查看虚拟环境
 $ conda env list 
 
 # 激活虚拟环境
-$ conda activate zerollama_v0.1
+$ conda activate zerollama_v0.2
 
 # 安装依赖, 只会安装在这个虚拟环境里
 # pip install .....
@@ -42,7 +42,7 @@ $ conda activate zerollama_v0.1
 $ conda deactivate
 
 # 删除虚拟环境
-conda remove -n zerollama_v0.1 --all
+conda remove -n zerollama_v0.2 --all
 ```
 
 ## 安装依赖
@@ -112,4 +112,5 @@ $ cd zerollama
 ```
 
  
-
+# 配置文件
+[跳转链接](https://github.com/noooop/zerollama/tree/main/zerollama/core/config)

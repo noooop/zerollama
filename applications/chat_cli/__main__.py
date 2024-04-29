@@ -1,23 +1,10 @@
 
-def list_model():
-    from prettytable import PrettyTable
-
-    from zerollama.models.qwen.qwen1_5 import info_header, info
-    table = PrettyTable(info_header, align='l')
-
-    for x in info:
-        table.add_row(x)
-
-    print(table)
+from zerollama.tasks.chat.cli import click, list_families, list_family, pull
 
 
-def pull(model_name):
-    from zerollama.inference_backend.hf_transformers.download import download
-    download(model_name)
-
-
+@click.command()
+@click.argument('model_name')
 def run(model_name):
-    import time
     from zerollama.core.framework.zero.server import ZeroServerProcess
 
     nameserver = ZeroServerProcess("zerollama.core.framework.nameserver.server:ZeroNameServer",
@@ -25,18 +12,16 @@ def run(model_name):
     nameserver.start()
     nameserver_port = nameserver.wait_port_available()
 
-    engine = ZeroServerProcess("zerollama.core.framework.inference_engine.server:ZeroInferenceEngine",
+    engine = ZeroServerProcess("zerollama.tasks.chat.inference_engine.server:ZeroChatInferenceEngine",
                                server_kwargs={
-                                   "model_class": "zerollama.models.qwen.qwen1_5:Qwen1_5",
-                                   "model_kwargs": {
-                                     "model_name": model_name
-                                   },
+                                   "model_name": model_name,
+                                   "model_kwargs": {},
                                    "nameserver_port": nameserver_port
                                },
                                ignore_warnings=True)
     engine.start()
 
-    from zerollama.core.framework.inference_engine.client import ChatClient
+    from zerollama.tasks.chat.inference_engine.client import ChatClient
     chat_client = ChatClient(nameserver_port=nameserver_port)
 
     print("正在加载模型...")
@@ -63,12 +48,17 @@ def run(model_name):
 
                 messages.append({"role": "user", "content": prompt})
 
-                print(f"({model_name}:)\n")
+                print(f"({model_name}:)\n", flush=True)
                 content = ""
-                for response in chat_client.stream_chat(model_name, messages):
-                    print(response["content"], end="")
-                    content += response["content"]
-                print("\n")
+                for rep in chat_client.stream_chat(model_name, messages):
+                    if rep.state != "ok":
+                        return
+                    rep = rep.msg
+
+                    if not rep.done:
+                        print(rep.content, end="", flush=True)
+                        content += rep.content
+                print("\n", flush=True)
                 messages.append({"role": "assistant", "content": content})
                 i += 1
     except (KeyboardInterrupt, EOFError):
@@ -79,26 +69,18 @@ def run(model_name):
         print("quit gracefully")
 
 
-def main(argv):
-    method = argv[1]
+@click.group()
+def chat():
+    pass
 
-    if method == "list":
-        list_model()
-        return
 
-    model_name = argv[2]
-
-    if method == "pull":
-        pull(model_name)
-        return
-
-    if method == "run":
-        run(model_name)
-        return
+chat.add_command(list_families)
+chat.add_command(list_family)
+chat.add_command(pull)
+chat.add_command(run)
 
 
 if __name__ == '__main__':
-    import sys
-    main(sys.argv)
+    chat()
 
 

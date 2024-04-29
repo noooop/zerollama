@@ -1,6 +1,8 @@
 
 import json
 from zerollama.core.framework.zero.server import ZeroServerProcess, Z_MethodZeroServer
+from zerollama.core.framework.zero_manager.protocol import ZeroServerResponseOk, ZeroServerResponseError
+from zerollama.core.framework.zero_manager.protocol import StartRequest, TerminateRequest, StatusRequest
 
 
 class ZeroManager(Z_MethodZeroServer):
@@ -25,91 +27,74 @@ class ZeroManager(Z_MethodZeroServer):
                 pass
         super().clean_up()
 
-    def z_start(self, msg):
-        if "model_class" not in msg:
-            err_msg = "'model_class' not in msg"
-            self.handle_error(err_msg)
-            return
-        model_class = msg['model_class']
+    def z_start(self, req):
+        kwargs = StartRequest(**req.data)
 
-        if "model_kwargs" not in msg:
-            err_msg = "'model_kwargs' not in msg"
-            self.handle_error(err_msg)
-            return
-        model_kwargs = msg['model_kwargs']
-
-        if "name" not in msg:
-            err_msg = "'name' not in msg"
-            self.handle_error(err_msg)
+        if kwargs.name in self._inference_engines:
+            rep = ZeroServerResponseOk(msg={"already_started": True})
+            self.zero_send(req, rep)
             return
 
-        name = msg["name"]
+        server_kwargs = {"model_name": kwargs.name,
+                         "model_kwargs": kwargs.model_kwargs}
 
-        if name in self._inference_engines:
-            response = json.dumps({
-                "state": "ok",
-                "msg": {"already_started": True}
-            }).encode('utf8')
-            self.socket.send(response)
+        engine = ZeroServerProcess(self.server_class, server_kwargs)
+        engine.start()
+
+        self._inference_engines[kwargs.name] = engine
+        rep = ZeroServerResponseOk(msg={"already_started": False})
+        self.zero_send(req, rep)
+
+    def z_terminate(self, req):
+        kwargs = TerminateRequest(**req.data)
+
+        if kwargs.name not in self._inference_engines:
+            rep = ZeroServerResponseOk(msg={"founded": False})
+            self.zero_send(req, rep)
             return
 
-        try:
-            engine = ZeroServerProcess(self.server_class,
-                                       server_kwargs={
-                                           "model_class": model_class,
-                                           "model_kwargs": model_kwargs
-                                       })
-            engine.start()
-        except Exception as e:
-            self.handle_error(err_msg=str(e))
+        engine = self._inference_engines.pop(kwargs.name)
+
+        exception = engine.exception
+        if exception is not None:
+            exception = f"{self.class_name}: {str(exception[0])}"
+        msg = {"founded": True, "last_status": engine.status, "last_exception": exception}
+
+        engine.terminate()
+        rep = ZeroServerResponseOk(msg=msg)
+        self.zero_send(req, rep)
+
+    def z_list(self, req):
+        rep = ZeroServerResponseOk(msg=list(self._inference_engines.keys()))
+        self.zero_send(req, rep)
+
+    def z_statuses(self, req):
+        msg = {k: v.status for k, v in self._inference_engines.items()}
+        rep = ZeroServerResponseOk(msg=msg)
+        self.zero_send(req, rep)
+
+    def z_status(self, req):
+        kwargs = StatusRequest(**req.data)
+        if kwargs.name not in self._inference_engines:
+            err_msg = f"[kwargs.name] not found."
+            self.handle_error(err_msg, req=req)
             return
 
-        self._inference_engines[name] = engine
-        response = json.dumps({
-            "state": "ok",
-            "msg": {"already_started": False}
-        }).encode('utf8')
-        self.socket.send(response)
+        engine = self._inference_engines[kwargs.name]
 
-    def z_terminate(self, msg):
-        if "name" not in msg:
-            err_msg = "'name' not in msg"
-            self.handle_error(err_msg)
-            return
-        name = msg["name"]
+        exception = engine.exception
 
-        if name not in self._inference_engines:
-            response = json.dumps({
-                "state": "ok",
-                "msg": {"founded": False}
-            }).encode('utf8')
-            self.socket.send(response)
-            return
+        if exception is not None:
+            exception = f"{self.class_name}: {str(exception[0])}"
 
-        try:
-            engine = self._inference_engines.pop(name)
-            engine.terminate()
-        except Exception as e:
-            self.handle_error(err_msg=str(e))
-            return
-
-        response = json.dumps({
-            "state": "ok",
-            "msg": {"founded": True}
-        }).encode('utf8')
-        self.socket.send(response)
-
-    def z_list(self, msg):
-        response = json.dumps({
-            "state": "ok",
-            "msg": list(self._inference_engines.keys())
-        }).encode('utf8')
-        self.socket.send(response)
+        msg = {"status": engine.status, "exception": exception}
+        rep = ZeroServerResponseOk(msg=msg)
+        self.zero_send(req, rep)
 
 
 if __name__ == '__main__':
-    name = "ZeroInferenceManager"
-    server_class = "zerollama.core.framework.inference_engine.server:ZeroInferenceEngine"
+    name = "ZeroChatInferenceManager"
+    server_class = "zerollama.tasks.chat.inference_engine.server:ZeroChatInferenceEngine"
 
     nameserver = ZeroServerProcess("zerollama.core.framework.nameserver.server:ZeroNameServer")
     manager = ZeroServerProcess("zerollama.core.framework.zero_manager.server:ZeroManager",
