@@ -6,7 +6,7 @@ from threading import Thread
 from zerollama.core.config.main import config_setup
 from zerollama.tasks.chat.interface import ChatInterface
 from zerollama.tasks.chat.protocol import ChatCompletionResponse, ChatCompletionStreamResponse
-from zerollama.tasks.chat.model_collection import get_model_config_by_name
+from zerollama.tasks.chat.collection import get_model_config_by_name
 
 
 class HuggingFaceTransformers(object):
