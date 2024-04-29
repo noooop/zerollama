@@ -31,7 +31,7 @@ def pull(model_name):
 
 @click.command()
 @click.argument('model_name')
-@click.option("--nowait", default=False)
+@click.option("--wait/--nowait", default=True)
 def start(model_name, nowait):
     from zerollama.core.framework.zero_manager.client import ZeroManagerClient
 
