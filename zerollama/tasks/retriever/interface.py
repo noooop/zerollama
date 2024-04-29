@@ -1,15 +1,23 @@
-from pydantic import BaseModel, ConfigDict
-from typing import Optional
 
 from zerollama.tasks.base.interface import ModelBase
+from zerollama.tasks.retriever.protocol import PROTOCOL
+from zerollama.tasks.retriever.protocol import RetrieverResponse, RetrieverModelConfig
 
 
 class Retriever(ModelBase):
-    protocol = "retriever"
+    protocol = PROTOCOL
+
+    @classmethod
+    def get_model_config(cls, model_name):
+        model_config = super().get_model_config(model_name)
+        if model_config is None:
+            return
+
+        return RetrieverModelConfig(**model_config)
 
 
 class RetrieverInterface(object):
-    protocol = "retriever"
+    protocol = PROTOCOL
 
     def load(self):
         """
@@ -18,7 +26,7 @@ class RetrieverInterface(object):
         """
         raise NotImplementedError
 
-    def encode(self, sentences, **options):
+    def encode(self, sentences, **options) -> RetrieverResponse:
         """
 
         :param sentences:

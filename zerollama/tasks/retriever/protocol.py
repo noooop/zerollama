@@ -1,11 +1,16 @@
+import typing
+
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 from typing import Literal, Optional, List, Dict, Any, Union, Tuple
+
+from pydantic.main import IncEx
 
 from zerollama.core.framework.zero.protocol import (
     ZeroServerRequest,
     ZeroServerResponse,
     ZeroServerResponseOk,
     ZeroServerStreamResponseOk,
+    ZeroServerResponseOkWithPayload,
     ZeroServerResponseError
 )
 
@@ -23,4 +28,15 @@ class RetrieverModelConfig(BaseModel):
     model_config = ConfigDict(
         protected_namespaces=()
     )
+
+
+class RetrieverRequest(BaseModel):
+    model: str
+    sentences: list = Field(default_factory=list)
+    options: dict = Field(default_factory=dict)
+
+
+class RetrieverResponse(BaseModel):
+    model: str
+    vecs: dict = Field(default_factory=dict)
 

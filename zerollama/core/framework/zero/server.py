@@ -11,6 +11,7 @@ from zerollama.core.framework.zero.protocol import (
     ZeroServerResponse,
     ZeroServerResponseOk,
     ZeroServerStreamResponseOk,
+    ZeroServerResponseOkWithPayload,
     ZeroServerResponseError
 )
 
@@ -125,7 +126,8 @@ class ZeroServer(object):
             rep_id = req.req_id + (b"M" if rep.snd_more else b"N") + str(rep.rep_id).encode("utf-8")
         else:
             rep_id = req.req_id
-        self.socket.send_multipart([req.uuid, rep_id, rep.b])
+
+        self.socket.send_multipart([req.uuid, rep_id] + rep.b)
 
 
 class Z_MethodZeroServer(ZeroServer):

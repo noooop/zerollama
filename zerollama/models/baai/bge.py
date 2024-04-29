@@ -16,25 +16,25 @@ class BGEM3(Retriever):
         ["BAAI/bge-base-en-v1.5",        "768",       "512",             "English model"],
         ["BAAI/bge-small-en-v1.5",       "384",       "512",             "English model"],
     ]
-    inference_backend = "zerollama.models.baai.bge_inference_backend:BGEM3"
-
-
-def get_model(model_name):
-    model_kwargs = {}
-
-    model_class = BGEM3.inference_backend
-    module_name, class_name = model_class.split(":")
-    import importlib
-
-    module = importlib.import_module(module_name)
-    model_class = getattr(module, class_name)
-
-    model = model_class(model_name=model_name, **model_kwargs)
-    model.load()
-    return model
+    inference_backend = "zerollama.models.baai.backend.bge:BGEM3"
 
 
 if __name__ == '__main__':
+    def get_model(model_name):
+        model_kwargs = {}
+
+        model_class = BGEM3.inference_backend
+        module_name, class_name = model_class.split(":")
+        import importlib
+
+        module = importlib.import_module(module_name)
+        model_class = getattr(module, class_name)
+
+        model = model_class(model_name=model_name, **model_kwargs)
+        model.load()
+        return model
+
+
     model_name = "BAAI/bge-m3"
 
     model = get_model(model_name)
@@ -45,10 +45,10 @@ if __name__ == '__main__':
         "BM25 is a bag-of-words retrieval function that ranks a set of documents based on the query terms appearing in each document"]
 
     embeddings_1 = model.encode(sentences_1,
-                                batch_size=12,
-                                max_length=8192,
-                                # If you don't need such a long length, you can set a smaller value to speed up the encoding process.
-                                )['dense_vecs']
-    embeddings_2 = model.encode(sentences_2)['dense_vecs']
+                                options={
+                                    "batch_size": 12,
+                                    "max_length": 8192,
+                                }).vecs['dense_vecs']
+    embeddings_2 = model.encode(sentences_2).vecs['dense_vecs']
     similarity = embeddings_1 @ embeddings_2.T
     print(similarity)

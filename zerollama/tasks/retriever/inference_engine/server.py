@@ -1,14 +1,14 @@
 
 from zerollama.core.framework.zero.server import Z_MethodZeroServer
-from zerollama.tasks.chat.interface import ChatModel
-from zerollama.tasks.chat.protocol import ChatCompletionRequest
-from zerollama.tasks.chat.protocol import ZeroServerResponseOk, ZeroServerStreamResponseOk
+from zerollama.tasks.retriever.collection import get_model_by_name
+from zerollama.tasks.retriever.protocol import RetrieverRequest
+from zerollama.tasks.retriever.protocol import ZeroServerResponseOk, ZeroServerResponseOkWithPayload
 
 
-class ZeroChatInferenceEngine(Z_MethodZeroServer):
+class ZeroRetrieverInferenceEngine(Z_MethodZeroServer):
     def __init__(self, model_name, model_kwargs, **kwargs):
         self.model_name = model_name
-        self.model_class = ChatModel
+        self.model_class = get_model_by_name(model_name)
         self.inference_backend = self.model_class.inference_backend
 
         if isinstance(self.inference_backend, str):
@@ -27,15 +27,11 @@ class ZeroChatInferenceEngine(Z_MethodZeroServer):
         print(f"{self.__class__.__name__}: ", self.name, "is running!", "port:", self.port)
 
     def z_inference(self, req):
-        ccr = ChatCompletionRequest(**req.data)
-        if ccr.stream:
-            for rep_id, response in enumerate(self.inference.stream_chat(ccr.messages, ccr.options)):
-                rep = ZeroServerStreamResponseOk(msg=response, snd_more=not response.done, rep_id=rep_id)
-                self.zero_send(req, rep)
-        else:
-            response = self.inference.chat(ccr.messages, ccr.options)
-            rep = ZeroServerResponseOk(msg=response)
-            self.zero_send(req, rep)
+        rr = RetrieverRequest(**req.data)
+        response = self.inference.encode(rr.sentences, rr.options)
+
+        rep = ZeroServerResponseOkWithPayload.combine(response, tensor_field="vecs")
+        self.zero_send(req, rep)
 
     def z_info(self, req):
         if hasattr(self.inference, "info"):
@@ -51,9 +47,9 @@ if __name__ == '__main__':
     from zerollama.core.framework.zero.server import ZeroServerProcess
 
     nameserver = ZeroServerProcess("zerollama.core.framework.nameserver.server:ZeroNameServer")
-    engine = ZeroServerProcess("zerollama.tasks.chat.inference_engine.server:ZeroChatInferenceEngine",
+    engine = ZeroServerProcess("zerollama.tasks.retriever.inference_engine.server:ZeroRetrieverInferenceEngine",
                                server_kwargs={
-                                   "model_name": "Qwen/Qwen1.5-0.5B-Chat",
+                                   "model_name": "BAAI/bge-m3",
                                    "model_kwargs": {}
                                })
 

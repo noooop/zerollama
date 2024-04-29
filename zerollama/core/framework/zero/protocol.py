@@ -1,5 +1,6 @@
 
-from pydantic import BaseModel, ValidationError
+import numpy as np
+from pydantic import BaseModel, Field, ValidationError
 from typing import Literal, Optional, List, Dict, Any, Union, Tuple
 
 
@@ -36,11 +37,10 @@ class ZeroServerRequest(BaseModel):
 class ZeroServerResponse(BaseModel):
     state: str = Literal["ok", "error"]
     msg: Any = ""
-    payload: Optional[list] = None
 
     @property
     def b(self):
-        return self.model_dump_json().encode('utf8')
+        return [self.model_dump_json().encode('utf8')]
 
 
 class ZeroServerResponseOk(ZeroServerResponse):
@@ -55,6 +55,49 @@ class ZeroServerStreamResponseOk(ZeroServerResponse):
 
 class ZeroServerResponseError(ZeroServerResponse):
     state: str = "error"
+
+
+class Meta(BaseModel):
+    name: str
+    dtype: str
+    shape: tuple
+
+
+class ZeroServerResponseOkWithPayload(ZeroServerResponseOk):
+    meta: List[Meta] = Field(default_factory=list)
+    payload: Optional[list] = None
+
+    @classmethod
+    def combine(cls, m, tensor_field):
+        msg = m.model_dump(exclude={tensor_field})
+        msg["tensor_field"] = tensor_field
+
+        meta = []
+        payload = []
+
+        data = getattr(m, tensor_field)
+
+        for k, vecs in data.items():
+            if vecs is None:
+                continue
+            meta.append(Meta(name=k, dtype=str(vecs.dtype), shape=vecs.shape))
+            payload.append(np.ascontiguousarray(vecs))
+
+        return cls(msg=msg, meta=meta, payload=payload)
+
+    def separate(self):
+        msg = self.msg.copy()
+        tensor_field = msg.pop("tensor_field")
+        msg[tensor_field] = {}
+        for m, p in zip(self.meta, self.payload):
+            msg[tensor_field][m.name] = p
+        return msg
+
+
+
+    @property
+    def b(self):
+        return [self.model_dump_json(exclude={"payload"}).encode('utf8')] + self.payload
 
 
 if __name__ == '__main__':

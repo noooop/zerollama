@@ -2,9 +2,10 @@
 import zmq
 import json
 import shortuuid
+import numpy as np
 from os import getpid
 from queue import Queue
-from zerollama.core.framework.zero.protocol import ZeroServerResponse
+from zerollama.core.framework.zero.protocol import ZeroServerResponse, ZeroServerResponseOkWithPayload
 
 
 class Socket(object):
@@ -144,23 +145,31 @@ class Client(object):
 
         raise Timeout(f"{self.addr} timeout")
 
+    def _load(self, req_id, msg, payload):
+        msg = json.loads(msg)
+        if len(payload) > 0:
+            msg = ZeroServerResponseOkWithPayload(**msg)
+            msg.payload = []
+            for m, p in zip(msg.meta, payload):
+                msg.payload.append(np.frombuffer(p, dtype=m.dtype).reshape(m.shape))
+            return msg
+        else:
+            msg = ZeroServerResponse(**msg)
+            return msg
+
     def stream_query(self, data, **kwargs):
         data = json.dumps(data).encode('utf8')
         for req_id, msg, *payload in self._stream_query(data=data, **kwargs):
-            msg = json.loads(msg)
-            msg = ZeroServerResponse(**msg)
-            msg.payload = payload
-            yield msg
+            yield self._load(req_id, msg, payload)
 
     def query(self, data, **kwargs):
         data = json.dumps(data).encode('utf8')
 
         req_id, msg, *payload = self._query(data=data, **kwargs)
+        return self._load(req_id, msg, payload)
 
-        msg = json.loads(msg)
-        msg = ZeroServerResponse(**msg)
-        msg.payload = payload
-        return msg
+
+
 
 
 class Z_Client(Client):
