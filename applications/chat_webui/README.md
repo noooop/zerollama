@@ -116,7 +116,7 @@ $ python -m applications.chat_webui.cli chat terminate Qwen/Qwen1.5-0.5B-Chat-AW
 
 [page-assist](https://github.com/n4ze3m/page-assist) 
 
-You can install the extension from the [Chrome Web Store](https://chromewebstore.google.com/detail/page-assist-a-web-ui-for/jfgfiigpkhlkbnfnbobbkinehhfdhndo)
+[安装指南](./page-assist.md) 
 
 
 **兼容**
