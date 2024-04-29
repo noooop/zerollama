@@ -5,10 +5,12 @@ from fastapi import FastAPI
 from fastapi.responses import StreamingResponse, JSONResponse
 
 from zerollama.tasks.chat.inference_engine.client import ChatClient
-from .protocol import ChatCompletionRequest, ShowRequest
+from zerollama.tasks.retriever.inference_engine.client import RetrieverClient
+from .protocol import ChatCompletionRequest, ShowRequest, EmbeddingsRequest
 
 
 chat_client = ChatClient()
+retriever_client = RetrieverClient()
 app = FastAPI()
 
 
@@ -25,6 +27,8 @@ def health():
 def tags():
     response = chat_client.get_service_names()
     services = response.msg["service_names"]
+    response = retriever_client.get_service_names()
+    services += response.msg["service_names"]
 
     models = []
     for s in services:
@@ -63,18 +67,18 @@ def show(req: ShowRequest):
 
 
 @app.post("/api/chat")
-async def chat(ccr: ChatCompletionRequest):
-    if ccr.stream:
+async def chat(req: ChatCompletionRequest):
+    if req.stream:
         def generate():
-            for rep in chat_client.stream_chat(ccr.model, ccr.messages, ccr.options):
+            for rep in chat_client.stream_chat(req.model, req.messages, req.options):
                 if rep is None:
                     return JSONResponse(status_code=404,
-                                        content={"error": f"model '{ccr.model}' not found"})
+                                        content={"error": f"model '{req.model}' not found"})
 
                 rep = rep.msg
                 if not rep.done:
                     content = rep.content
-                    response = json.dumps({"model": ccr.model,
+                    response = json.dumps({"model": req.model,
                                            "created_at": get_timestamp(),
                                            "message": {"role": "assistant", "content": content},
                                            "done": False
@@ -83,7 +87,7 @@ async def chat(ccr: ChatCompletionRequest):
                     yield "\n"
                 else:
                     response = json.dumps({
-                        "model": ccr.model,
+                        "model": req.model,
                         "created_at": get_timestamp(),
                         "message": {"role": "assistant", "content": ""},
                         "done": True
@@ -92,17 +96,27 @@ async def chat(ccr: ChatCompletionRequest):
                     break
         return StreamingResponse(generate(), media_type="application/x-ndjson")
     else:
-        rep = chat_client.chat(ccr.model, ccr.messages, ccr.options)
+        rep = chat_client.chat(req.model, req.messages, req.options)
         if rep is None:
             return JSONResponse(status_code=404,
-                                content={"error": f"model '{ccr.model}' not found"})
+                                content={"error": f"model '{req.model}' not found"})
         rep = rep.msg
         content = rep.content
-        response = {"model": ccr.model,
+        response = {"model": req.model,
                     "created_at": get_timestamp(),
                     "message": {"role": "assistant", "content": content},
                     "done": True}
         return response
+
+
+@app.post("/api/embeddings")
+def embeddings(req: EmbeddingsRequest):
+    rep = retriever_client.encode(req.model, [req.prompt], req.options)
+    if rep is None:
+        return JSONResponse(status_code=404,
+                            content={"error": f"model '{req.model}' not found"})
+
+    return {"embedding": rep.vecs['dense_vecs'][0].tolist()}
 
 
 if __name__ == '__main__':

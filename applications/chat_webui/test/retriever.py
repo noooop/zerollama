@@ -1,5 +1,5 @@
 from zerollama.core.framework.zero_manager.client import ZeroManagerClient
-from zerollama.tasks.chat.protocol import MANAGER_NAME
+from zerollama.tasks.retriever.protocol import MANAGER_NAME
 
 if __name__ == '__main__':
     from pprint import pprint
@@ -19,8 +19,7 @@ if __name__ == '__main__':
     print(manager_client.list())
     print(manager_client.statuses())
 
-    model_names = ["Qwen/Qwen1.5-0.5B-Chat-AWQ",
-                   "openbmb/MiniCPM-2B-sft-bf16"]
+    model_names = ["BAAI/bge-m3"]
 
     for model_name in model_names:
         print("=" * 80)
@@ -29,14 +28,14 @@ if __name__ == '__main__':
         print(manager_client.list())
 
     def test_inference_engine(model_name):
-        prompt = "给我介绍一下大型语言模型。"
-        messages = [
-            {"role": "user", "content": prompt}
-        ]
+        sentences_1 = ["What is BGE M3?", "Defination of BM25"]
+        sentences_2 = [
+            "BGE M3 is an embedding model supporting dense retrieval, lexical matching and multi-vector interaction.",
+            "BM25 is a bag-of-words retrieval function that ranks a set of documents based on the query terms appearing in each document"]
 
-        from zerollama.tasks.chat.inference_engine.client import ChatClient
+        from zerollama.tasks.retriever.inference_engine.client import RetrieverClient
 
-        client = ChatClient()
+        client = RetrieverClient()
         print("=" * 80)
         print(f"Wait {model_name} available")
         manager_client.wait_service_status(model_name)
@@ -46,22 +45,14 @@ if __name__ == '__main__':
         print('ZeroChatInferenceEngine support_methods')
         print(client.support_methods(model_name))
 
-        print("="*80)
-        print("stream == False")
-        msg = client.chat(model_name, messages)
-        pprint(msg)
+        embeddings_1 = client.encode(model_name, sentences_1).vecs['dense_vecs']
+        embeddings_2 = client.encode(model_name, sentences_2).vecs['dense_vecs']
 
-        print("="*80)
-        print("stream == True")
-        for msg in client.stream_chat(model_name, messages):
-            pprint(msg)
+        print("=" * 80)
+        similarity = embeddings_1 @ embeddings_2.T
+        print(similarity)
 
 
     for model_name in model_names:
+        print(model_name)
         test_inference_engine(model_name)
-
-    #for model_name in model_names:
-    #    print("=" * 80)
-    #    print('terminate', model_name)
-    #    print(manager_client.terminate(model_name))
-    #    print(manager_client.list())

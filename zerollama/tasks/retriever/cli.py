@@ -32,16 +32,16 @@ def pull(model_name):
 @click.command()
 @click.argument('model_name')
 @click.option("--wait/--nowait", default=True)
-def start(model_name, nowait):
+def start(model_name, wait):
     from zerollama.core.framework.zero_manager.client import ZeroManagerClient
 
     manager_client = ZeroManagerClient(MANAGER_NAME)
     manager_client.start(model_name)
 
-    if nowait:
+    if not wait:
         return
-    print(f"Wait {model_name} available.")
 
+    print(f"Wait {model_name} available.")
     manager_client.wait_service_status(model_name)
 
 

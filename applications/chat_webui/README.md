@@ -12,6 +12,7 @@ Options:
 
 Commands:
   chat
+  retriever
   server
 ```
 
@@ -21,18 +22,37 @@ Commands:
 ```
 $ python -m applications.chat_webui.cli server run
 Control-C terminate
-HttpEntrypoints running! 127.0.0.1 11434
-HttpEntrypoints running! 127.0.0.1 8080
+ZeroManager for ZeroChatInferenceEngine running! port: 53713
+ZeroManager for ZeroRetrieverInferenceEngine running! port: 56194
 ZeroNameServer: InMemoryNameServer running! port: 9527
-ZeroManager for ZeroInferenceEngine running! port: 50755
+HttpEntrypoints running! 0.0.0.0 8080
+HttpEntrypoints running! 0.0.0.0 11434
+INFO:     Started server process [5764]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8080 (Press CTRL+C to quit)
+INFO:     Started server process [4988]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:11434 (Press CTRL+C to quit)
 ```
 
 ### 关闭
 ```
 # Control-C 关闭
+INFO:     Shutting down
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [5764]
+INFO:     Finished server process [4988]
 HttpEntrypoints clean_up!
 HttpEntrypoints clean_up!
-ZeroNameServer clean_up!
+ZeroManager clean_up!
+ZeroChatInferenceEngine clean_up!
+ZeroChatInferenceEngine clean_up!
 ZeroManager clean_up!
 ```
 
@@ -58,24 +78,27 @@ $ python -m applications.chat_webui.cli chat list-family Qwen1.5
 +----------------------------------+------+--------------+-------+---------+----------+
 ```
 
-## 下载模型 pull
+### pull 下载模型 
 ```
 $ python -m applications.chat_webui.cli chat pull Qwen/Qwen1.5-1.8B-Chat-GPTQ-Int4
 ```
 
-## 加载模型 start
+### start 加载模型 
 ```
 $ python -m applications.chat_webui.cli chat start Qwen/Qwen1.5-0.5B-Chat
 $ python -m applications.chat_webui.cli chat start Qwen/Qwen1.5-0.5B-Chat-GPTQ-Int4
 $ python -m applications.chat_webui.cli chat start Qwen/Qwen1.5-0.5B-Chat-AWQ
 ```
 
-## 卸载模型 terminate
+### terminate 卸载模型 
 ```
 $ python -m applications.chat_webui.cli chat terminate Qwen/Qwen1.5-0.5B-Chat
 $ python -m applications.chat_webui.cli chat terminate Qwen/Qwen1.5-0.5B-Chat-GPTQ-Int4
 $ python -m applications.chat_webui.cli chat terminate Qwen/Qwen1.5-0.5B-Chat-AWQ
 ```
+
+## retriever(embeddings) 模型控制
+与 chat大同小异，list-families、list-family、pull、start、terminate
 
 # 注意
 1. 考虑到大语言模型动辄几个G，下载相当缓慢，所以默认设置了local_files_only=True， 模型必须先下载，才能加载。

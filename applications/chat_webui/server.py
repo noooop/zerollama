@@ -2,24 +2,26 @@
 
 def setup():
     from zerollama.core.framework.zero.server import ZeroServerProcess
-    from zerollama.core.entrypoints.http_entrypoint import HttpEntrypoint
-
-    name = "ZeroChatInferenceManager"
-    server_class = "zerollama.tasks.chat.inference_engine.server:ZeroChatInferenceEngine"
+    from zerollama.entrypoints.http_entrypoint import HttpEntrypoint
 
     nameserver = ZeroServerProcess("zerollama.core.framework.nameserver.server:ZeroNameServer")
-    manager = ZeroServerProcess("zerollama.core.framework.zero_manager.server:ZeroManager",
-                                server_kwargs={
-                                    "name": name,
-                                    "server_class": server_class
-                                })
-    entrypoint1 = HttpEntrypoint(server_class="zerollama.tasks.chat.entrypoints.ollama_compatible.api:app",
+    chat_manager = ZeroServerProcess("zerollama.core.framework.zero_manager.server:ZeroManager",
+                                        server_kwargs={
+                                            "name": "ZeroChatInferenceManager",
+                                            "server_class": "zerollama.tasks.chat.inference_engine.server:ZeroChatInferenceEngine"
+                                        })
+    retriever_manager = ZeroServerProcess("zerollama.core.framework.zero_manager.server:ZeroManager",
+                                        server_kwargs={
+                                            "name": "ZeroRetrieverInferenceManager",
+                                            "server_class": "zerollama.tasks.retriever.inference_engine.server:ZeroRetrieverInferenceEngine"
+                                        })
+    entrypoint1 = HttpEntrypoint(server_class="zerollama.entrypoints.ollama_compatible.api:app",
                                  server_kwargs={"port": 11434})
 
-    entrypoint2 = HttpEntrypoint(server_class="zerollama.tasks.chat.entrypoints.openai_compatible.api:app",
+    entrypoint2 = HttpEntrypoint(server_class="zerollama.entrypoints.openai_compatible.api:app",
                                  server_kwargs={"port": 8080})
 
-    handle = [nameserver, manager, entrypoint1, entrypoint2]
+    handle = [nameserver, chat_manager, retriever_manager, entrypoint1, entrypoint2]
     return handle
 
 

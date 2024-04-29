@@ -1,6 +1,7 @@
 
-from zerollama.tasks.chat.cli import click, chat
-
+import click
+from zerollama.tasks.chat.cli import chat
+from zerollama.tasks.retriever.cli import retriever
 
 @click.command()
 def run():
@@ -25,6 +26,7 @@ def main():
 
 
 main.add_command(chat)
+main.add_command(retriever)
 main.add_command(server)
 
 
