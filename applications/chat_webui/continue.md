@@ -101,7 +101,7 @@ BAAI/bge-m3 available now.
 <img src="https://github.com/noooop/zerollama/blob/main/static/continue/chat.png?raw=true" width="400">
 
 ## 8. 与大模型结对编程
-<img src="https://github.com/noooop/zerollama/blob/main/static/continue/chat.png?raw=true" width="400">
+<img src="https://github.com/noooop/zerollama/blob/main/static/continue/code.png?raw=true" width="400">
 
 ## 9. 退出
 ```
