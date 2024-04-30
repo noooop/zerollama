@@ -1,14 +1,14 @@
 # ollama client examples
 
 ## 支持
-- list   输出字段可能不完整
-- show   输出字段可能不一样
+- list
+- show
 - chat 
 - chat-stream
+- embeddings
 
 # 暂不支持
-- generate
-- embeddings
+- generate  请使用chat api
 
 # 不支持
 因为zerollama管理和加载模型的方法跟ollama不一样，所以以下操作不支持
