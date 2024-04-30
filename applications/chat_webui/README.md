@@ -90,6 +90,8 @@ deepseek-llm
 MiniCPM
 Qwen1.5
 Yi
+llama3
+llama3zh
 ```
 
 ### list-family 列出支持的模型家族成员

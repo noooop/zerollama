@@ -34,41 +34,6 @@ The models and weights of MiniCPM are completely free for academic research.
 
 If you intend to utilize the model for commercial purposes, please reach out to cpm@modelbest.cn to obtain the certificate of authorization.
 
-### Todo
-stream_chat 显存泄露，析构时没有释放显存
-
-```
-C:\Users\noooop\anaconda3\python.exe E:\PycharmProjects\zerollama\zerollama\models\openbmb\minicpm.py 
-================================================================================
-{'name': 'openbmb/MiniCPM-2B-sft-bf16', 'family': 'MiniCPM', 'type': 'Chat', 'size': '2B', 'quantization': '', 'bits': '', 'torch_dtype': 'bf16'}
-....
-8.125
-================================================================================
-{'name': 'openbmb/MiniCPM-2B-dpo-bf16', 'family': 'MiniCPM', 'type': 'Chat', 'size': '2B', 'quantization': '', 'bits': '', 'torch_dtype': 'bf16'}
-....
-8.125
-================================================================================
-{'name': 'openbmb/MiniCPM-2B-sft-bf16', 'family': 'MiniCPM', 'type': 'Chat', 'size': '2B', 'quantization': '', 'bits': '', 'torch_dtype': 'bf16'}
-....
-5608.5380859375
-================================================================================
-WARNING:root:Some parameters are on the meta device device because they were offloaded to the cpu.
-WARNING:accelerate.big_modeling:You shouldn't move a model that is dispatched using accelerate hooks.
-Traceback (most recent call last):
-  File "E:\PycharmProjects\zerollama\zerollama\models\openbmb\minicpm.py", line 66, in <module>
-    run(model_name, MiniCPM, stream=True)
-  File "E:\PycharmProjects\zerollama\zerollama\models\openbmb\minicpm.py", line 42, in run
-    model.load()
-  File "E:\PycharmProjects\zerollama\zerollama\inference_backend\hf_transformers\main.py", line 66, in load
-    self.model = model.to(self.device)
-                 ^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\noooop\anaconda3\Lib\site-packages\accelerate\big_modeling.py", line 455, in wrapper
-    raise RuntimeError("You can't move a model that has some modules offloaded to cpu or disk.")
-RuntimeError: You can't move a model that has some modules offloaded to cpu or disk.
-
-Process finished with exit code 1
-
-```
 
 ### Reference
 [openbmb](https://www.openbmb.cn/home)

@@ -23,6 +23,19 @@
 1. [与大模型对话 客户端](./applications/chat_cli)
 2. [与大模型对话 webui](./applications/chat_webui)
 
+# 支持的模型
+## Chat 模型
+- [deepseek-llm](https://github.com/noooop/zerollama/tree/main/zerollama/models/deepseek)
+- [MiniCPM](https://github.com/noooop/zerollama/tree/main/zerollama/models/openbmb)
+- [Qwen1.5](https://github.com/noooop/zerollama/tree/main/zerollama/models/qwen)
+- [Yi](https://github.com/noooop/zerollama/tree/main/zerollama/models/yi)
+- [llama3](https://github.com/noooop/zerollama/tree/main/zerollama/models/llama)
+- [llama3zh](https://github.com/noooop/zerollama/tree/main/zerollama/models/llama)
+
+
+## Retriever(Embeddings) 模型
+- [BGE](https://github.com/noooop/zerollama/tree/main/zerollama/models/baai)
+
 ## Contribute
 贡献代码请交逻辑清晰思路、简单直接的代码、不要有魔法，甚至可以牺牲一部分性能换取可读性
 
