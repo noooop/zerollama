@@ -1,8 +1,10 @@
 
-import time
-import datetime
-from fastapi import FastAPI, Response
-from fastapi.responses import StreamingResponse
+import json
+from fastapi import FastAPI
+from fastapi.responses import StreamingResponse, JSONResponse
+
+from zerollama.tasks.chat.inference_engine.client import ChatClient
+from zerollama.tasks.retriever.inference_engine.client import RetrieverClient
 
 from .protocol import (
     ChatCompletionRequest,
@@ -28,25 +30,107 @@ from .protocol import (
 )
 
 
+chat_client = ChatClient()
+retriever_client = RetrieverClient()
 app = FastAPI()
 
 
-@app.post("/v1/chat/completions")
-async def chat(request: ChatCompletionRequest):
-    if request.messages and request.messages[-1].role == 'user':
-      resp_content = "As a mock AI Assitant, I can only echo your last message:" + request.messages[-1].content
-    else:
-      resp_content = "As a mock AI Assitant, I can only echo your last message, but there were no messages!"
+@app.get("/")
+def health():
+    return "zerollama is running"
 
-    return {
-        "id": "1337",
-        "object": "chat.completion",
-        "created": time.time(),
-        "model": request.model,
-        "choices": [{
-            "message": ChatMessage(role="assistant", content=resp_content)
-        }]
-    }
+
+@app.get("/v1/models")
+def models():
+    response = chat_client.get_service_names()
+    services = response.msg["service_names"]
+    response = retriever_client.get_service_names()
+    services += response.msg["service_names"]
+    return ModelList(data=[ModelCard(id=s) for s in services])
+
+
+@app.get("/v1/models/{model_id:path}", name="path-convertor")
+def model(model_id: str):
+    rep = chat_client.info(model_id)
+
+    if rep is None:
+        return JSONResponse(status_code=404,
+                            content={"error": f"model '{model_id}' not found"})
+
+    return ModelCard(id=model_id)
+
+
+@app.post("/v1/chat/completions")
+def chat(req: ChatCompletionRequest):
+    options = {}
+
+    if req.stream:
+        def generate():
+            for rep in chat_client.stream_chat(req.model, req.messages, options):
+                if rep is None:
+                    return JSONResponse(status_code=404,
+                                        content={"error": f"model '{req.model}' not found"})
+
+                rep = rep.msg
+                if not rep.done:
+                    response = ChatCompletionStreamResponse(**{
+                        "model": rep.model,
+                        "choices": [ChatCompletionResponseStreamChoice(**{
+                            "index": 0,
+                            "delta": DeltaMessage(role="assistant", content=rep.content)
+                        })]
+                    })
+                    yield response.model_dump_json()
+                    yield "\n"
+                else:
+                    response = ChatCompletionStreamResponse(**{
+                        "model": rep.model,
+                        "choices": [ChatCompletionResponseStreamChoice(**{
+                            "index": 0,
+                            "delta": DeltaMessage(),
+                            "finish_reason": rep.finish_reason
+                        })]
+                    })
+                    yield response.model_dump_json()
+                    break
+        return StreamingResponse(generate(), media_type="application/x-ndjson")
+    else:
+        rep = chat_client.chat(req.model, req.messages, options)
+        if rep is None:
+            return JSONResponse(status_code=404,
+                                content={"error": f"model '{req.model}' not found"})
+        rep = rep.msg
+        response = ChatCompletionResponse(**{
+            "model": rep.model,
+            "choices": [ChatCompletionResponseChoice(**{
+                "index": 0,
+                "message": ChatMessage(role="assistant", content=rep.content),
+                "finish_reason": rep.finish_reason
+            })]
+        })
+        return response
+
+
+@app.post("/v1/embeddings")
+def embeddings(req: EmbeddingsRequest):
+    options = {}
+    sentences = [req.input] if isinstance(req.input, str) else req.input
+
+    print(req)
+
+    rep = retriever_client.encode(req.model, sentences, options)
+    if rep is None:
+        return JSONResponse(status_code=404,
+                            content={"error": f"model '{req.model}' not found"})
+
+    vecs = rep.vecs['dense_vecs']
+    if isinstance(req.input, str):
+        vecs = vecs[0]
+
+    return EmbeddingsResponse(**{
+        "model": rep.model,
+        "data": [{"index": 0, "object": "embedding", "embedding": vecs.tolist()}]
+    })
 
 
 if __name__ == '__main__':

@@ -80,7 +80,7 @@ class ChatCompletionRequest(BaseModel):
 class ChatCompletionResponseChoice(BaseModel):
     index: int
     message: ChatMessage
-    finish_reason: Optional[Literal["stop", "length"]] = None
+    finish_reason: str
 
 
 class ChatCompletionResponse(BaseModel):
@@ -89,7 +89,7 @@ class ChatCompletionResponse(BaseModel):
     created: int = Field(default_factory=lambda: int(time.time()))
     model: str
     choices: List[ChatCompletionResponseChoice]
-    usage: UsageInfo
+    #usage: UsageInfo
 
 
 class DeltaMessage(BaseModel):
@@ -143,7 +143,7 @@ class EmbeddingsResponse(BaseModel):
     object: str = "list"
     data: List[Dict[str, Any]]
     model: str
-    usage: UsageInfo
+    #usage: UsageInfo
 
 
 class CompletionRequest(BaseModel):
