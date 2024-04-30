@@ -4,7 +4,7 @@
 [支持情况](https://github.com/noooop/zerollama/blob/main/applications/chat_webui/ollama_client_examples/README.md)
 
 # openai compatible
-[支持情况]()
+[支持情况](https://github.com/noooop/zerollama/blob/main/applications/chat_webui/openai_client_examples/README.md)
 
 # 浏览器插件
 [page-assist](https://github.com/n4ze3m/page-assist) 
