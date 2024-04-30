@@ -1,7 +1,7 @@
 # 与大语言模型对话
 
 # ollama compatible
-[支持情况](https://github.com/noooop/zerollama/tree/v0.2/applications/chat_webui/ollama_client_examples)
+[支持情况](https://github.com/noooop/zerollama/blob/main/applications/chat_webui/ollama_client_examples/README.md)
 
 # openai compatible
 [支持情况]()
