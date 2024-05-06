@@ -39,6 +39,7 @@ See the LICENSE file, as well as our accompanying Acceptable Use Policy
 llama3训练数据里中文占比很少，所以会有中文提问英文回答的情况，以下是一些社区微调中文版LLaMa3.
 
 - [UnicomLLM/Unichat-llama3-Chinese-8B](https://huggingface.co/UnicomLLM/Unichat-llama3-Chinese-8B)
+- [ymcui/Chinese-LLaMA-Alpaca-3](https://github.com/ymcui/Chinese-LLaMA-Alpaca-3)
 
 
 ### Reference
