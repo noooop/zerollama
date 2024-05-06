@@ -42,7 +42,7 @@ if __name__ == '__main__':
         print(client.get_services(model_name))
 
         print("=" * 80)
-        print('ZeroChatInferenceEngine support_methods')
+        print('ZeroRetrieverInferenceEngine support_methods')
         print(client.support_methods(model_name))
 
         embeddings_1 = client.encode(model_name, sentences_1).vecs['dense_vecs']

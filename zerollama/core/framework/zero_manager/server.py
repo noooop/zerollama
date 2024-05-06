@@ -1,5 +1,5 @@
 
-import json
+from gevent.threadpool import ThreadPoolExecutor
 from zerollama.core.framework.zero.server import ZeroServerProcess, Z_MethodZeroServer
 from zerollama.core.framework.zero_manager.protocol import ZeroServerResponseOk, ZeroServerResponseError
 from zerollama.core.framework.zero_manager.protocol import StartRequest, TerminateRequest, StatusRequest
@@ -39,9 +39,14 @@ class ZeroManager(Z_MethodZeroServer):
                          "model_kwargs": kwargs.model_kwargs}
 
         engine = ZeroServerProcess(self.server_class, server_kwargs)
-        engine.start()
-
         self._inference_engines[kwargs.name] = engine
+
+        executor = ThreadPoolExecutor(1)
+        f = executor.submit(engine.start)
+        f.result()
+
+        ## engine.start() ?????
+
         rep = ZeroServerResponseOk(msg={"already_started": False})
         self.zero_send(req, rep)
 

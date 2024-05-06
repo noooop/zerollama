@@ -6,7 +6,7 @@ from zerollama.tasks.chat.protocol import ChatModelConfig, ChatCompletionRespons
 
 class ChatModel(ModelBase):
     protocol = PROTOCOL
-    inference_backend = "zerollama.inference_backend.hf_transformers.chat:HuggingFaceTransformersChat"
+    inference_backend = "zerollama.inference_backend.transformers_green.chat:HuggingFaceTransformersChat"
 
     @classmethod
     def get_model_config(cls, model_name):

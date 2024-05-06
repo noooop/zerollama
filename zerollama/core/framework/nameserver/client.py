@@ -9,7 +9,7 @@ CLIENT_VALIDATION = True
 
 
 class NameServerClient(Z_Client):
-    timeout = 100
+    timeout = 0.1
 
     def __init__(self, port=None):
         if port is None:

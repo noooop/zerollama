@@ -66,11 +66,11 @@ class Meta(BaseModel):
 class ZeroServerResponseOkWithPayload(ZeroServerResponseOk):
     meta: List[Meta] = Field(default_factory=list)
     payload: Optional[list] = None
+    tensor_field: str
 
     @classmethod
-    def combine(cls, m, tensor_field):
+    def load(cls, m, tensor_field):
         msg = m.model_dump(exclude={tensor_field})
-        msg["tensor_field"] = tensor_field
 
         meta = []
         payload = []
@@ -83,21 +83,23 @@ class ZeroServerResponseOkWithPayload(ZeroServerResponseOk):
             meta.append(Meta(name=k, dtype=str(vecs.dtype), shape=vecs.shape))
             payload.append(np.ascontiguousarray(vecs))
 
-        return cls(msg=msg, meta=meta, payload=payload)
+        return cls(msg=msg, tensor_field=tensor_field, meta=meta, payload=payload)
 
-    def separate(self):
+    def unload(self):
         msg = self.msg.copy()
-        tensor_field = msg.pop("tensor_field")
-        msg[tensor_field] = {}
+
+        msg[self.tensor_field] = {}
         for m, p in zip(self.meta, self.payload):
-            msg[tensor_field][m.name] = p
+            msg[self.tensor_field][m.name] = p
         return msg
-
-
 
     @property
     def b(self):
         return [self.model_dump_json(exclude={"payload"}).encode('utf8')] + self.payload
+
+
+class Timeout(Exception):
+    pass
 
 
 if __name__ == '__main__':

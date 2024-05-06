@@ -26,7 +26,7 @@ class RetrieverClient(ZeroClient):
             return rep
 
         if rep.state == "ok":
-            rep = rep.separate()
+            rep = rep.unload()
             rep = RetrieverResponse(**rep)
         return rep
 

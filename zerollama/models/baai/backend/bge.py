@@ -22,6 +22,7 @@ class BGEM3(RetrieverInterface):
         self.trust_remote_code = self.model_config.model_kwargs.get("trust_remote_code", False)
 
         self.model = None
+        self.batch_size = 1
 
     def load(self):
         config_setup()

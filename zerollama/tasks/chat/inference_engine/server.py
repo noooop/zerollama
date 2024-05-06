@@ -1,4 +1,6 @@
 
+from gevent.lock import Semaphore
+from gevent.threadpool import ThreadPoolExecutor
 from zerollama.core.framework.zero.server import Z_MethodZeroServer
 from zerollama.tasks.chat.interface import ChatModel
 from zerollama.tasks.chat.protocol import ChatCompletionRequest
@@ -19,6 +21,8 @@ class ZeroChatInferenceEngine(Z_MethodZeroServer):
 
         self.inference = self.inference_backend(model_name=model_name, **model_kwargs)
 
+        self.semaphore = Semaphore(self.inference.batch_size)
+
         Z_MethodZeroServer.__init__(self, name=model_name, protocol=self.inference.protocol,
                                     port=None, do_register=True, **kwargs)
 
@@ -28,14 +32,21 @@ class ZeroChatInferenceEngine(Z_MethodZeroServer):
 
     def z_inference(self, req):
         ccr = ChatCompletionRequest(**req.data)
-        if ccr.stream:
-            for rep_id, response in enumerate(self.inference.stream_chat(ccr.messages, ccr.options)):
-                rep = ZeroServerStreamResponseOk(msg=response, snd_more=not response.done, rep_id=rep_id)
+
+        def worker(ccr):
+            if ccr.stream:
+                for rep_id, response in enumerate(self.inference.stream_chat(ccr.messages, ccr.options)):
+                    rep = ZeroServerStreamResponseOk(msg=response, snd_more=not response.done, rep_id=rep_id)
+                    self.zero_send(req, rep)
+            else:
+                response = self.inference.chat(ccr.messages, ccr.options)
+                rep = ZeroServerResponseOk(msg=response)
                 self.zero_send(req, rep)
-        else:
-            response = self.inference.chat(ccr.messages, ccr.options)
-            rep = ZeroServerResponseOk(msg=response)
-            self.zero_send(req, rep)
+
+        with self.semaphore:
+            executor = ThreadPoolExecutor(1)
+            f = executor.submit(worker, ccr)
+            f.result()
 
     def z_info(self, req):
         if hasattr(self.inference, "info"):

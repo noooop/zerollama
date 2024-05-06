@@ -1,9 +1,6 @@
 
 import json
 import time
-import gevent
-import signal
-import greenlet
 import traceback
 import zmq.green as zmq
 from gevent.pool import Pool
@@ -85,10 +82,6 @@ class ZeroServer(object):
 
     def start(self):
         self.init()
-
-        gevent.signal_handler(signal.SIGTERM, self.close)
-        gevent.signal_handler(signal.SIGINT, self.close)
-
         self.run()
 
     def run(self):
@@ -107,14 +100,13 @@ class ZeroServer(object):
                 try:
                     socks = dict(poller.poll(self.POLL_INTERVAL))
                 except (KeyboardInterrupt, EOFError):
-                    return
+                    break
 
                 if socks.get(self.socket) == zmq.POLLIN:
                     msg = self.socket.recv_multipart()
                     yield msg
 
         p = Pool(self.POOL_SIZE)
-
         for x in p.imap_unordered(self.process, get_task()):
             pass
 
@@ -133,8 +125,8 @@ class ZeroServer(object):
         if isinstance(err_msg, ValidationError):
             err_msg = convert_errors(err_msg)
 
-        rep = ZeroServerResponseError(msg=err_msg)
-        self.socket.send_multipart([uuid, req_id] + rep.b)
+        response = ZeroServerResponseError(msg=err_msg)
+        self.socket.send_multipart([uuid, req_id, response.b])
 
     def zero_send(self, req: ZeroServerRequest, rep: ZeroServerResponse):
         if isinstance(rep, ZeroServerStreamResponseOk):
@@ -143,9 +135,6 @@ class ZeroServer(object):
             rep_id = req.req_id
 
         self.socket.send_multipart([req.uuid, rep_id] + rep.b)
-
-    def close(self):
-        self.event.clear()
 
 
 class Z_MethodZeroServer(ZeroServer):
@@ -227,34 +216,6 @@ class ZeroServerProcess(Process):
 
         self._set_status("prepare")
 
-        # slow log
-        self.__last_switch_time_ms, self.__last_switch_cpu_tick = None, None
-        self.__threshold_ms = 0.1
-
-    def _slow_log(self, event, args):
-        if event not in {'switch', 'throw'}:
-            return
-
-        origin, target = args
-
-        then_time, then_tick = self.__last_switch_time_ms, self.__last_switch_cpu_tick
-        now_time, now_tick = time.time(), time.process_time()
-        self.__last_switch_time_ms, self.__last_switch_cpu_tick = now_time, now_tick
-
-        if None in (then_time, then_tick):
-            return
-
-        if origin is gevent.hub.get_hub():
-            return
-
-        elapsed_ms = now_time - then_time
-        elapsed_ticks = now_tick - then_tick
-
-        if elapsed_ms <= self.__threshold_ms:
-            return
-
-        print(f"[SLOW LOG] Transfer from {origin} to {target} with {event} elapsed_ms: [{elapsed_ms}] elapsed_ticks [{elapsed_ticks}]")
-
     def _set_status(self, status):
         self._status['status'] = status
 
@@ -285,13 +246,11 @@ class ZeroServerProcess(Process):
 
             self.server = self.server_class(**self.server_kwargs)
         except (FileNotFoundError, EnvironmentError) as e:
-            print(e)
             self._set_status("error")
             tb = traceback.format_exc()
             self._child_conn.send((e, tb))
             return
         except Exception as e:
-            print(e)
             traceback.print_exc()
             self._set_status("error")
             tb = traceback.format_exc()
@@ -303,13 +262,11 @@ class ZeroServerProcess(Process):
         try:
             self.server.init()
         except (FileNotFoundError, EnvironmentError) as e:
-            print(e)
             self._set_status("error")
             tb = traceback.format_exc()
             self._child_conn.send((e, tb))
             return
         except Exception as e:
-            print(e)
             traceback.print_exc()
             self._set_status("error")
             tb = traceback.format_exc()
@@ -318,25 +275,17 @@ class ZeroServerProcess(Process):
 
         self._set_status("running")
 
-        greenlet.settrace(self._slow_log)
-        gevent.signal_handler(signal.SIGTERM, self.close)
-        gevent.signal_handler(signal.SIGINT, self.close)
-
         try:
             self.server.run()
         except Exception as e:
-            print(e)
             self._set_status("error")
             tb = traceback.format_exc()
             self._child_conn.send((e, tb))
             return
 
-    def close(self):
+    def terminate(self):
         self._set_status("stopped")
         self.event.clear()
-
-    def terminate(self):
-        self.close()
         self.join()
 
     def wait(self):

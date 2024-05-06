@@ -1,4 +1,7 @@
 
+from gevent.lock import Semaphore
+from gevent.threadpool import ThreadPoolExecutor
+
 from zerollama.core.framework.zero.server import Z_MethodZeroServer
 from zerollama.tasks.retriever.collection import get_model_by_name
 from zerollama.tasks.retriever.protocol import RetrieverRequest
@@ -19,6 +22,8 @@ class ZeroRetrieverInferenceEngine(Z_MethodZeroServer):
 
         self.inference = self.inference_backend(model_name=model_name, **model_kwargs)
 
+        self.semaphore = Semaphore(self.inference.batch_size)
+
         Z_MethodZeroServer.__init__(self, name=model_name, protocol=self.inference.protocol,
                                     port=None, do_register=True, **kwargs)
 
@@ -28,10 +33,17 @@ class ZeroRetrieverInferenceEngine(Z_MethodZeroServer):
 
     def z_inference(self, req):
         rr = RetrieverRequest(**req.data)
-        response = self.inference.encode(rr.sentences, rr.options)
 
-        rep = ZeroServerResponseOkWithPayload.combine(response, tensor_field="vecs")
-        self.zero_send(req, rep)
+        def worker(rr):
+            response = self.inference.encode(rr.sentences, rr.options)
+
+            rep = ZeroServerResponseOkWithPayload.load(response, tensor_field="vecs")
+            self.zero_send(req, rep)
+
+        with self.semaphore:
+            executor = ThreadPoolExecutor(1)
+            f = executor.submit(worker, rr)
+            f.result()
 
     def z_info(self, req):
         if hasattr(self.inference, "info"):

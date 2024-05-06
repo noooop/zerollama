@@ -1,7 +1,8 @@
 from zerollama.core.framework.zero_manager.client import ZeroManagerClient
 from zerollama.tasks.chat.protocol import MANAGER_NAME
 
-if __name__ == '__main__':
+
+def test(x):
     from pprint import pprint
     manager_client = ZeroManagerClient(MANAGER_NAME)
 
@@ -59,8 +60,17 @@ if __name__ == '__main__':
     for model_name in model_names:
         test_inference_engine(model_name)
 
-    #for model_name in model_names:
-    #    print("=" * 80)
-    #    print('terminate', model_name)
-    #    print(manager_client.terminate(model_name))
-    #    print(manager_client.list())
+
+if __name__ == '__main__':
+    import sys
+    from multiprocessing import Pool
+
+    if len(sys.argv) == 1:
+        n = 1
+    else:
+        n = int(sys.argv[1])
+    p = Pool(n)
+    for x in p.imap_unordered(test, range(n)):
+        pass
+
+
