@@ -1,61 +1,23 @@
 
-from gevent.lock import Semaphore
-from gevent.threadpool import ThreadPoolExecutor
-from zerollama.core.framework.zero.server import Z_MethodZeroServer
-from zerollama.tasks.chat.interface import ChatModel
+from zerollama.tasks.chat.collection import get_model_by_name
 from zerollama.tasks.chat.protocol import ChatCompletionRequest
 from zerollama.tasks.chat.protocol import ZeroServerResponseOk, ZeroServerStreamResponseOk
+from zerollama.tasks.base.inference_engine.server import ZeroInferenceEngine
 
 
-class ZeroChatInferenceEngine(Z_MethodZeroServer):
-    def __init__(self, model_name, model_kwargs, **kwargs):
-        self.model_name = model_name
-        self.model_class = ChatModel
-        self.inference_backend = self.model_class.inference_backend
+class ZeroChatInferenceEngine(ZeroInferenceEngine):
+    get_model_by_name = staticmethod(get_model_by_name)
 
-        if isinstance(self.inference_backend, str):
-            module_name, class_name = self.inference_backend.split(":")
-            import importlib
-            module = importlib.import_module(module_name)
-            self.inference_backend = getattr(module, class_name)
-
-        self.inference = self.inference_backend(model_name=model_name, **model_kwargs)
-
-        self.semaphore = Semaphore(self.inference.batch_size)
-
-        Z_MethodZeroServer.__init__(self, name=model_name, protocol=self.inference.protocol,
-                                    port=None, do_register=True, **kwargs)
-
-    def init(self):
-        self.inference.load()
-        print(f"{self.__class__.__name__}: ", self.name, "is running!", "port:", self.port)
-
-    def z_inference(self, req):
+    def inference_worker(self, req):
         ccr = ChatCompletionRequest(**req.data)
-
-        def worker(ccr):
-            if ccr.stream:
-                for rep_id, response in enumerate(self.inference.stream_chat(ccr.messages, ccr.options)):
-                    rep = ZeroServerStreamResponseOk(msg=response, snd_more=not response.done, rep_id=rep_id)
-                    self.zero_send(req, rep)
-            else:
-                response = self.inference.chat(ccr.messages, ccr.options)
-                rep = ZeroServerResponseOk(msg=response)
+        if ccr.stream:
+            for rep_id, response in enumerate(self.inference.stream_chat(ccr.messages, ccr.options)):
+                rep = ZeroServerStreamResponseOk(msg=response, snd_more=not response.done, rep_id=rep_id)
                 self.zero_send(req, rep)
-
-        with self.semaphore:
-            executor = ThreadPoolExecutor(1)
-            f = executor.submit(worker, ccr)
-            f.result()
-
-    def z_info(self, req):
-        if hasattr(self.inference, "info"):
-            info = self.inference.info
         else:
-            info = {}
-
-        rep = ZeroServerResponseOk(msg=info)
-        self.zero_send(req, rep)
+            response = self.inference.chat(ccr.messages, ccr.options)
+            rep = ZeroServerResponseOk(msg=response)
+            self.zero_send(req, rep)
 
 
 if __name__ == '__main__':

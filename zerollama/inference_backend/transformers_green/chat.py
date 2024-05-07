@@ -26,7 +26,7 @@ class HuggingFaceTransformers(object):
         self.model = None
         self.tokenizer = None
         self.streamer = None
-        self.batch_size = 1
+        self.n_concurrent = 1
 
     def load(self):
         config = config_setup()
