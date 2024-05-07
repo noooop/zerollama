@@ -150,6 +150,7 @@ class HuggingFaceTransformersChat(HuggingFaceTransformers, ChatInterface):
                                               "response_length": response_length,
                                               "finish_reason": "stop" if response_length < max_new_tokens else "length",
                                               "done": True})
+        thread.join()
 
 
 def run_test(model_name, stream=False):
