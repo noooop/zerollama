@@ -41,10 +41,9 @@ class ZeroManager(Z_MethodZeroServer):
         engine = ZeroServerProcess(self.server_class, server_kwargs)
         self._inference_engines[kwargs.name] = engine
 
-        executor = ThreadPoolExecutor(1)
-        f = executor.submit(engine.start)
-        f.result()
-
+        with ThreadPoolExecutor(1) as executor:
+            f = executor.submit(engine.start)
+            f.result()
         ## engine.start() ?????
 
         rep = ZeroServerResponseOk(msg={"already_started": False})
