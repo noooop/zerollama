@@ -1,6 +1,7 @@
 import time
-import sys
-sys.path.append("../")
+import os, sys
+parentddir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir))
+sys.path.append(parentddir)
 
 from use_sync.client import Client as BaseClient
 from use_sync.server import ZeroServerProcess, Z_MethodZeroServer, ZeroServerResponseOk

@@ -1,9 +1,12 @@
 
+import signal
 import json
 import time
 import traceback
-import zmq.green as zmq
-from gevent.pool import Pool
+import asyncio
+import zmq
+import platform
+from zmq.asyncio import Context
 from multiprocessing import Event, Process, Value, Pipe, Manager
 from zerollama.core.framework.zero.protocol import (
     Timeout,
@@ -17,6 +20,10 @@ from zerollama.core.framework.zero.protocol import (
     ZeroServerResponseError
 )
 
+plat = platform.system().lower()
+if plat == 'windows':
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
 
 class ZeroServer(object):
     POLL_INTERVAL = 1000
@@ -24,7 +31,7 @@ class ZeroServer(object):
 
     def __init__(self, name=None, protocol=None, port=None, event=None, do_register=True, share_port=None,
                  nameserver_port=None):
-        context = zmq.Context.instance()
+        context = Context.instance()
         socket = context.socket(zmq.ROUTER)
         if port is None or port == "random":
             port = socket.bind_to_random_port("tcp://*", min_port=50000, max_port=60000)
@@ -71,14 +78,14 @@ class ZeroServer(object):
     def clean_up(self):
         print(f"{self.__class__.__name__} clean_up!")
 
-    def process(self, msg):
+    async def process(self, msg):
         try:
             uuid, req_id, msg, *payload = msg
         except Exception:
             traceback.print_exc()
             return
 
-        return self.socket.send_multipart([uuid, req_id, b"ok"])
+        await self.socket.send_multipart([uuid, req_id, b"ok"])
 
     def start(self):
         self.init()
@@ -92,23 +99,44 @@ class ZeroServer(object):
         if self.do_register:
             self._register()
 
-        poller = zmq.Poller()
-        poller.register(self.socket, zmq.POLLIN)
+        class GracefulExit(SystemExit):
+            code = 1
 
-        def get_task():
-            while self.event.is_set():
+        def raise_graceful_exit(*args):
+            loop = asyncio.get_event_loop()
+            tasks = asyncio.all_tasks(loop=loop)
+            for t in tasks:
+                t.cancel()
+
+            loop.stop()
+            raise GracefulExit()
+
+        signal.signal(signal.SIGINT, raise_graceful_exit)
+        signal.signal(signal.SIGTERM, raise_graceful_exit)
+        # https://stackoverflow.com/questions/45987985/asyncio-loops-add-signal-handler-in-windows
+        # Windows does not have signals.
+
+        async def _run():
+            while True:
                 try:
-                    socks = dict(poller.poll(self.POLL_INTERVAL))
-                except (KeyboardInterrupt, EOFError):
+                    msg = await self.socket.recv_multipart()
+                except (KeyboardInterrupt, EOFError, asyncio.CancelledError):
                     break
+                asyncio.create_task(self.process(msg))
 
-                if socks.get(self.socket) == zmq.POLLIN:
-                    msg = self.socket.recv_multipart()
-                    yield msg
-
-        p = Pool(self.POOL_SIZE)
-        for x in p.imap_unordered(self.process, get_task()):
+        loop = asyncio.get_event_loop()
+        task = loop.create_task(_run())
+        try:
+            loop.run_until_complete(task)
+        except GracefulExit:
             pass
+        if 1:
+            tasks = asyncio.all_tasks(loop=loop)
+            for t in tasks:
+                t.cancel()
+            group = asyncio.gather(*tasks, return_exceptions=True)
+            loop.run_until_complete(group)
+            loop.close()
 
         if self.do_register:
             try:
@@ -118,7 +146,7 @@ class ZeroServer(object):
 
         self.clean_up()
 
-    def handle_error(self, err_msg, uuid=None, req_id=None, req=None):
+    async def handle_error(self, err_msg, uuid=None, req_id=None, req=None):
         if req is not None:
             uuid, req_id = req.uuid, req.req_id
 
@@ -126,19 +154,19 @@ class ZeroServer(object):
             err_msg = convert_errors(err_msg)
 
         response = ZeroServerResponseError(msg=err_msg)
-        self.socket.send_multipart([uuid, req_id, response.b])
+        await self.socket.send_multipart([uuid, req_id, response.b])
 
-    def zero_send(self, req: ZeroServerRequest, rep: ZeroServerResponse):
+    async def zero_send(self, req: ZeroServerRequest, rep: ZeroServerResponse):
         if isinstance(rep, ZeroServerStreamResponseOk):
             rep_id = req.req_id + (b"M" if rep.snd_more else b"N") + str(rep.rep_id).encode("utf-8")
         else:
             rep_id = req.req_id
 
-        self.socket.send_multipart([req.uuid, rep_id] + rep.b)
+        await self.socket.send_multipart([req.uuid, rep_id] + rep.b)
 
 
 class Z_MethodZeroServer(ZeroServer):
-    def process(self, msg):
+    async def process(self, msg):
         try:
             uuid, req_id, msg, *payload = msg
         except Exception:
@@ -148,13 +176,13 @@ class Z_MethodZeroServer(ZeroServer):
         try:
             msg = json.loads(msg)
         except json.JSONDecodeError as e:
-            self.handle_error(str(e), uuid, req_id)
+            await self.handle_error(str(e), uuid, req_id)
             return
 
         try:
             req = ZeroServerRequest(**msg)
         except ValidationError as e:
-            self.handle_error(e, uuid, req_id)
+            await self.handle_error(e, uuid, req_id)
             return
 
         req.uuid = uuid
@@ -165,26 +193,26 @@ class Z_MethodZeroServer(ZeroServer):
         method = getattr(self, "z_" + method_name, self.default)
 
         try:
-            method(req)
+            await method(req)
         except ValidationError as e:
-            self.handle_error(e, req=req)
+            await self.handle_error(e, req=req)
         except Exception as e:
             traceback.print_exc()
-            self.handle_error(str(e), req=req)
+            await self.handle_error(str(e), req=req)
 
-    def default(self, req: ZeroServerRequest):
+    async def default(self, req: ZeroServerRequest):
         method_name = req.method
         err_msg = f"method [{method_name}] not supported."
-        self.handle_error(err_msg, req=req)
+        await self.handle_error(err_msg, req=req)
 
-    def z_support_methods(self, req: ZeroServerRequest):
+    async def z_support_methods(self, req: ZeroServerRequest):
         support_methods = [m[2:] for m in dir(self) if m.startswith('z_')]
         rep = ZeroServerResponseOk(msg={"support_methods": support_methods})
-        self.zero_send(req, rep)
+        await self.zero_send(req, rep)
 
-    def z_info(self, req: ZeroServerRequest):
+    async def z_info(self, req: ZeroServerRequest):
         rep = ZeroServerResponseOk(msg={})
-        self.zero_send(req, rep)
+        await self.zero_send(req, rep)
 
 
 class ZeroServerProcess(Process):
@@ -285,7 +313,7 @@ class ZeroServerProcess(Process):
 
     def terminate(self):
         self._set_status("stopped")
-        self.event.clear()
+        super().terminate()
         self.join()
 
     def wait(self):

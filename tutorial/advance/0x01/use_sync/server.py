@@ -300,28 +300,3 @@ class ZeroServerProcess(Process):
         if self._parent_conn.poll():
             self._exception = self._parent_conn.recv()
         return self._exception
-
-
-if __name__ == '__main__':
-    """
-    server_class = "zerollama.core.framework.zero.server:ZeroServer"
-
-    h1 = ZeroServerProcess(server_class, {"do_register": False})
-    h2 = ZeroServerProcess(server_class, {"do_register": False})
-    h3 = ZeroServerProcess(server_class, {"do_register": False})
-
-    h1.start()
-    h2.start()
-    h3.start()
-
-    time.sleep(10)
-
-    h1.terminate()
-    h2.terminate()
-    h3.terminate()
-    """
-
-    server_class = "zerollama.core.framework.zero.server:Z_MethodZeroServer"
-    h = ZeroServerProcess(server_class, {"do_register": False, "port": 9527})
-    h.start()
-    h.wait()

@@ -1,7 +1,9 @@
 import time
 import gevent
-import sys
-sys.path.append("../")
+
+import os, sys
+parentddir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir))
+sys.path.append(parentddir)
 
 from use_gevent.client import Client as BaseClient
 from use_gevent.server import ZeroServerProcess, Z_MethodZeroServer, ZeroServerResponseOk
