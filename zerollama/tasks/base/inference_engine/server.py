@@ -32,9 +32,9 @@ class ZeroInferenceEngine(Z_MethodZeroServer):
 
     def z_inference(self, req):
         with self.semaphore:
-            executor = ThreadPoolExecutor(1)
-            f = executor.submit(self.inference_worker, req)
-            f.result()
+            with ThreadPoolExecutor(1) as executor:
+                f = executor.submit(self.inference_worker, req)
+                f.result()
 
     def inference_worker(self, req):
         pass
