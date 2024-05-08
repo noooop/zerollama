@@ -5,7 +5,7 @@ from zerollama.tasks.chat.interface import ChatModel
 
 class DeepSeekLLM(ChatModel):
     family = "deepseek-llm"
-    model_kwargs = {}
+    model_kwargs = {"trust_remote_code": True}
     header = ["name", "size", "quantization", "bits"]
     info = [
         # name                                           size      quantization(_, GPTQ, AWQ)     bits   subtype
