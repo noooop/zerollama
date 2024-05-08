@@ -1,6 +1,6 @@
 
 from zerollama.tasks.chat.collection import get_model_by_name
-from zerollama.tasks.chat.protocol import ChatCompletionRequest
+from zerollama.tasks.chat.protocol import ChatCompletionRequest, ChatCompletionStreamResponseDone
 from zerollama.tasks.chat.protocol import ZeroServerResponseOk, ZeroServerStreamResponseOk
 from zerollama.tasks.base.inference_engine.server import ZeroInferenceEngine
 
@@ -12,7 +12,9 @@ class ZeroChatInferenceEngine(ZeroInferenceEngine):
         ccr = ChatCompletionRequest(**req.data)
         if ccr.stream:
             for rep_id, response in enumerate(self.inference.stream_chat(ccr.messages, ccr.options)):
-                rep = ZeroServerStreamResponseOk(msg=response, snd_more=not response.done, rep_id=rep_id)
+                rep = ZeroServerStreamResponseOk(msg=response,
+                                                 snd_more=not isinstance(response, ChatCompletionStreamResponseDone),
+                                                 rep_id=rep_id)
                 self.zero_send(req, rep)
         else:
             response = self.inference.chat(ccr.messages, ccr.options)

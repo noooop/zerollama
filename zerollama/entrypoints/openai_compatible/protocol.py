@@ -89,7 +89,7 @@ class ChatCompletionResponse(BaseModel):
     created: int = Field(default_factory=lambda: int(time.time()))
     model: str
     choices: List[ChatCompletionResponseChoice]
-    #usage: UsageInfo
+    usage: UsageInfo
 
 
 class DeltaMessage(BaseModel):

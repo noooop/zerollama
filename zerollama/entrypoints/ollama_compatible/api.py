@@ -6,6 +6,7 @@ from fastapi.responses import StreamingResponse, JSONResponse
 
 from zerollama.tasks.chat.inference_engine.client import ChatClient
 from zerollama.tasks.retriever.inference_engine.client import RetrieverClient
+from zerollama.tasks.chat.protocol import ChatCompletionStreamResponseDone
 from .protocol import ChatCompletionRequest, ShowRequest, EmbeddingsRequest
 
 
@@ -76,16 +77,7 @@ async def chat(req: ChatCompletionRequest):
                                         content={"error": f"model '{req.model}' not found"})
 
                 rep = rep.msg
-                if not rep.done:
-                    content = rep.content
-                    response = json.dumps({"model": req.model,
-                                           "created_at": get_timestamp(),
-                                           "message": {"role": "assistant", "content": content},
-                                           "done": False
-                                           })
-                    yield response
-                    yield "\n"
-                else:
+                if isinstance(rep, ChatCompletionStreamResponseDone):
                     response = json.dumps({
                         "model": req.model,
                         "created_at": get_timestamp(),
@@ -94,6 +86,15 @@ async def chat(req: ChatCompletionRequest):
                     })
                     yield response
                     break
+                else:
+                    delta_content = rep.delta_content
+                    response = json.dumps({"model": req.model,
+                                           "created_at": get_timestamp(),
+                                           "message": {"role": "assistant", "content": delta_content},
+                                           "done": False
+                                           })
+                    yield response
+                    yield "\n"
         return StreamingResponse(generate(), media_type="application/x-ndjson")
     else:
         rep = chat_client.chat(req.model, req.messages, req.options)

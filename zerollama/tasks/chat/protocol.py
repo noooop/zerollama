@@ -22,19 +22,26 @@ class ChatCompletionRequest(BaseModel):
 
 class ChatCompletionResponse(BaseModel):
     model: str
-    prompt_length: int
-    response_length: int
     finish_reason: str
     content: str
+
+    completion_tokens: int
+    prompt_tokens: int
+    total_tokens: int
 
 
 class ChatCompletionStreamResponse(BaseModel):
     model: str
-    prompt_length: int
-    response_length: int
+    delta_content: str
     finish_reason: Optional[str] = None
-    content: Optional[str] = None
-    done: bool
+
+
+class ChatCompletionStreamResponseDone(BaseModel):
+    model: str
+    finish_reason: Optional[str] = None
+    completion_tokens: int
+    prompt_tokens: int
+    total_tokens: int
 
 
 class ChatModelConfig(BaseModel):

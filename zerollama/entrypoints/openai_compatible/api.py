@@ -1,11 +1,11 @@
 
-import json
 from fastapi import FastAPI
 from fastapi.responses import StreamingResponse, JSONResponse
 
 from zerollama.tasks.chat.inference_engine.client import ChatClient
 from zerollama.tasks.retriever.inference_engine.client import RetrieverClient
 
+from zerollama.tasks.chat.protocol import ChatCompletionStreamResponseDone
 from .protocol import (
     ChatCompletionRequest,
     ChatCompletionResponse,
@@ -72,17 +72,8 @@ def chat(req: ChatCompletionRequest):
                                         content={"error": f"model '{req.model}' not found"})
 
                 rep = rep.msg
-                if not rep.done:
-                    response = ChatCompletionStreamResponse(**{
-                        "model": rep.model,
-                        "choices": [ChatCompletionResponseStreamChoice(**{
-                            "index": 0,
-                            "delta": DeltaMessage(role="assistant", content=rep.content)
-                        })]
-                    })
-                    yield response.model_dump_json()
-                    yield "\n"
-                else:
+
+                if isinstance(rep, ChatCompletionStreamResponseDone):
                     response = ChatCompletionStreamResponse(**{
                         "model": rep.model,
                         "choices": [ChatCompletionResponseStreamChoice(**{
@@ -93,6 +84,17 @@ def chat(req: ChatCompletionRequest):
                     })
                     yield response.model_dump_json()
                     break
+                else:
+                    response = ChatCompletionStreamResponse(**{
+                        "model": rep.model,
+                        "choices": [ChatCompletionResponseStreamChoice(**{
+                            "index": 0,
+                            "delta": DeltaMessage(role="assistant", content=rep.delta_content)
+                        })]
+                    })
+                    yield response.model_dump_json()
+                    yield "\n"
+
         return StreamingResponse(generate(), media_type="application/x-ndjson")
     else:
         rep = chat_client.chat(req.model, req.messages, options)
@@ -106,7 +108,10 @@ def chat(req: ChatCompletionRequest):
                 "index": 0,
                 "message": ChatMessage(role="assistant", content=rep.content),
                 "finish_reason": rep.finish_reason
-            })]
+            })],
+            "usage": UsageInfo(prompt_tokens=rep.prompt_tokens,
+                               total_tokens=rep.total_tokens,
+                               completion_tokens=rep.completion_tokens)
         })
         return response
 

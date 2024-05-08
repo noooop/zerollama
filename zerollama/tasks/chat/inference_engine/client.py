@@ -1,7 +1,8 @@
 
 from zerollama.core.framework.nameserver.client import ZeroClient
 from zerollama.tasks.chat.protocol import PROTOCOL
-from zerollama.tasks.chat.protocol import ChatCompletionRequest, ChatCompletionResponse, ChatCompletionStreamResponse
+from zerollama.tasks.chat.protocol import ChatCompletionRequest, ChatCompletionResponse
+from zerollama.tasks.chat.protocol import ChatCompletionStreamResponse, ChatCompletionStreamResponseDone
 
 CLIENT_VALIDATION = True
 
@@ -43,7 +44,10 @@ class ChatClient(ZeroClient):
                 return rep
 
             if rep.state == "ok":
-                rep.msg = ChatCompletionStreamResponse(**rep.msg)
+                if rep.msg["finish_reason"] is None:
+                    rep.msg = ChatCompletionStreamResponse(**rep.msg)
+                else:
+                    rep.msg = ChatCompletionStreamResponseDone(**rep.msg)
             yield rep
 
 

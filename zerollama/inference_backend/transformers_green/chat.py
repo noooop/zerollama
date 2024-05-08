@@ -5,7 +5,8 @@ import requests
 from threading import Thread
 from zerollama.core.config.main import config_setup
 from zerollama.tasks.chat.interface import ChatInterface
-from zerollama.tasks.chat.protocol import ChatCompletionResponse, ChatCompletionStreamResponse
+from zerollama.tasks.chat.protocol import ChatCompletionResponse
+from zerollama.tasks.chat.protocol import ChatCompletionStreamResponse, ChatCompletionStreamResponseDone
 from zerollama.tasks.chat.collection import get_model_config_by_name
 
 
@@ -102,17 +103,19 @@ class HuggingFaceTransformersChat(HuggingFaceTransformers, ChatInterface):
             output_ids[len(input_ids):] for input_ids, output_ids in zip(model_inputs.input_ids, generated_ids)
         ]
 
-        prompt_length = len(model_inputs.input_ids[0])
+        prompt_tokens = len(model_inputs.input_ids[0])
 
         content = self.tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]
 
-        response_length = len(generated_ids[0])
+        completion_tokens = len(generated_ids[0])
 
         return ChatCompletionResponse(**{"model": self.model_name,
-                                         "prompt_length": prompt_length,
                                          "content": content,
-                                         "response_length": response_length,
-                                         "finish_reason": "stop" if response_length < max_new_tokens else "length"})
+                                         "finish_reason": "stop" if completion_tokens < max_new_tokens else "length",
+
+                                         "completion_tokens": completion_tokens,
+                                         "prompt_tokens": prompt_tokens,
+                                         "total_tokens": prompt_tokens+completion_tokens})
 
     @torch.no_grad()
     def stream_chat(self, messages, options=None):
@@ -126,30 +129,30 @@ class HuggingFaceTransformersChat(HuggingFaceTransformers, ChatInterface):
         )
         model_inputs = self.tokenizer([text], return_tensors="pt").to(self.device)
 
-        prompt_length = len(model_inputs.input_ids[0])
+        prompt_tokens = len(model_inputs.input_ids[0])
 
         generation_kwargs = dict(model_inputs, streamer=self.streamer, max_new_tokens=max_new_tokens)
 
         thread = Thread(target=self.model.generate, kwargs=generation_kwargs)
         thread.start()
 
-        response_length = 0
+        completion_tokens = 0
 
         for content in self.streamer:
+            completion_tokens += 1
+
             if not content:
                 continue
-            response_length += 1
-            yield ChatCompletionStreamResponse(**{"model": self.model_name,
-                                                  "prompt_length": prompt_length,
-                                                  "response_length": response_length,
-                                                  "content": content,
-                                                  "done": False})
 
-        yield ChatCompletionStreamResponse(**{"model": self.model_name,
-                                              "prompt_length": prompt_length,
-                                              "response_length": response_length,
-                                              "finish_reason": "stop" if response_length < max_new_tokens else "length",
-                                              "done": True})
+            yield ChatCompletionStreamResponse(**{"model": self.model_name,
+                                                  "delta_content": content})
+
+        yield ChatCompletionStreamResponseDone(**{"model": self.model_name,
+                                                  "finish_reason": "stop" if completion_tokens < max_new_tokens else "length",
+
+                                                  "prompt_tokens": prompt_tokens,
+                                                  "completion_tokens": completion_tokens,
+                                                  "total_tokens": prompt_tokens+completion_tokens})
         thread.join()
 
 
@@ -168,12 +171,13 @@ def run_test(model_name, stream=False):
 
     if stream:
         for response in model.stream_chat(messages):
-            if not response.done:
-                print(response.content, end="", flush=True)
-            else:
+            if isinstance(response, ChatCompletionStreamResponseDone):
                 print()
-                print("response_length:", response.response_length)
+                print("completion_tokens:", response.completion_tokens)
+            else:
+                print(response.delta_content, end="", flush=True)
+
     else:
         response = model.chat(messages)
         print(response.content)
-        print("response_length:", response.response_length)
+        print("completion_tokens:", response.completion_tokens)

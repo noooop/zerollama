@@ -1,5 +1,6 @@
 
 from zerollama.tasks.chat.cli import click, list_families, list_family, pull
+from zerollama.tasks.chat.protocol import ChatCompletionStreamResponseDone
 
 
 @click.command()
@@ -55,10 +56,13 @@ def run(model_name):
                         return
                     rep = rep.msg
 
-                    if not rep.done:
-                        print(rep.content, end="", flush=True)
-                        content += rep.content
-                print("\n", flush=True)
+                    if isinstance(rep, ChatCompletionStreamResponseDone):
+                        print("\n", flush=True)
+                        break
+                    else:
+                        print(rep.delta_content, end="", flush=True)
+                        content += rep.delta_content
+
                 messages.append({"role": "assistant", "content": content})
                 i += 1
     except (KeyboardInterrupt, EOFError):
