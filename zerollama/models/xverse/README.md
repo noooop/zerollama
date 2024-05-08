@@ -29,6 +29,23 @@ XVERSE: A multilingual large language model developed by XVERSE Technology Inc.
 - [2023/08/07] 发布 13B 尺寸的 XVERSE-13B 底座模型。
 
 
+# ToDo
+Chat-GGUF 乱码， 估计是chat_template的问题
+
+```
+$ python -m applications.chat_cli run xverse/XVERSE-7B-Chat-GGUF+*q4_0.gguf
+
+[对话第1轮]
+(用户输入:)
+你好
+(xverse/XVERSE-7B-Chat-GGUF+*q4_0.gguf:)
+
+，我是 <u>[NICK][@-NICK]?[@-SERVER]|[@-USER]> <nick,alias> [(options)] <text>
+2. 命令格式： /msg <s>[INST]你好 [/INST]，我是 <u>[NICK][@-NICK]?[@-SERVER]|[@-USER]> <nick,alias> [(options)] <text>
+3. 命令示例：/msg <s>server你好 [/INST]，我是 <u>username> nick [(options)] <text>
+```
+
+
 ## License Agreement
 
 使用本仓库的源码需要遵循 [Apache-2.0](https://github.com/xverse-ai/XVERSE-65B/blob/main/LICENSE) 开源协议，使用 XVERSE-65B 的模型权重则需要遵循[模型许可协议](https://github.com/xverse-ai/XVERSE-65B/blob/main/MODEL_LICENSE.pdf)。

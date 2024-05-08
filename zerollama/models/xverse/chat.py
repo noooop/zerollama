@@ -1,6 +1,6 @@
 
 
-from zerollama.tasks.chat.interface import ChatModel
+from zerollama.tasks.chat.interface import ChatModel, ChatGGUFModel
 
 
 class XVERSE(ChatModel):
@@ -24,16 +24,53 @@ class XVERSE(ChatModel):
     ]
 
 
+class XVERSE_GGUF(ChatGGUFModel):
+    family = "xverse_gguf"
+
+    gguf = {
+        "repo_id": [
+            "xverse/XVERSE-7B-Chat-GGUF",
+            "xverse/XVERSE-13B-Chat-GGUF",
+            "xverse/XVERSE-65B-Chat-GGUF",
+        ],
+        "filename": [
+            "*fp16.gguf"
+            "*q8_0.gguf",
+            "*q6_k.gguf",
+            "*q5_k_m.gguf",
+            "*q5_0.gguf",
+            "*q4_k_m.gguf",
+            "*q4_0.gguf",
+            "*q3_k_m.gguf",
+            "*q2_k.gguf"
+        ]
+    }
+
+
 if __name__ == '__main__':
     import torch
     from zerollama.inference_backend.transformers_green.chat import run_test
 
-    for model_name in ["xverse/XVERSE-7B-Chat"]:
-        run_test(model_name, stream=False)
 
-        print(torch.cuda.memory_allocated() / 1024 ** 2)
+    def transformers_test():
+        for model_name in ["xverse/XVERSE-7B-Chat"]:
+            run_test(model_name, stream=False)
 
-    for model_name in ["xverse/XVERSE-7B-Chat"]:
-        run_test(model_name, stream=True)
+            print(torch.cuda.memory_allocated() / 1024 ** 2)
 
-        print(torch.cuda.memory_allocated() / 1024 ** 2)
+        for model_name in ["xverse/XVERSE-7B-Chat"]:
+            run_test(model_name, stream=True)
+
+            print(torch.cuda.memory_allocated() / 1024 ** 2)
+
+    def llama_cpp_test():
+        from zerollama.inference_backend.llama_cpp_green.chat import run_test
+
+        for model_name in ["xverse/XVERSE-7B-Chat-GGUF+*q4_0.gguf"]:
+            run_test(model_name, stream=False)
+
+        for model_name in ["xverse/XVERSE-7B-Chat-GGUF+*q4_0.gguf"]:
+            run_test(model_name, stream=True)
+
+
+    llama_cpp_test()

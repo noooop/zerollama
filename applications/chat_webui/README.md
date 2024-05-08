@@ -89,9 +89,12 @@ Supported chat families:
 deepseek-llm
 MiniCPM
 Qwen1.5
+Qwen1.5_gguf
 Yi
 llama3
 llama3zh
+xverse
+xverse_gguf
 ```
 
 ### list-family 列出支持的模型家族成员

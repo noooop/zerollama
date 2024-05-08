@@ -29,6 +29,7 @@ Yi
 llama3
 llama3zh
 xverse
+xverse_gguf
 ```
 
 ## list-family 列出支持的模型家族成员
