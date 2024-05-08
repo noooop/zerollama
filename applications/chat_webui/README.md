@@ -117,6 +117,11 @@ $ python -m applications.chat_webui.cli chat start Qwen/Qwen1.5-0.5B-Chat-GPTQ-I
 $ python -m applications.chat_webui.cli chat start Qwen/Qwen1.5-0.5B-Chat-AWQ
 ```
 
+支持 llama cpp gguf 模型 
+```
+$ python -m applications.chat_webui.cli run Qwen/Qwen1.5-0.5B-Chat-GGUF+*q8_0.gguf
+```
+
 ### terminate 卸载模型 
 ```
 $ python -m applications.chat_webui.cli chat terminate Qwen/Qwen1.5-0.5B-Chat

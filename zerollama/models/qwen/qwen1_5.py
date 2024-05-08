@@ -1,4 +1,4 @@
-from zerollama.tasks.chat.interface import ChatModel
+from zerollama.tasks.chat.interface import ChatModel, ChatGGUFModel
 
 
 class Qwen1_5(ChatModel):
@@ -48,20 +48,63 @@ class Qwen1_5(ChatModel):
     ]
 
 
+class Qwen1_5_GGUF(ChatGGUFModel):
+    family = "Qwen1.5_gguf"
+
+    gguf = {
+        "repo_id": [
+            "Qwen/Qwen1.5-0.5B-Chat-GGUF",
+            "Qwen/Qwen1.5-1.8B-Chat-GGUF",
+            "Qwen/Qwen1.5-4B-Chat-GGUF",
+            "Qwen/Qwen1.5-7B-Chat-GGUF",
+            "Qwen/Qwen1.5-32B-Chat-GGUF",
+            "Qwen/Qwen1.5-72B-Chat-GGUF",
+            "Qwen/Qwen1.5-110B-Chat-GGUF",
+        ],
+        "filename": [
+            "*q8_0.gguf",
+            "*q6_k.gguf",
+            "*q5_k_m.gguf",
+            "*q5_0.gguf",
+            "*q4_k_m.gguf",
+            "*q4_0.gguf",
+            "*q3_k_m.gguf",
+            "*q2_k.gguf"
+        ]
+    }
+
+
 if __name__ == '__main__':
     import torch
-    from zerollama.inference_backend.transformers_green.chat import run_test
 
-    for model_name in ["Qwen/Qwen1.5-0.5B-Chat",
-                       "Qwen/Qwen1.5-0.5B-Chat-GPTQ-Int4",
-                       "Qwen/Qwen1.5-0.5B-Chat-AWQ"]:
-        run_test(model_name, stream=False)
+    def transformers_test():
+        from zerollama.inference_backend.transformers_green.chat import run_test
 
-        print("memory_allocated:", torch.cuda.memory_allocated() / 1024 ** 2)
+        for model_name in ["Qwen/Qwen1.5-0.5B-Chat",
+                           "Qwen/Qwen1.5-0.5B-Chat-GPTQ-Int4",
+                           "Qwen/Qwen1.5-0.5B-Chat-AWQ"]:
+            run_test(model_name, stream=False)
 
-    for model_name in ["Qwen/Qwen1.5-0.5B-Chat",
-                       "Qwen/Qwen1.5-0.5B-Chat-GPTQ-Int4",
-                       "Qwen/Qwen1.5-0.5B-Chat-AWQ"]:
-        run_test(model_name, stream=True)
+            print("memory_allocated:", torch.cuda.memory_allocated() / 1024 ** 2)
 
-        print("memory_allocated:", torch.cuda.memory_allocated() / 1024 ** 2)
+        for model_name in ["Qwen/Qwen1.5-0.5B-Chat",
+                           "Qwen/Qwen1.5-0.5B-Chat-GPTQ-Int4",
+                           "Qwen/Qwen1.5-0.5B-Chat-AWQ"]:
+            run_test(model_name, stream=True)
+
+            print("memory_allocated:", torch.cuda.memory_allocated() / 1024 ** 2)
+
+    def llama_cpp_test():
+        from zerollama.inference_backend.llama_cpp_green.chat import run_test
+
+        for model_name in ["Qwen/Qwen1.5-0.5B-Chat-GGUF+*q8_0.gguf",
+                           "Qwen/Qwen1.5-0.5B-Chat-GGUF+*q2_k.gguf"]:
+            run_test(model_name, stream=False)
+
+        for model_name in ["Qwen/Qwen1.5-0.5B-Chat-GGUF+*q8_0.gguf",
+                           "Qwen/Qwen1.5-0.5B-Chat-GGUF+*q2_k.gguf"]:
+            run_test(model_name, stream=True)
+
+
+    transformers_test()
+    llama_cpp_test()
