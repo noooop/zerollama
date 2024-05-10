@@ -240,10 +240,11 @@ Qwen1.5 家族参数量
 
 ## 3.2. KV缓存参数量计算
 
-每DecoderLayer层都会输出key_states和value_states, 
+每DecoderLayer层都会输出key_states和value_states
+
 每个key_states, value_states 大小为 num_key_value_heads * head_dim = hidden_size // n_groups
 
-KV缓存计算方法
+所以，KV缓存计算方法
 ```
 def kv_cache_parameters(num_hidden_layers, hidden_size, n_groups):
     layer_parameters = (
@@ -268,9 +269,8 @@ def kv_cache_parameters(num_hidden_layers, hidden_size, n_groups):
 | 110B | 8192        | 80                | 8        | 0.15625M    |
 
 
-注意到
-
-32B、110B KV缓存占用比 4B 模型还小，GQA确实可以有效减少KV缓存大小
+可以看到
+- 32B、110B KV缓存占用比 4B 模型还小，GQA确实可以有效减少KV缓存大小
 
 
 ## 3.3. 4090 显存占用分析
