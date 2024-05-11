@@ -29,7 +29,7 @@ ZeRO Redundancy Optimizer、PEFT等，都是训练专用的，推理时用不着
 
 下面以 Qwen1.5 家族为例，有八种尺寸 0.5B, 1.8B, 4B, 7B, 14B, 32B, 72B, 110B，方便纵向对比。
 
-其中 32B 和 110B 使用了 GQA，计算稍有改变，会在 [GQA](#) 一节详细讨论。
+其中 32B 和 110B 使用了 GQA，计算稍有改变，会在 [GQA](#51-%E5%88%86%E7%BB%84%E6%9F%A5%E8%AF%A2%E6%B3%A8%E6%84%8F%E5%8A%9B-gqa) 一节详细讨论。
 
 # 2. 推理机制
 ## 2.1 推理整体流程
@@ -261,7 +261,7 @@ def kv_cache_len(parameters, kv_cache_parameters, memory_size, w_size, a_size):
 
 可以看到
 - 模型参数使用16bits表示，4090 显卡甚至没法加载14B模型。降低浮点数表示占用，比如使用 8bits 甚至 4bits 才行。
-- 更多信息将在 [量化](#52-%E9%87%8F%E5%8C%96) 一节讨论。
+- 更多信息将在 [量化](#52-%E9%87%8F%E5%8C%96-quantize) 一节讨论。
 
 # 4. 推理理论极限
 
@@ -411,7 +411,7 @@ kv cache已经填入之前 token。 推理过程就是从下往上过一遍模�
 
 当语言模型生成文本时，它是逐个 token 进行的，后一个词依赖前一个词，没有并行性的可能性，也玩不出什么花样。
 
-> [Speculative Decoding](https://arxiv.org/abs/2211.17192) 后面会讨论，暂时先忽略
+> [Speculative Decoding](https://arxiv.org/abs/2211.17192) [后面会讨论](#53-%E6%8A%95%E6%9C%BA%E9%87%87%E6%A0%B7-speculative-decoding)，暂时先忽略
 
 Decoding 阶段 推理理论极限：
 - 读取延迟 = （模型参数 * 模型每浮点占用大小 + kv cache参数 * kv cache每浮点占用大小) / 显卡带宽
@@ -569,7 +569,7 @@ def kv_cache_parameters(num_hidden_layers, hidden_size, n_groups):
 可以看到
 - GQA确实可以有效减少KV缓存大小，能生成更多的token。
 - 感谢 w4a16 让 4090 用上 32B 的模型。
-- 其他量化技术比如很有性价比的 w6a16 方案，很有前途的 w4a8 方案。以及更多考量在 [量化]() 一节讨论。
+- 其他量化技术比如很有性价比的 w6a16 方案，很有前途的 w4a8 方案。以及更多考量在 [量化](#52-%E9%87%8F%E5%8C%96-quantize) 一节讨论。
 
 ### 5.1.4. 预填充 (Prefill) 阶段 带宽瓶颈到算力瓶颈拐点
 
