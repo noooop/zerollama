@@ -57,6 +57,7 @@ class Qwen1_5_GGUF(ChatGGUFModel):
             "Qwen/Qwen1.5-1.8B-Chat-GGUF",
             "Qwen/Qwen1.5-4B-Chat-GGUF",
             "Qwen/Qwen1.5-7B-Chat-GGUF",
+            "Qwen/Qwen1.5-14B-Chat-GGUF",
             "Qwen/Qwen1.5-32B-Chat-GGUF",
             "Qwen/Qwen1.5-72B-Chat-GGUF",
             "Qwen/Qwen1.5-110B-Chat-GGUF",
@@ -106,5 +107,5 @@ if __name__ == '__main__':
             run_test(model_name, stream=True)
 
 
-    transformers_test()
+    #transformers_test()
     llama_cpp_test()

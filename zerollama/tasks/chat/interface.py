@@ -7,6 +7,7 @@ from zerollama.tasks.chat.protocol import ChatModelConfig, ChatCompletionRespons
 class ChatModel(ModelBase):
     protocol = PROTOCOL
     inference_backend = "zerollama.inference_backend.transformers_green.chat:HuggingFaceTransformersChat"
+    download_backend = "zerollama.inference_backend.transformers_green.download:download"
 
     @classmethod
     def get_model_config(cls, model_name):
@@ -19,6 +20,8 @@ class ChatModel(ModelBase):
 
 class ChatGGUFModel(ChatModel):
     inference_backend = "zerollama.inference_backend.llama_cpp_green.chat:LLamaCPPChat"
+    download_backend = "zerollama.inference_backend.llama_cpp_green.download:download"
+
     gguf = {"repo_id": [], "filename": []}
 
     @classmethod

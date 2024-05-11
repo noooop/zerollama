@@ -94,7 +94,6 @@ class LLamaCPPChat(ChatInterface):
                 break
 
 
-
 def run_test(model_name, stream=False):
     from pprint import pprint
     print("=" * 80)

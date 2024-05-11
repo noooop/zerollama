@@ -13,6 +13,9 @@ class ZeroInferenceEngine(Z_MethodZeroServer):
         self.model_class = self.get_model_by_name(model_name)
         self.inference_backend = self.model_class.inference_backend
 
+        print("use inference backend:")
+        print(self.inference_backend)
+
         if isinstance(self.inference_backend, str):
             module_name, class_name = self.inference_backend.split(":")
             import importlib
