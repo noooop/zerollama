@@ -257,7 +257,7 @@ def kv_cache_len(parameters, kv_cache_parameters, memory_size, w_size, a_size):
 | 14B  | 12.6B | 0.390625M        | oom     | 15114  | 23285  |
 | 72B  | 66B   | 1.25M            | oom     | oom    | oom    |
 
-表里面w表示模型参数占用bits，a表示 kv cache 一个 token 占用bits。
+表里面w表示模型参数占用bits，kv 表示 kv cache 一个 token 占用bits。
 
 可以看到
 - 模型参数使用16bits表示，4090 显卡甚至没法加载14B模型。降低浮点数表示占用，比如使用 8bits 甚至 4bits 才行。
