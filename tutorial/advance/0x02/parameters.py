@@ -84,8 +84,8 @@ if __name__ == '__main__':
         print(name, kv_cache_parameters(num_hidden_layers, hidden_size, n_groups)/M, "M")
 
     memory_size = 24 * 1024 * 1024 * 1024
-    for s in ["w16a16", "w8a16", "w4a16", "w6a16", "w8a8", "w4a8"]:
-        w_size, a_size = s.split("a")
+    for s in ["w16kv16", "w8kv16", "w4kv16", "w6kv16", "w8kv8", "w4kv8"]:
+        w_size, a_size = s.split("kv")
         w_size = int(w_size[1:])
         a_size = int(a_size)
 
@@ -98,8 +98,8 @@ if __name__ == '__main__':
 
     print("First Token Latency")
     for n in [1, 20, 1000]:
-        for s in ["w16a16", "w8a16", "w4a16"]:
-            w_size, a_size = s.split("a")
+        for s in ["w16kv16", "w8kv16", "w4kv16"]:
+            w_size, a_size = s.split("kv")
             w_size = int(w_size[1:])
             a_size = int(a_size)
 
@@ -119,8 +119,8 @@ if __name__ == '__main__':
 
     print("Prefill turning point")
 
-    for s in ["w16a16", "w8a16", "w4a16"]:
-        w_size, a_size = s.split("a")
+    for s in ["w16kv16", "w8kv16", "w4kv16"]:
+        w_size, a_size = s.split("kv")
         w_size = int(w_size[1:])
         a_size = int(a_size)
 
@@ -142,8 +142,8 @@ if __name__ == '__main__':
 
     print("Decoding Latency")
     for n in [1, 20, 1000]:
-        for s in ["w16a16", "w8a16", "w4a16"]:
-            w_size, a_size = s.split("a")
+        for s in ["w16kv16", "w8kv16", "w4kv16"]:
+            w_size, a_size = s.split("kv")
             w_size = int(w_size[1:])
             a_size = int(a_size)
 
