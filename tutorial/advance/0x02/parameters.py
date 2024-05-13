@@ -16,8 +16,10 @@ def model_parameters(num_hidden_layers, hidden_size, intermediate_size, vocab_si
 
     Lp = num_hidden_layers * layer_parameters                          # DecoderLayers 一共参数量
     Hp = hidden_size * vocab_size                                      # lm_head 参数量
-    Tp = Lp + Hp
-    return Lp, Hp, Tp
+    Ep = hidden_size * vocab_size                                      # Embedding 参数量
+    Ap = Lp + Hp                                                       # 激活参数量 = DecoderLayers 一共参数量 + lm_head 参数量
+    Tp = Ap + Ep                                                       # 总参数量 = 激活参数量 + Embedding 参数量
+    return Lp, Hp, Ap, Tp
 
 
 def kv_cache_parameters(num_hidden_layers, hidden_size, n_groups):
@@ -54,6 +56,10 @@ def latency(Mp, KVp, w_size, a_size, n, bandwidth):
     return read_latency1, read_latency2, W, B
 
 
+def batch_latency(Mp, KVp, w_size, a_size, m, n, bandwidth):
+    return (Mp * (n-m) * w_size + (2*n-1) * KVp * a_size) / bandwidth * 1000
+
+
 if __name__ == '__main__':
     info = [
         ["0.5B", 151936, 1024, 24, 2816, 1],
@@ -73,11 +79,11 @@ if __name__ == '__main__':
     bandwidth = 1008 * 1024 * 1024 * 1024 * 8
     computing_power = 82.58 * 1024 * 1024 * 1024 * 1024
 
-
+    """
     print("model_parameters: B")
     for name, vocab_size, hidden_size, num_hidden_layers, intermediate_size, n_groups in info:
-        Lp, Hp, Tp = model_parameters(num_hidden_layers, hidden_size, intermediate_size, vocab_size, n_groups)
-        print(name, f"{Lp/B:0.2f}B {Hp/B:0.2f}B {Tp/B:0.2f}B")
+        Lp, Hp, Ap, Tp = model_parameters(num_hidden_layers, hidden_size, intermediate_size, vocab_size, n_groups)
+        print(name, f"{Lp/B:0.2f}B {Hp/B:0.2f}B {Ap/B:0.2f}B {Tp/B:0.2f}B")
 
     print("kv_cache_parameters: M")
     for name, vocab_size, hidden_size, num_hidden_layers, intermediate_size, n_groups in info:
@@ -91,13 +97,13 @@ if __name__ == '__main__':
 
         print(s)
         for name, vocab_size, hidden_size, num_hidden_layers, intermediate_size, n_groups in info:
-            Lp, Hp, Tp = model_parameters(num_hidden_layers, hidden_size, intermediate_size, vocab_size, n_groups)
+            Lp, Hp, Ap, Tp = model_parameters(num_hidden_layers, hidden_size, intermediate_size, vocab_size, n_groups)
             kv_size = kv_cache_parameters(num_hidden_layers, hidden_size, n_groups)
 
-            print(name, int(kv_cache_len(Tp, kv_size, memory_size, w_size, a_size)))
+            print(name, int(kv_cache_len(Ap, kv_size, memory_size, w_size, a_size)))
 
     print("First Token Latency")
-    for n in [1, 20, 1000]:
+    for n in [1, 20, 27, 200, 1000]:
         for s in ["w16kv16", "w8kv16", "w4kv16"]:
             w_size, a_size = s.split("kv")
             w_size = int(w_size[1:])
@@ -105,12 +111,12 @@ if __name__ == '__main__':
 
             print(n, s)
             for name, vocab_size, hidden_size, num_hidden_layers, intermediate_size, n_groups in info:
-                Lp, Hp, Tp = model_parameters(num_hidden_layers, hidden_size, intermediate_size, vocab_size, n_groups)
+                Lp, Hp, Ap, Tp = model_parameters(num_hidden_layers, hidden_size, intermediate_size, vocab_size, n_groups)
                 kv_size = kv_cache_parameters(num_hidden_layers, hidden_size, n_groups)
 
                 #print(name, f"{Lp / B:0.2f}B {Hp / B:0.2f}B {Tp / B:0.2f}B")
 
-                r, c = first_token_latency_roughly(Tp, kv_size, w_size, a_size, n, n_groups, bandwidth, computing_power)
+                r, c = first_token_latency_roughly(Ap, kv_size, w_size, a_size, n, n_groups, bandwidth, computing_power)
                 print(name, f"{r:0.2f}ms {c:0.2f}ms {max(r, c):0.2f}ms")
 
                 r, c = first_token_latency_exactly(Lp, Hp, kv_size, w_size, a_size, n, n_groups, bandwidth, computing_power)
@@ -127,10 +133,10 @@ if __name__ == '__main__':
         print(s)
         n = sm.symbols('n')
         for name, vocab_size, hidden_size, num_hidden_layers, intermediate_size, n_groups in info:
-            Lp, Hp, Tp = model_parameters(num_hidden_layers, hidden_size, intermediate_size, vocab_size, n_groups)
+            Lp, Hp, Ap, Tp = model_parameters(num_hidden_layers, hidden_size, intermediate_size, vocab_size, n_groups)
             kv_size = kv_cache_parameters(num_hidden_layers, hidden_size, n_groups)
 
-            r, c = first_token_latency_roughly(Tp, kv_size, w_size, a_size, n, n_groups, bandwidth, computing_power)
+            r, c = first_token_latency_roughly(Ap, kv_size, w_size, a_size, n, n_groups, bandwidth, computing_power)
 
             o = sm.solve(r-c, n)
 
@@ -149,13 +155,44 @@ if __name__ == '__main__':
 
             print(n, s)
             for name, vocab_size, hidden_size, num_hidden_layers, intermediate_size, groups in info:
-                Lp, Hp, Tp = model_parameters(num_hidden_layers, hidden_size, intermediate_size, vocab_size, groups)
+                Lp, Hp, Ap, Tp = model_parameters(num_hidden_layers, hidden_size, intermediate_size, vocab_size, groups)
                 kv_size = kv_cache_parameters(num_hidden_layers, hidden_size, groups)
 
-                latency1, latency2, W, B = latency(Tp, kv_size, w_size, a_size, n, bandwidth)
+                latency1, latency2, W, B = latency(Ap, kv_size, w_size, a_size, n, bandwidth)
                 #print(latency1, latency2)
                 print(name, f"{W:0.0f} {B:0.2f}ms")
 
+    print("model_parameters: B")
+    for name, vocab_size, hidden_size, num_hidden_layers, intermediate_size, n_groups in info:
+        Lp, Hp, Ap, Tp = model_parameters(num_hidden_layers, hidden_size, intermediate_size, vocab_size, n_groups)
+        print(name, f"{Tp*2/B:0.2f}GB")
 
+    print("kv_cache_parameters: B")
+    for name, vocab_size, hidden_size, num_hidden_layers, intermediate_size, n_groups in info:
+        for max_tokens in [2 ** 14]:
+            Lp, Hp, Ap, Tp = model_parameters(num_hidden_layers, hidden_size, intermediate_size, vocab_size, n_groups)
+            kv_size = kv_cache_parameters(num_hidden_layers, hidden_size, n_groups)
+            print(name, max_tokens, f"{Tp*2/B:0.2f}GB", f"{kv_size*max_tokens*2/B:0.2f}GB", f"{(Tp+kv_size*max_tokens)*2/B:0.2f}GB")
+    """
+
+    m = 25
+    for s in ["w16kv16", "w8kv16", "w4kv16"]:
+        print(s)
+
+        for n in range(1, 1281):
+            w_size, a_size = s.split("kv")
+            w_size = int(w_size[1:])
+            a_size = int(a_size)
+
+
+            for name, vocab_size, hidden_size, num_hidden_layers, intermediate_size, groups in info:
+                Lp, Hp, Ap, Tp = model_parameters(num_hidden_layers, hidden_size, intermediate_size, vocab_size,
+                                                  groups)
+                KVp = kv_cache_parameters(num_hidden_layers, hidden_size, groups)
+
+                latency = batch_latency(Tp, KVp, w_size, a_size, m, n, bandwidth)
+
+                if n in [128 * i for i in range(1, 11)]:
+                    print(name, latency)
 
 
