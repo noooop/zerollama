@@ -19,6 +19,18 @@ class Yi(ChatModel):
     ]
 
 
+class Yi_1_5(ChatModel):
+    family = "Yi-1.5"
+    model_kwargs = {}
+    header = ["name", "size", "quantization", "bits"]
+    info = [
+        # name                         size    quantization(_, GPTQ, AWQ)     bits
+        ["01-ai/Yi-1.5-6B-Chat",       "6B",   "",                            ""],
+        ["01-ai/Yi-1.5-9B-Chat",       "9B",   "",                            ""],
+        ["01-ai/Yi-1.5-34B-Chat",      "34B",  "",                            ""],
+    ]
+
+
 if __name__ == '__main__':
     import torch
     from zerollama.inference_backend.transformers_green.chat import run_test
