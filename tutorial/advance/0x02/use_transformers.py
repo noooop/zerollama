@@ -12,11 +12,11 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 
 
 B = 1024 * 1024 * 1024
-device="cuda"
+device = "cuda"
 
 
 @torch.no_grad()
-def decoding(model_name, max_tokens):
+def decoding_latency(model_name):
     print(model_name)
     print(torch.cuda.memory_allocated() / 1024 ** 3)
 
@@ -49,10 +49,10 @@ def decoding(model_name, max_tokens):
     print(model_inputs.input_ids.shape)
 
     X, Y = [], []
-    for m in max_tokens:
+    for m in [2048 * i for i in range(1, 9)]:
         try:
             tt = []
-            for i in range(5):
+            for i in range(3):
                 t = time.time()
                 generated_ids = model.generate(
                     model_inputs.input_ids,
@@ -83,9 +83,9 @@ def decoding(model_name, max_tokens):
 
 
 @torch.no_grad()
-def prefill_turning_point(model_name):
+def prefill_first_token_latency(model_name):
     print(model_name)
-    print(torch.cuda.memory_allocated() / 1024 ** 3)
+    print(torch.cuda.memory_allocated() / B)
 
     tokenizer = AutoTokenizer.from_pretrained(model_name)
 
@@ -116,7 +116,7 @@ def prefill_turning_point(model_name):
     input_ids = model_inputs.input_ids
 
     time_list = []
-    for m in range(input_ids.shape[-1], 201):
+    for m in range(input_ids.shape[-1], 501):
         try:
             tt = []
             for i in range(10):
@@ -128,7 +128,7 @@ def prefill_turning_point(model_name):
                 )
                 tt.append(time.time()-t)
             input_ids = generated_ids
-            print(m, input_ids.shape, np.median(tt)*1000)
+            print(m, f"{np.median(tt)*1000:0.2f}")
             time_list.append((m, tt))
         except Exception:
             pass
@@ -138,9 +138,11 @@ def prefill_turning_point(model_name):
 
     gc.collect()
     torch.cuda.empty_cache()
+    return time_list
 
 
 if __name__ == '__main__':
+
     info = [
         # name                                   size      quantization(_, GPTQ, AWQ)     bits
         # original
@@ -151,13 +153,13 @@ if __name__ == '__main__':
         # ["Qwen/Qwen1.5-14B-Chat", "14B", "", ""]
     ]
 
-    print("Decoding")
+    print("Decoding Latency(")
     for model_name, *_ in info:
-        decoding(model_name, max_tokens=[128 * i for i in range(1, 11)])
+        decoding_latency(model_name)
 
-    print("prefill turning point")
+    print("Prefill First Token Latency")
     for model_name, *_ in info:
-        prefill_turning_point(model_name)
+        prefill_first_token_latency(model_name)
 
 
 
