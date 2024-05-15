@@ -105,6 +105,22 @@ autoawq-0.2.4 (Pin transformers>=4.35.0,<=4.38.2) [详情](https://github.com/ca
 $ git clone https://github.com/noooop/zerollama.git
 ```
 
+# 安装 llama-cpp-python
+使用 cuda 12.1 与 pytorch 2.2 一致
+
+[下载并安装 CUDA Toolkit 12.1](https://developer.nvidia.com/cuda-12-1-1-download-archive)
+
+```
+pip install llama-cpp-python==0.2.69 \
+  --extra-index-url https://abetlen.github.io/llama-cpp-python/whl/cu121
+```
+
+其他安装方式请 [参考](https://github.com/abetlen/llama-cpp-python#installation)
+
+以下版本经过测试
+
+llama-cpp-python==0.2.69 + cuda 12.1
+
 # 切换到工作目录
 项目默认的工作目录是项目根目录
 ```
