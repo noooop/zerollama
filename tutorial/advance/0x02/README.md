@@ -827,11 +827,15 @@ llama.cpp使用库的好处是依赖少，安装使用都很方便方便。而�
 
 - bfloat16，awq use_exllama_v2 最快，接着是 GPTQ，接着是awq 默认的gemm。llama-cpp-python 都比较慢，能跟之前的拉开差距，是因为python的开销吗？
 
-### 6.4.1 prefill 1.8B 
+### 6.4.2 prefill 1.8B 
 <img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/static/prefill-1.8B.png?raw=true">
 
 - awq use_exllama_v2 最快，接着是 GPTQ，接着 bfloat16。awq 默认的 gemm 曲线很直。llama-cpp-python 都比较慢，能跟之前的拉开差距，是因为python的开销吗？
 
+### 6.4.3 prefill 4B 
+<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/static/prefill-4B.png?raw=true">
+
+- 速度排序跟之前差不多
 
 # 7. 总结
 
