@@ -10,7 +10,7 @@
 # 1. 讨论范围限定
 大模型使用分为训练和推理两个阶段
 
-- 训练阶段，因为要做反向传播，要保存中间状态，要更新优化器状态，性能优化技术比如 flashattention、混合精度训练（Mixed-precision Training）、
+- 训练阶段，因为要做反向传播，要保存中间状态，要更新优化器状态，性能优化技术比如 混合精度训练（Mixed-precision Training）、
 ZeRO Redundancy Optimizer、PEFT等，都是训练专用的，推理时用不着。本文主要讨论推理阶段，训练阶段专用的技术不在本文讨论范围内。
 - 推理阶段，实际包含很多种使用场景：
 
@@ -31,7 +31,7 @@ ZeRO Redundancy Optimizer、PEFT等，都是训练专用的，推理时用不着
 
 
 # 2. 推理机制
-> 其中 32B 和 110B 使用了 GQA，计算稍有改变，会在 [GQA](#51-%E5%88%86%E7%BB%84%E6%9F%A5%E8%AF%A2%E6%B3%A8%E6%84%8F%E5%8A%9B-gqa) 一节详细讨论。
+> 其中 32B 和 110B 使用了 GQA，计算稍有改变，会在 [GQA](#52-%E5%88%86%E7%BB%84%E6%9F%A5%E8%AF%A2%E6%B3%A8%E6%84%8F%E5%8A%9B-gqa) 一节详细讨论。
 > 这章先忽略这两个模型。
 
 ## 2.1 推理整体流程
@@ -162,7 +162,7 @@ Qwen2ForCausalLM(
 )
 
 
-Embedding 参数量 = vocab_size * hidden_size = 151936 * 1024 = 148.375 M  (不计入激活参数量
+Embedding 参数量 = vocab_size * hidden_size = 151936 * 1024 = 148.375 M
 
 self_attn 模块 q_proj, k_proj, v_proj带bias， o_proj不带 
 mlp 模块 gate_proj, up_proj, down_proj都不带bias
@@ -176,7 +176,6 @@ lm_head 参数量 = hidden_size * vocab_size = 1024 * 151936 = 148.375 M
 
 0.5B 总参数量 = 294 M + 148.375 M = 442.375 M = 0.432 B
 ```
-
 
 模型参数量计算方法
 ```
@@ -211,7 +210,7 @@ Qwen1.5 家族参数量
 | 72B  | 152064     | 8192        | 80                | 24576             | 65.00B            | 1.16B       | 66.16B | 67.32B |
 
 可以看到
-- 小模型 “lm_head 参数量” 占比比较大，0.5B占总参数的30%以上，而 72B 占比不到2%。
+- 小模型 “lm_head 参数量” 占比比较大，小模型大词表在“模型大小”的比较上很吃亏，0.5B占总参数的30%以上，而 72B 占比不到2%。
 
 ## 3.2. KV缓存参数量计算
 
@@ -252,20 +251,19 @@ def kv_cache_len(parameters, kv_cache_parameters, memory_size, w_size, a_size):
     return (memory_size - parameters * w_size / 8) / (kv_cache_parameters * a_size / 8)
 ```
 
-| 模型大小 | 激活参数量 | kv cache 参数量（每词） | w16kv16 | w8kv16 | w4kv16 | 
-|------|-------|------------------|---------|--------|--------|
-| 0.5B | 0.43B | 0.046875M        | 252705  | 257424 | 259784 |
-| 1.8B | 1.42B | 0.09375M         | 115553  | 123312 | 127192 |
-| 4B   | 3.32B | 0.1953125M       | 45525   | 54220  | 58567  |
-| 7B   | 6.61B | 0.25M            | 22072   | 35612  | 42382  |
-| 14B  | 12.6B | 0.390625M        | oom     | 15114  | 23285  |
-| 72B  | 66B   | 1.25M            | oom     | oom    | oom    |
+| 模型大小 | 激活参数量 | kv cache 参数量（每词） | w16kv16 | 
+|------|-------|------------------|---------|
+| 0.5B | 0.43B | 0.046875M        | 252705  |
+| 1.8B | 1.42B | 0.09375M         | 115553  |
+| 4B   | 3.32B | 0.1953125M       | 45525   |
+| 7B   | 6.61B | 0.25M            | 22072   |
+| 14B  | 12.6B | 0.390625M        | oom     |
+| 72B  | 66B   | 1.25M            | oom     |
 
-表里面w表示模型参数占用bits，kv 表示 kv cache 一个 token 占用bits。
 
 可以看到
-- 模型参数使用16bits表示，4090 显卡甚至没法加载14B模型。降低浮点数表示占用，比如使用 8bits 甚至 4bits 才行。
-- 更多信息将在 [量化](#52-%E9%87%8F%E5%8C%96-quantize) 一节讨论。
+- 模型参数使用16bits表示，4090 显卡甚至没法加载14B模型。。
+- 更多信息将在 [量化](#51-%E9%87%8F%E5%8C%96-quantize) 一节讨论。
 
 # 4. 推理理论极限
 
@@ -335,7 +333,7 @@ def kv_cache_len(parameters, kv_cache_parameters, memory_size, w_size, a_size):
               （一个事务读取了另一个未提交事务中的数据）
             2. q_proj 放在 做 scaled_dot_product_attention 里面，query_states 就不需要找地方存，但 q_proj 每个词都得加载一遍。
                这就要权衡 hidden_size 大 q_proj 要大一些; prompt_tokens 长度长，query_states要大一些 
-               所以超长的 prompt_tokens 需要进一步分析，现在还是按 hidden_size >>  prompt_tokens 长度
+               所以超长的 prompt_tokens 需要进一步分析，现在还是按 len(prompt_tokens) < hidden_size
         
         只要写入到kv cache正确，现在就可以从kv cache读取出来计算，没有任何问题
         
@@ -370,28 +368,27 @@ def prefill_first_token_latency_exactly(Lp, Hp, KVp, w_size, a_size, n, n_groups
 因为 kv cache 读取次数是自然数列求和，公式是0.5 * n * (n+1) 的 二次函数，所以 read_latency 和 computing_latency 都是 prompt_tokens 长度 的二次函数。
 
 <img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/static/prefill-w16kv16.png?raw=true" width="600">
-<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/static/prefill-w8kv16.png?raw=true" width="600">
-<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/static/prefill-w4kv16.png?raw=true" width="600">
 
 可以看到 读取延迟 和 计算延迟 曲线可能有交点，标志这从 带宽瓶颈到算力瓶颈的拐点，这个拐点可以算出来：
 
-| 模型大小 | 拐点 w16kv16 粗略 | 拐点 w16kv16 精细 | 拐点 w8kv16 粗略 | 拐点 w8kv16 精细 | 拐点 w4kv16 精细 | 拐点 w4kv16 精细 |
-|------|---------------|---------------|--------------|--------------|--------------|--------------|
-| 0.5B | 无 \ 无         | 无 \ 无         | 55 \ 170     | 无 \ 无        | 23 \ 203     | 44 \ 106     |
-| 1.8B | 127 \ 245     | 无 \ 无         | 48 \ 325     | 68 \ 228     | 22 \ 351     | 29 \ 268     |
-| 4B   | 116 \ 302     | 无 \ 无         | 47 \ 371     | 55 \ 317     | 22 \ 396     | 25 \ 347     |
-| 7B   | 99 \ 553      | 113 \ 481     | 45 \ 607     | 50 \ 544     | 21 \ 630     | 23 \ 571     |
-| 14B  | 95 \ 692      | 103 \ 638     | 44 \ 743     | 47 \ 694     | 21 \ 766     | 22 \ 718     |
-| 72B  | 90 \ 1216     | 92 \ 1191     | 43 \ 1263    | 44 \ 1239    | 21 \ 1285    | 21 \ 1262    |
+| 模型大小 | 拐点 w16kv16 粗略 | 拐点 w16kv16 精细 |
+|------|---------------|---------------|
+| 0.5B | 无 \ 无         | 无 \ 无         |
+| 1.8B | 127 \ 245     | 无 \ 无         |
+| 4B   | 116 \ 302     | 无 \ 无         |
+| 7B   | 99 \ 553      | 113 \ 481     |
+| 14B  | 95 \ 692      | 103 \ 638     |
+| 72B  | 90 \ 1216     | 92 \ 1191     |
 
 可以看到有两个拐点
 - 第一个拐点，加载模型瓶颈 切换到 算力瓶颈
 - 第二个拐点，算力瓶颈 切换到 加载 kv cache瓶颈
 
-> 在第一个拐点 加载模型瓶颈 切换到 算力瓶颈 之前，增加提示词长度，延迟基本不变，瓶颈在加载模型上；将一次 Prefill 完成的工作分成两次，相当于模型加载了两次，延迟也变成两倍。所以这个序列长度不要切分，一次性完成。
+> 1. 在第一个拐点 加载模型瓶颈 切换到 算力瓶颈 之前，增加提示词长度，延迟基本不变，瓶颈在加载模型上；将一次 Prefill 完成的工作分成两次，相当于模型加载了两次，延迟也变成两倍。所以这个序列长度不要切分，一次性完成。
 > 
-> 在第一个拐点之后，只要切分的小工作大于拐点，没有增加计算和kv cache读取，Prefill 延迟不变。所以可以将 Prefill 工作切分成第一个拐点大小的多份，总Prefill延迟不变。**这个结论非常重要**
-
+> 2. 在第一个拐点之后，只要切分的小工作大于拐点，没有增加计算和kv cache读取，Prefill 延迟不变。所以可以将 Prefill 工作切分成第一个拐点大小的多份，总Prefill延迟不变。**这个结论非常重要**
+> 
+> 3. 在第一个拐点在100左右，长提示词也可以切块成100左右进行Prefill，所以 len(prompt_tokens) < hidden_size， q_proj 加载一次延迟更低。解决了之前的担忧。
 
 ## 4.4. 解码 （Decoding） 阶段 推理理论极限
 解码 （Decoding） 阶段对应于输出之后的 token 的输出。
@@ -414,6 +411,48 @@ Latency = (n-1)/每过多少词输出延迟增加1ms + 第一个词的输出延�
 
 以 4090 为例 带宽 1008 GB/s，算力 82.58 TFLOPS
 
+| 模型大小 | w16kv16 W | w16kv16 B | 
+|------|-----------|-----------|
+| 0.5B | 11010     | 0.86ms    |
+| 1.8B | 5505      | 2.82ms    |
+| 4B   | 2642      | 6.58ms    |
+| 7B   | 2064      | 13.12ms   |
+| 14B  | 1321      | 24.74ms   |
+| 72B  | 413       | 131.28ms  |
+
+
+可以看到
+- W （每过多少词输出延迟增加1ms） 只跟 kv cache参数 * kv cache每浮点占用大小有关
+- B （第一个词的输出延迟）（忽略第一个kv cache） 只跟 模型参数 * 模型每浮点占用大小 
+- B 跟 预填充 (Prefill) 阶段 prompt_tokens 长度 = 1 相同
+- 估算一下，比如7B 模型， 1w token时输出一个token的延迟
+```
+  Latency = (1/W)(n-1) + B 
+          ≈ (1w / 2064)ms + 13.12ms  
+          ≈ 5ms +  13.12ms 
+          ≈ 18.126ms
+```
+
+# 5. 一些速度优化方法
+
+## 5.1 量化 (Quantize)
+模型量化 Quantize 是指将神经网络的浮点转换为定点，减少模型空间占用。
+
+4090 显存占用分析
+
+| 模型大小 | 激活参数量 | kv cache 参数量（每词） | w16kv16 | w8kv16 | w4kv16 | 
+|------|-------|------------------|---------|--------|--------|
+| 0.5B | 0.43B | 0.046875M        | 252705  | 257424 | 259784 |
+| 1.8B | 1.42B | 0.09375M         | 115553  | 123312 | 127192 |
+| 4B   | 3.32B | 0.1953125M       | 45525   | 54220  | 58567  |
+| 7B   | 6.61B | 0.25M            | 22072   | 35612  | 42382  |
+| 14B  | 12.6B | 0.390625M        | oom     | 15114  | 23285  |
+| 72B  | 66B   | 1.25M            | oom     | oom    | oom    |
+
+- 感谢 w8kv16 方法，让 4090 用上 7B 模型
+
+4090 推理理论极限
+
 | 模型大小 | w16kv16 W | w16kv16 B | w8kv16 W | w8kv16 B | w4kv16 W | w4kv16 B | 
 |------|-----------|-----------|----------|----------|----------|----------|
 | 0.5B | 11010     | 0.86ms    | 11010    | 0.43ms   | 11010    | 0.21ms   |
@@ -423,21 +462,67 @@ Latency = (n-1)/每过多少词输出延迟增加1ms + 第一个词的输出延�
 | 14B  | 1321      | 24.74ms   | 1321     | 12.37ms  | 1321     | 6.19ms   |
 | 72B  | 413       | 131.28ms  | 413      | 65.64ms  | 413      | 32.82ms  |
 
-可以看到
-- W （每过多少词输出延迟增加1ms） 只跟 kv cache参数 * kv cache每浮点占用大小有关
-- B （第一个词的输出延迟）（忽略第一个kv cache） 只跟 模型参数 * 模型每浮点占用大小 
-- B 跟 预填充 (Prefill) 阶段 prompt_tokens 长度 = 1 相同
-- 估算一下，比如7B w8kv16， 1w token时输出一个token的延迟
-```
-  Latency = (1/W)(n-1) + B 
-          ≈ (1w / 2064)ms + 6.56ms  
-          ≈ 6.56ms + 5ms 
-          ≈ 11.56ms
-```
+预填充 (Prefill) 阶段 带宽瓶颈到算力瓶颈拐点
 
-# 5. 一些速度优化方法
+<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/static/prefill-w8kv16.png?raw=true" width="600">
+<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/static/prefill-w4kv16.png?raw=true" width="600">
 
-## 5.1. 分组查询注意力 (GQA) 
+| 模型大小       | 拐点 w16kv16 粗略 | 拐点 w16kv16 精细 | 拐点 w8kv16 粗略 | 拐点 w8kv16 精细 | 拐点 w4kv16 精细 | 拐点 w4kv16 精细 |
+|------------|---------------|---------------|--------------|--------------|--------------|--------------|
+| 0.5B       | 无 \ 无         | 无 \ 无         | 55 \ 170     | 无 \ 无        | 23 \ 203     | 44 \ 106     |
+| 1.8B       | 127 \ 245     | 无 \ 无         | 48 \ 325     | 68 \ 228     | 22 \ 351     | 29 \ 268     |
+| 4B         | 116 \ 302     | 无 \ 无         | 47 \ 371     | 55 \ 317     | 22 \ 396     | 25 \ 347     |
+| 7B         | 99 \ 553      | 113 \ 481     | 45 \ 607     | 50 \ 544     | 21 \ 630     | 23 \ 571     |
+| 14B        | 95 \ 692      | 103 \ 638     | 44 \ 743     | 47 \ 694     | 21 \ 766     | 22 \ 718     |
+| 72B        | 90 \ 1216     | 92 \ 1191     | 43 \ 1263    | 44 \ 1239    | 21 \ 1285    | 21 \ 1262    |
+
+- 因为量化方法，模型成倍减小，加载模型瓶颈 切换到 算力瓶颈 的拐点也来的更快
+
+使用量化方法收益非常明显，降低浮点占用意味着成倍的提高响应时间，增加上下文长度。
+对于访存带宽限制的llm，只要精巧的写 cuda kernel 将计算阶段量化和反量化融合进去，总可以被访存时间 cover 住。
+
+降低浮点占用肯定会降低模型效果，剩下就是精度和速度的权衡。
+
+主流的量化方法，比如 qwen 1.5 官方提供了 [AWQ](https://arxiv.org/abs/2306.00978) 和 [GPTQ](https://arxiv.org/abs/2210.17323) (int8、int4) 量化模型。以及 GGUF 格式的8种量化模型。
+
+参考 [Qwen1.5 官方](https://huggingface.co/Qwen/Qwen1.5-4B-Chat-GGUF) 给出的量化模型效果:
+
+To demonstrate their model quality, we follow [`llama.cpp`](https://github.com/ggerganov/llama.cpp) to evaluate their perplexity on wiki test set. Results are shown below:
+
+| Size | fp16  | q8_0  | q6_k  | q5_k_m | q5_0  | q4_k_m | q4_0  | q3_k_m | q2_k  |
+|------|-------|-------|-------|--------|-------|--------|-------|--------|-------|
+| 0.5B | 34.20 | 34.22 | 34.31 | 33.80  | 34.02 | 34.27  | 36.74 | 38.25  | 62.14 |
+| 1.8B | 15.99 | 15.99 | 15.99 | 16.09  | 16.01 | 16.22  | 16.54 | 17.03  | 19.99 |
+| 4B   | 13.20 | 13.21 | 13.28 | 13.24  | 13.27 | 13.61  | 13.44 | 13.67  | 15.65 |
+| 7B   | 14.21 | 14.24 | 14.35 | 14.32  | 14.12 | 14.35  | 14.47 | 15.11  | 16.57 |
+| 14B  | 10.91 | 10.91 | 10.93 | 10.98  | 10.88 | 10.92  | 10.92 | 11.24  | 12.27 |
+| 32B  | 8.87  | 8.89  | 8.91  | 8.94   | 8.93  | 8.96   | 9.17  | 9.14   | 10.51 |
+| 72B  | 7.97  | 7.99  | 7.99  | 7.99   | 8.01  | 8.00   | 8.01  | 8.06   | 8.63  |
+
+<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/static/quantize.png?raw=true" width="600">
+
+简单建议，6bit量化几乎无损，4bit量化是性价比较高的方案。更小尺寸的量化模型部署时要进行充分测试。
+
+参考 [llama.cpp k-quants](https://github.com/ggerganov/llama.cpp/pull/1684)
+
+> Perhaps worth noting is that the 6-bit quantized perplexity is within 0.1% or better from the original fp16 model.
+
+参考 [DeepSpeed-FP6：大型语言模型中以FP6为核心的强大推理服务](https://github.com/microsoft/DeepSpeed/blob/master/blogs/deepspeed-fp6/03-05-2024/README-Chinese.md)
+> FP6的突破...，该格式在各种任务的性能和灵活性方面均表现出色。...到了与FP16模型相当的结果。.....这一创新使FP6成为提高LLMs效率的有效途径。
+
+参考 [Qwen-7B-Chat-Int4](https://huggingface.co/Qwen/Qwen-7B-Chat-Int4#%E9%87%8F%E5%8C%96-quantization)
+> 我们对BF16，Int8和Int4模型在基准评测上做了测试（使用zero-shot设置），发现量化模型效果损失较小....
+
+参考 [How Good Are Low-bit Quantized LLaMA3 Models? An Empirical Study](https://arxiv.org/abs/2404.14047)
+> Both of them (AWQ, QuIP) can keep LLAMA3’s capability at 3-bit and even push the 2-bit quantization to promising.
+
+参考 [Quantize Llama models with GGUF and llama.cpp](https://towardsdatascience.com/quantize-llama-models-with-ggml-and-llama-cpp-3612dfbcc172)
+> I recommend using Q5_K_M as it preserves most of the model’s performance. Alternatively, you can use Q4_K_M if you want to save some memory. In general, K_M versions are better than K_S versions. I cannot recommend Q2 or Q3 versions, as they drastically decrease model performance.
+
+前沿的量化论文已经讨论[2bits](https://arxiv.org/abs/2404.12759)甚至[1-bit](https://arxiv.org/abs/2402.17764) [OneBit](https://arxiv.org/abs/2402.11295)。
+除了模型可以量化，kv cache 也可以量化, 比如 [SmoothQuant](https://arxiv.org/abs/2211.10438)、[KVQuant](https://arxiv.org/abs/2401.18079)、[W4A8KV4](https://arxiv.org/abs/2405.04532)， 可以关注一下。
+
+## 5.2. 分组查询注意力 (GQA) 
 [GQA: Training Generalized Multi-Query Transformer Models from Multi-Head Checkpoints](https://arxiv.org/abs/2305.13245)
 
 <img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/static/gqa.png?raw=true" width="600">
@@ -476,7 +561,7 @@ value_states = repeat_kv(value_states, n_groups)
     - 计算 attention 时，repeat_kv，一个当 n_groups 个使，执行 n_groups 次乘加运算（2 FLOPs） 。
     - 稍微改善 FLOPs：MACs， 毕竟 ALU 非常充足。
   
-### 5.1.1. 模型参数量计算方法, 考虑 GQA
+### 5.2.1. 模型参数量计算方法, 考虑 GQA
 
 ```
 def model_parameters(num_hidden_layers, hidden_size, intermediate_size, vocab_size, n_groups):
@@ -516,7 +601,7 @@ Qwen1.5 家族参数量
 可以看到
 - 使用 GQA 模型总参数小了一些
 
-### 5.1.2. 每个词KV缓存大小, 考虑 GQA
+### 5.2.2. 每个词KV缓存大小, 考虑 GQA
 
 ```
 def kv_cache_parameters(num_hidden_layers, hidden_size, n_groups):
@@ -544,27 +629,26 @@ def kv_cache_parameters(num_hidden_layers, hidden_size, n_groups):
 - GQA确实可以有效减少KV缓存大小
 - 32B、110B KV缓存占用比 4B 模型还小
 
-### 5.1.3. 4090 显存占用分析
+### 5.2.3. 4090 显存占用分析
 
-| 模型大小       | 激活参数量 | kv cache 参数量（每词） | w16kv16 | w8kv16 | w4kv16 | w6kv16 | w4kv8  | 
-|------------|-------|------------------|---------|--------|--------|--------|--------|
-| 0.5B       | 0.43B | 0.046875M        | 252705  | 257424 | 259784 | 258604 | 519568 |
-| 1.8B       | 1.42B | 0.09375M         | 115553  | 123312 | 127192 | 125252 | 254384 |
-| 4B         | 3.32B | 0.1953125M       | 45525   | 54220  | 58567  | 56393  | 117134 |
-| 7B         | 6.61B | 0.25M            | 22072   | 35612  | 42382  | 38997  | 84764  |
-| 14B        | 12.6B | 0.390625M        | oom     | 15114  | 23285  | 19199  | 46571  |
-| 32B(无GQA)  | 29.6B | 0.625M           | oom     | oom    | 6531   | oom    | 13062  |
-| 32B        | 29.6B | 0.125M           | oom     | oom    | 37778  | 7515   | 75556  |
-| 72B        | 66B   | 1.25M            | oom     | oom    | oom    | oom    | oom    |
-| 110B(无GQA) | 102B  | 1.25 M           | oom     | oom    | oom    | oom    | oom    |
-| 110B       | 102B  | 0.125M           | oom     | oom    | oom    | oom    | oom    |
+| 模型大小       | 激活参数量 | kv cache 参数量（每词） | w16kv16 | w8kv16 | w4kv16 | w6kv16 | 
+|------------|-------|------------------|---------|--------|--------|--------|
+| 0.5B       | 0.43B | 0.046875M        | 252705  | 257424 | 259784 | 258604 |
+| 1.8B       | 1.42B | 0.09375M         | 115553  | 123312 | 127192 | 125252 |
+| 4B         | 3.32B | 0.1953125M       | 45525   | 54220  | 58567  | 56393  |
+| 7B         | 6.61B | 0.25M            | 22072   | 35612  | 42382  | 38997  |
+| 14B        | 12.6B | 0.390625M        | oom     | 15114  | 23285  | 19199  |
+| 32B(无GQA)  | 29.6B | 0.625M           | oom     | oom    | 6531   | oom    |
+| 32B        | 29.6B | 0.125M           | oom     | oom    | 37778  | 7515   |
+| 72B        | 66B   | 1.25M            | oom     | oom    | oom    | oom    |
+| 110B(无GQA) | 102B  | 1.25 M           | oom     | oom    | oom    | oom    |
+| 110B       | 102B  | 0.125M           | oom     | oom    | oom    | oom    |
 
 可以看到
 - GQA确实可以有效减少KV缓存大小，能生成更多的token。
 - 感谢 w4kv16 让 4090 用上 32B 的模型。
-- 其他量化技术比如很有性价比的 w6kv16 方案，很有前途的 w4kv8 方案。以及更多考量在 [量化](#52-%E9%87%8F%E5%8C%96-quantize) 一节讨论。
 
-### 5.1.4. 预填充 (Prefill) 阶段 带宽瓶颈到算力瓶颈拐点
+### 5.2.4. 预填充 (Prefill) 阶段 带宽瓶颈到算力瓶颈拐点
 
 | 模型大小       | 拐点 w16kv16 粗略 | 拐点 w16kv16 精细 | 拐点 w8kv16 粗略 | 拐点 w8kv16 精细 | 拐点 w4kv16 精细 | 拐点 w4kv16 精细 |
 |------------|---------------|---------------|--------------|--------------|--------------|--------------|
@@ -587,7 +671,7 @@ def kv_cache_parameters(num_hidden_layers, hidden_size, n_groups):
 <img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/static/prefill-w8kv16-gqa.png?raw=true" width="600">
 <img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/static/prefill-w4kv16-gqa.png?raw=true" width="600">
 
-### 5.1.5. 解码 （Decoding） 阶段 推理理论极限
+### 5.2.5. 解码 （Decoding） 阶段 推理理论极限
 
 | 模型大小       | w16kv16 W | w16kv16 B | w8kv16 W | w8kv16 B | w4kv16 W | w4kv16 B | 
 |------------|-----------|-----------|----------|----------|----------|----------|
@@ -603,135 +687,151 @@ def kv_cache_parameters(num_hidden_layers, hidden_size, n_groups):
 | 110B       | 3303      | 203.20ms  | 3303     | 101.60ms | 3303     | 50.80ms  |
 
 可以看到
-- 第一个词的输出延迟 变小
-- "每过多少词输出延迟增加1ms" 大幅变大，或者推理延迟增加大幅变缓
+- 因为模型变小，第一个词的输出延迟 相比无GQA版本小幅变小。
+- "每过多少词输出延迟增加1ms" 大幅变大，或者推理延迟增加大幅变缓。
 
-### 5.1.6. 总结 
+### 5.2.6. 总结 
 - 虽然引入 GQA 可能会导致模型质量有下降，但对于推理延迟和长上下文收益太大了。
 - GQA 让 4090 用上 32B 的模型，使得 Qwen1.5 32B 是家族里面性价比最高的模型。
-
-## 5.2 量化 (Quantize)
-模型量化 Quantize 是指将神经网络的浮点转换为定点，减少模型空间占用。
-
-收益也非常明显，降低浮点占用意味着成倍的提高响应时间，增加上下文长度。
-对于访存带宽限制的llm，只要精巧的写 cuda kernel 将计算阶段量化和反量化融合进去，总可以被访存时间 cover 住。
-剩下就是精度和速度的权衡。 
-
-主流的量化方法，比如 qwen 1.5 官方提供了 [AWQ](https://arxiv.org/abs/2306.00978) 和 [GPTQ](https://arxiv.org/abs/2210.17323) (int8、int4) 量化模型。以及 GGUF 格式的8种量化模型。
-
-
-参考 [Qwen1.5 官方](https://huggingface.co/Qwen/Qwen1.5-4B-Chat-GGUF) 给出的量化模型效果:
-
-To demonstrate their model quality, we follow [`llama.cpp`](https://github.com/ggerganov/llama.cpp) to evaluate their perplexity on wiki test set. Results are shown below:
-
-| Size | fp16  | q8_0  | q6_k  | q5_k_m | q5_0  | q4_k_m | q4_0  | q3_k_m | q2_k  |
-|------|-------|-------|-------|--------|-------|--------|-------|--------|-------|
-| 0.5B | 34.20 | 34.22 | 34.31 | 33.80  | 34.02 | 34.27  | 36.74 | 38.25  | 62.14 |
-| 1.8B | 15.99 | 15.99 | 15.99 | 16.09  | 16.01 | 16.22  | 16.54 | 17.03  | 19.99 |
-| 4B   | 13.20 | 13.21 | 13.28 | 13.24  | 13.27 | 13.61  | 13.44 | 13.67  | 15.65 |
-| 7B   | 14.21 | 14.24 | 14.35 | 14.32  | 14.12 | 14.35  | 14.47 | 15.11  | 16.57 |
-| 14B  | 10.91 | 10.91 | 10.93 | 10.98  | 10.88 | 10.92  | 10.92 | 11.24  | 12.27 |
-| 32B  | 8.87  | 8.89  | 8.91  | 8.94   | 8.93  | 8.96   | 9.17  | 9.14   | 10.51 |
-| 72B  | 7.97  | 7.99  | 7.99  | 7.99   | 8.01  | 8.00   | 8.01  | 8.06   | 8.63  |
-
-<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/static/quantize.png?raw=true" width="600">
-
-简单建议，6bit量化几乎无损，4bit量化是性价比较高的方案。更小尺寸的量化模型部署时要进行充分测试。
-
-参考 [llama.cpp k-quants](https://github.com/ggerganov/llama.cpp/pull/1684)
-
-> Perhaps worth noting is that the 6-bit quantized perplexity is within 0.1% or better from the original fp16 model.
-
-参考 [DeepSpeed-FP6：大型语言模型中以FP6为核心的强大推理服务](https://github.com/microsoft/DeepSpeed/blob/master/blogs/deepspeed-fp6/03-05-2024/README-Chinese.md)
-> FP6的突破...，该格式在各种任务的性能和灵活性方面均表现出色。...到了与FP16模型相当的结果。.....这一创新使FP6成为提高LLMs效率的有效途径。
-
-参考 [How Good Are Low-bit Quantized LLaMA3 Models? An Empirical Study](https://arxiv.org/abs/2404.14047)
-
-> Both of them (AWQ, QuIP) can keep LLAMA3’s capability at 3-bit and even push the 2-bit quantization to promising.
-
-前沿的量化论文已经讨论[2bits](https://arxiv.org/abs/2404.12759)甚至[1-bit](https://arxiv.org/abs/2402.17764) [OneBit](https://arxiv.org/abs/2402.11295)。
-除了模型可以量化，kv cache 也可以量化, 比如 [SmoothQuant](https://arxiv.org/abs/2211.10438)、[KVQuant](https://arxiv.org/abs/2401.18079)、[W4A8KV4](https://arxiv.org/abs/2405.04532)。
 
 ## 5.3 投机采样 (Speculative Decoding)
 
 # 6. 实际推理速度测试
 
-# 6.1. HuggingFace Transformers
-### 6.1.1. bfloat16 模型
+## 6.1. HuggingFace Transformers 库
+Qwen 1.5 官方提供了 bfloat16 无损版本，和 GPTQ (8bits、4bits), AWQ 三种量化版本，可以用HuggingFace Transformers做推理。
 
-模型占用显存
+1. bfloat16 就是训练模型使用的格式，所以是“无损版本”，可以作为比较的基线。
+> - [PyTorch 2.2](https://github.com/pytorch/pytorch/releases/tag/v2.2.0) SDPA 已经集成 FlashAttention-2，所以性能也值得期待
 
-| 模型                     | 理论总参数量  | 模型格式     | 理论模型占用显存 | 实际模型文件大小  | 显存实际占用  | 
-|------------------------|---------|----------|----------|-----------|---------|
-| Qwen/Qwen1.5-0.5B-Chat | 0.58B   | bfloat16 | 1.15GB   | 1.24 GB   | 1.07GB  |
-| Qwen/Qwen1.5-1.8B-Chat | 1.71B   | bfloat16 | 3.42GB   | 3.67 GB   | 3.83GB  |
-| Qwen/Qwen1.5-4B-Chat   | 3.68B   | bfloat16 | 7.36GB   | 7.9 GB    | 8.01GB  |
-| Qwen/Qwen1.5-7B-Chat   | 7.19B   | bfloat16 | 14.38GB  | 15.45 GB  | 14.88GB |
-| Qwen/Qwen1.5-14B-Chat  | 13.19B  | bfloat16 | 26.39GB  | 28.34 GB  | oom     |
-| Qwen/Qwen1.5-32B-Chat  | 30.28B  | bfloat16 | 60.56GB  | 65.04 GB  | oom     |
-| Qwen/Qwen1.5-72B-Chat  | 67.32B  | bfloat16 | 134.64GB | 144.47 GB | oom     |
-| Qwen/Qwen1.5-110B-Chat | 103.57B | bfloat16 | 207.14GB | 222.39 GB | oom     |
+2. GPTQ 的事实标准是 [AutoGPTQ](https://github.com/AutoGPTQ/AutoGPTQ) 库
 
-### 6.1.2. 预填充 (Prefill) 阶段 推理速度 单位 ms
+原理可以参考 [原始论文](https://arxiv.org/abs/2210.17323) 和 [Making LLMs lighter with AutoGPTQ and transformers](https://huggingface.co/blog/gptq-integration)
 
-<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/static/prefill1.png?raw=true" width="600">
+还有一些值得注意的点：
 
-| 模型                     | 实测25  | 实测100 | 实测200 | 实测300 | 实测400 | 实测500 |
-|------------------------|-------|-------|-------|-------|-------|-------|
-| Qwen/Qwen1.5-0.5B-Chat | 6.12  | 6.17  | 6.83  | 7.31  | 8.03  | 8.74  |
-| Qwen/Qwen1.5-1.8B-Chat | 7.15  | 7.79  | 10    | 12.68 | 15.61 | 16.31 |
-| Qwen/Qwen1.5-4B-Chat   | 13.6  | 14.56 | 20.29 | 28.76 | 35.82 | 37.52 |
-| Qwen/Qwen1.5-7B-Chat   | 21.01 | 23.18 | 29.98 | 46.93 | 52.34 | 61.02 |
+- 这个库的矩阵乘法有两个 W4A16 算子，参考 Marlin 官方，1~32 batchsize几乎是理想的速度。
 
-|                        | 实测25 | 实测100 | 实测200 | 实测300 | 实测400 | 实测500 |
-|------------------------|------|-------|-------|-------|-------|-------|
-| Qwen/Qwen1.5-0.5B-Chat | 0.26 | 1.03  | 2.07  | 3.11  | 4.17  | 5.25  |
-| Qwen/Qwen1.5-1.8B-Chat | 0.84 | 3.37  | 6.76  | 10.18 | 13.62 | 17.07 |
-| Qwen/Qwen1.5-4B-Chat   | 1.96 | 7.87  | 15.78 | 23.74 | 31.74 | 39.79 |
-| Qwen/Qwen1.5-7B-Chat   | 3.91 | 15.67 | 31.39 | 47.17 | 63.01 | 78.91 |
+<img src="https://github.com/IST-DASLab/marlin/raw/master/assets/peak.png" width="600">
 
-|                        | 实测25 | 实测100 | 实测200 | 实测300 | 实测400 | 实测500 |
-|------------------------|------|-------|-------|-------|-------|-------|
-| Qwen/Qwen1.5-0.5B-Chat | 4%   | 17%   | 30%   | 43%   | 52%   | 60%   |
-| Qwen/Qwen1.5-1.8B-Chat | 12%  | 43%   | 68%   | 80%   | 87%   | 105%  |
-| Qwen/Qwen1.5-4B-Chat   | 14%  | 54%   | 78%   | 83%   | 89%   | 106%  |
-| Qwen/Qwen1.5-7B-Chat   | 19%  | 68%   | 105%  | 101%  | 120%  | 129%  |
+> - AutoGPTQ defaults to using exllamav2 int4*fp16 kernel for matrix multiplication.
+> 
+> - Marlin is an optimized int4 * fp16 kernel was recently proposed at https://github.com/IST-DASLab/marlin. This is integrated in AutoGPTQ when loading a model with use_marlin=True. This kernel is available only on devices with compute capability 8.0 or 8.6 (Ampere GPUs).
 
-### 6.1.3. 解码 （Decoding） 阶段 推理速度 单位 ms
+<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/static/marlin.png?raw=true" width="600">
 
-<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/static/decoding1.png?raw=true" width="600">
+> 但实测 Marlin 序列长度小于50时差不多跟 bfloat16 一样，大于50时速度有点离谱？
+>
+> 1.8B模型 报错 ValueError: `infeatures` must be divisible by 128 and `outfeatures` by 256.
+> 
+> 更大的模型 报错 ValueError: The loading of sharded checkpoints with Marlin is currently not supported. Please raise an issue in AutoGPTQ repository.
+> 
+> 兼容性有待改善。
 
-理论速度
+> 还有，感觉这个库要放弃 8bits 版本支持，8bits 模型会报错，qwen1.5 32B也没有提供 8bits 版本。
 
-| 模型                     | 2048  | 4096  | 6144   | 8192   | 10240  | 12288  | 14336  | 16384  |
-|------------------------|-------|-------|--------|--------|--------|--------|--------|--------|
-| Qwen/Qwen1.5-0.5B-Chat | 2698  | 6185  | 10435  | 15446  | 21220  | 27755  | 35052  | 43111  |
-| Qwen/Qwen1.5-1.8B-Chat | 7631  | 16868 | 27629  | 39914  | 53722  | 69054  | 85911  | 104290 |
-| Qwen/Qwen1.5-4B-Chat   | 16361 | 36073 | 58959  | 85020  | 114256 | 146666 | 182251 | 221010 |
-| Qwen/Qwen1.5-7B-Chat   | 30909 | 66225 | 105604 | 149047 | 196554 | 248124 | 303757 | 363454 |
+3. AWQ 的事实标准是 [AutoAWQ](https://github.com/casper-hansen/AutoAWQ)
 
-实际速度
+原理可以参考 [原始论文](https://arxiv.org/abs/2306.00978), 也可以看看 [AutoAWQ Roadmap](https://github.com/casper-hansen/AutoAWQ/issues/32)
 
-| 模型                     | 2048  | 4096  | 6144  | 8192   | 10240  | 12288  | 14336  | 16384  |
-|------------------------|-------|-------|-------|--------|--------|--------|--------|--------|
-| Qwen/Qwen1.5-0.5B-Chat | 12100 | 24265 | 36481 | 48889  | 62012  | 76313  | 91938  | 109417 |
-| Qwen/Qwen1.5-1.8B-Chat | 13460 | 29493 | 47919 | 68936  | 93109  | 120300 | 150521 | 183629 |
-| Qwen/Qwen1.5-4B-Chat   | 26769 | 58778 | 95816 | 139449 | 189314 | 245423 | 307444 | 375503 |
-| Qwen/Qwen1.5-7B-Chat   | 40957 | 88720 | oom   | oom    | oom    | oom    | oom    | oom    |
-
-速度比
-
-| 模型                     | 2048 | 4096 | 6144 | 8192 | 10240 | 12288 | 14336 | 16384 |
-|------------------------|------|------|------|------|-------|-------|-------|-------|
-| Qwen/Qwen1.5-0.5B-Chat | 22%  | 25%  | 29%  | 32%  | 34%   | 36%   | 38%   | 39%   |
-| Qwen/Qwen1.5-1.8B-Chat | 57%  | 57%  | 58%  | 58%  | 58%   | 57%   | 57%   | 57%   |
-| Qwen/Qwen1.5-4B-Chat   | 61%  | 61%  | 62%  | 61%  | 60%   | 60%   | 59%   | 59%   |
-| Qwen/Qwen1.5-7B-Chat   | 75%  | 75%  | oom  | oom  | oom   | oom   | oom   | oom   |
-
-- 小模型跟理论差距大一些，大模型差距小一些
+还有一些值得注意的点：
+- Fused modules：（这个 Fused modules 默认启动。但对比 GPTQ 没啥效果
+> Fused modules are a large part of the speedup you get from AutoAWQ. The idea is to combine multiple layers into a single operation, thus becoming more efficient. 
+> 
+> Fused modules are activated when you use fuse_layers=True.
+> 
+> A custom cache is implemented. It preallocates based on batch size and sequence length.
 
 
-# 6.2. llama.cpp 库实际推理速度测试
+- 这个库的矩阵乘法两种格式INT4，对比 FP16：
+> INT4 GEMM vs INT4 GEMV vs FP16
+> 
+> There are two versions of AWQ: GEMM and GEMV. Both names relate to how matrix multiplication runs under the hood. We suggest the following:
+> 
+> GEMV (quantized): 20% faster than GEMM, only batch size 1 (not good for large context).
+> 
+> GEMM (quantized): Much faster than FP16 at batch sizes below 8 (good with large contexts). 
+> 
+> FP16 (non-quantized): Recommended for highest throughput: vLLM.
+
+这篇文章主要聚焦单用户，也就是batchsize=1的情况，多用户场景会在下篇文章讨论。这个场景主要还是带宽瓶颈，估计 INT4 GEMV 版会快一点。
+
+[代码](https://github.com/casper-hansen/AutoAWQ/blob/5f3785dcaa107ca76f5fa5355f459370c86f82d6/awq/models/base.py#L577) 里支持的 WQLinear version挺多的，但是导出什么类型，导入就得什么类型，没办法在线转换，qwen1.5 官方导出版本是gemm。
+```
+marlin          WQLinear_Marlin
+use_exllama     WQLinear_Exllama
+use_exllama_v2  WQLinear_ExllamaV2
+gemm            WQLinear_GEMM
+gemv            WQLinear_GEMV
+gemv_fast       WQLinear_GEMVFast
+
+Exllama kernels only support GEMM version.
+```
+
+<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/static/awq1.png?raw=true" width="600">
+<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/static/awq2.png?raw=true" width="600">
+
+- use_exllama 至少在 Prefill 阶段慢的相当离谱。
+- use_exllama_v2 非常快。
+- HuggingFace Transformers 默认使用的 gemm 比较慢。
+
+## 6.2. llama-cpp-python 库
+
+llama.cpp使用库的好处是依赖少，安装使用都很方便方便。而且自带有16种模型格式，[参考](https://github.com/ggerganov/llama.cpp/pull/1684) 整理如下：
+
+2种无损格式:
+- F32 现在模型都是用 fp16 训练的，不会使用 F32 存储
+- F16 模型，所有模型首先要转成 fp16 GGUF 中间格式，相当于无损模型，再转换成其他模型
+
+5种原始系列, 官方说不如后面新的混合量化方法:
+- 原始 type-0 系列: weights w are obtained from quants q using w = d * q where d is the block scale.
+- q8_0 32 numbers in chunk, 8 bits per weight, 1 scale value at 32 bits, making total of 9 bits per weight.
+- q5_0 32 numbers in chunk, 5 bits per weight, 1 scale value at 16-bit float, size is 5.5 bits per weight. legacy, prefer using Q4_K_M
+- q4_0 32 numbers in chunk, 4 bits per weight, 1 scale value at 32-bit float (5 bits per value in average). legacy, prefer using Q3_K_M
+- 原始 type-1 系列: weights are given by w = d * q + m, where m is the block minimum. 
+- q5_1 32 numbers in chunk, 5 bits per weight, 1 scale value at 16 bit float and 1 bias value at 16 bit, size is 6 bits per weight. legacy, prefer using Q5_K_M
+- q4_1 32 numbers in chunk, 4 bits per weight, 1 scale value and 1 bias value at 32-bit float (6 bits per value in average). legacy, prefer using Q3_K_L
+
+新的量化数据类型
+- type-0 系列
+- GGML_TYPE_Q8_K - "type-0" 8-bit quantization. The difference to the existing Q8_0 is that the block size is 256.
+- GGML_TYPE_Q6_K - "type-0" 6-bit quantization. Super-blocks with 16 blocks, each block having 16 weights. Scales are quantized with 8 bits. This ends up using 6.5625 bpw
+- GGML_TYPE_Q3_K - "type-0" 3-bit quantization in super-blocks containing 16 blocks, each block having 16 weights. Scales are quantized with 6 bits. This end up using 3.4375 bpw.
+- type-1 系列
+- GGML_TYPE_Q2_K - "type-1" 2-bit quantization in super-blocks containing 16 blocks, each block having 16 weight. Block scales and mins are quantized with 4 bits. This ends up effectively using 2.5625 bits per weight (bpw)
+- GGML_TYPE_Q4_K - "type-1" 4-bit quantization in super-blocks containing 8 blocks, each block having 32 weights. Scales and mins are quantized with 6 bits. This ends up using 4.5 bpw.
+- GGML_TYPE_Q5_K - "type-1" 5-bit quantization. Same super-block structure as GGML_TYPE_Q4_K resulting in 5.5 bpw
+
+9种新 MOSTLY 系列，其中 4种单一量化，5种混合量化
+- MOSTLY 系列 但不是 quantization mixes
+- LLAMA_FTYPE_MOSTLY_Q3_K_S - uses GGML_TYPE_Q3_K for all tensors
+- LLAMA_FTYPE_MOSTLY_Q4_K_S - uses GGML_TYPE_Q4_K for all tensors
+- LLAMA_FTYPE_MOSTLY_Q5_K_S - uses GGML_TYPE_Q5_K for all tensors
+- LLAMA_FTYPE_MOSTLY_Q6_K - uses GGML_TYPE_Q8_K for all tensors
+- MOSTLY 系列 quantization mixes
+- LLAMA_FTYPE_MOSTLY_Q2_K - uses GGML_TYPE_Q4_K for the attention.vw and feed_forward.w2 tensors, GGML_TYPE_Q2_K for the other tensors.
+- LLAMA_FTYPE_MOSTLY_Q3_K_M - uses GGML_TYPE_Q4_K for the attention.wv, attention.wo, and feed_forward.w2 tensors, else GGML_TYPE_Q3_K
+- LLAMA_FTYPE_MOSTLY_Q3_K_L - uses GGML_TYPE_Q5_K for the attention.wv, attention.wo, and feed_forward.w2 tensors, else GGML_TYPE_Q3_K
+- LLAMA_FTYPE_MOSTLY_Q4_K_M - uses GGML_TYPE_Q6_K for half of the attention.wv and feed_forward.w2 tensors, else GGML_TYPE_Q4_K
+- LLAMA_FTYPE_MOSTLY_Q5_K_M - uses GGML_TYPE_Q6_K for half of the attention.wv and feed_forward.w2 tensors, else GGML_TYPE_Q5_K
+
+你看懂了吗，反正我没看懂。最后官方建议使用Q4_K_M、Q5_K_S、Q5_K_M。
+
+## 6.3. 占用显存测试
+
+## 6.4. 实际速度测试
+
+### 6.4.1 prefill 0.5B 
+
+<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/static/prefill-0.5B.png?raw=true" width="600">
+
+- bfloat16，awq use_exllama_v2 最快，接着是 GPTQ，接着是awq 默认的gemm。llama-cpp-python 都比较慢，能跟之前的拉开差距，是因为python的开销吗？
+
+### 6.4.1 prefill 1.8B 
+<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/static/prefill-1.8B.png?raw=true" width="600">
+
+- awq use_exllama_v2 最快，接着是 GPTQ，接着 bfloat16。awq 默认的 gemm 曲线很直。llama-cpp-python 都比较慢，能跟之前的拉开差距，是因为python的开销吗？
+
 
 # 7. 总结
 
