@@ -768,8 +768,8 @@ gemv_fast       WQLinear_GEMVFast
 Exllama kernels only support GEMM version.
 ```
 
-<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/static/awq1.png?raw=true" width="600">
-<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/static/awq2.png?raw=true" width="600">
+<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/static/awq1.png?raw=true">
+<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/static/awq2.png?raw=true">
 
 - use_exllama 至少在 Prefill 阶段慢的相当离谱。
 - use_exllama_v2 非常快。
@@ -823,12 +823,12 @@ llama.cpp使用库的好处是依赖少，安装使用都很方便方便。而�
 
 ### 6.4.1 prefill 0.5B 
 
-<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/static/prefill-0.5B.png?raw=true" width="600">
+<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/static/prefill-0.5B.png?raw=true">
 
 - bfloat16，awq use_exllama_v2 最快，接着是 GPTQ，接着是awq 默认的gemm。llama-cpp-python 都比较慢，能跟之前的拉开差距，是因为python的开销吗？
 
 ### 6.4.1 prefill 1.8B 
-<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/static/prefill-1.8B.png?raw=true" width="600">
+<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/static/prefill-1.8B.png?raw=true">
 
 - awq use_exllama_v2 最快，接着是 GPTQ，接着 bfloat16。awq 默认的 gemm 曲线很直。llama-cpp-python 都比较慢，能跟之前的拉开差距，是因为python的开销吗？
 
