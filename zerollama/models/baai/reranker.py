@@ -4,7 +4,7 @@ from zerollama.tasks.reranker.interface import Reranker
 
 
 class BGEReranker(Reranker):
-    family = "BGEReranker"
+    family = "bge-reranker"
     model_kwargs = {}
     header = ["name", "type", "layerwise", "Base model", "Language", "feature"]
     info = [

@@ -3,7 +3,7 @@ from zerollama.tasks.retriever.interface import Retriever
 
 
 class BGERetriever(Retriever):
-    family = "BGERetriever"
+    family = "bge-retrieval"
     model_kwargs = {}
     header = ["name", "dimension", "sequence_length", "introduction"]
     info = [
