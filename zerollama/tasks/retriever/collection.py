@@ -1,9 +1,10 @@
 
 
 from zerollama.models.baai.retriever import BGERetriever
+from zerollama.models.bce.retriever import BCERetriever
 
 
-MODELS = [BGERetriever]
+MODELS = [BGERetriever, BCERetriever]
 MODELS_NAME_MAP = dict()
 MODELS_FAMILY_MAP = {m.family: m for m in MODELS}
 
@@ -36,7 +37,7 @@ def get_model_by_name(model_name):
 if __name__ == '__main__':
     print(families())
 
-    print(family("BGERetriever"))
+    print(family("bge-retrieval"))
 
     model_name = "BAAI/bge-m3"
     config = get_model_config_by_name(model_name)

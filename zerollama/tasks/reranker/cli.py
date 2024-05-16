@@ -25,7 +25,7 @@ def list_family(name):
 @click.command()
 @click.argument('model_name')
 def pull(model_name):
-    from zerollama.inference_backend.transformers_green.download import download
+    from zerollama.tasks.reranker.download import download
     download(model_name)
 
 

@@ -33,10 +33,12 @@
 - [XVERSE](https://github.com/noooop/zerollama/tree/main/zerollama/models/xverse)
 
 ## Retriever(Embeddings) 模型
-- [BGERetriever](https://github.com/noooop/zerollama/tree/main/zerollama/models/baai)
+- [bge-retrieval](https://github.com/noooop/zerollama/tree/main/zerollama/models/baai)
+- [bce-embedding](https://github.com/noooop/zerollama/tree/main/zerollama/models/bce)
 
 ## Reranker 模型
-- [BGEReranker](https://github.com/noooop/zerollama/tree/main/zerollama/models/baai)
+- [bge-reranker](https://github.com/noooop/zerollama/tree/main/zerollama/models/baai)
+- [bce-reranker](https://github.com/noooop/zerollama/tree/main/zerollama/models/bce)
 
 ## Contribute
 贡献代码请交逻辑清晰思路、简单直接的代码、不要有魔法，甚至可以牺牲一部分性能换取可读性

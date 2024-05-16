@@ -6,6 +6,7 @@ from zerollama.tasks.reranker.protocol import RerankerResponse, RerankerModelCon
 
 class Reranker(ModelBase):
     protocol = PROTOCOL
+    download_backend = "zerollama.inference_backend.transformers_green.download:download"
 
     @classmethod
     def get_model_config(cls, model_name):

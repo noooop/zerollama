@@ -1,9 +1,10 @@
 
 
 from zerollama.models.baai.reranker import BGEReranker
+from zerollama.models.bce.reranker import BCEReranker
 
 
-MODELS = [BGEReranker]
+MODELS = [BGEReranker, BCEReranker]
 MODELS_NAME_MAP = dict()
 MODELS_FAMILY_MAP = {m.family: m for m in MODELS}
 
@@ -36,7 +37,7 @@ def get_model_by_name(model_name):
 if __name__ == '__main__':
     print(families())
 
-    print(family("BGEReranker"))
+    print(family("bge-reranker"))
 
     model_name = 'BAAI/bge-reranker-v2-m3'
     config = get_model_config_by_name(model_name)
