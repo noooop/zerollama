@@ -29,12 +29,14 @@
 - [MiniCPM](https://github.com/noooop/zerollama/tree/main/zerollama/models/openbmb)
 - [Qwen1.5](https://github.com/noooop/zerollama/tree/main/zerollama/models/qwen)
 - [Yi](https://github.com/noooop/zerollama/tree/main/zerollama/models/yi)
-- [llama3](https://github.com/noooop/zerollama/tree/main/zerollama/models/llama)
-- [llama3zh](https://github.com/noooop/zerollama/tree/main/zerollama/models/llama)
-
+- [llama3](https://github.com/noooop/zerollama/tree/main/zerollama/models/llama) [llama3zh](https://github.com/noooop/zerollama/tree/main/zerollama/models/llama)
+- [XVERSE](https://github.com/noooop/zerollama/tree/main/zerollama/models/xverse)
 
 ## Retriever(Embeddings) 模型
-- [BGE](https://github.com/noooop/zerollama/tree/main/zerollama/models/baai)
+- [BGERetriever](https://github.com/noooop/zerollama/tree/main/zerollama/models/baai)
+
+## Reranker 模型
+- [BGEReranker](https://github.com/noooop/zerollama/tree/main/zerollama/models/baai)
 
 ## Contribute
 贡献代码请交逻辑清晰思路、简单直接的代码、不要有魔法，甚至可以牺牲一部分性能换取可读性
