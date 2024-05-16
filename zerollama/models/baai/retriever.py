@@ -1,10 +1,9 @@
 
-
 from zerollama.tasks.retriever.interface import Retriever
 
 
-class BGEM3(Retriever):
-    family = "BGE"
+class BGERetriever(Retriever):
+    family = "BGERetriever"
     model_kwargs = {}
     header = ["name", "dimension", "sequence_length", "introduction"]
     info = [
@@ -16,14 +15,14 @@ class BGEM3(Retriever):
         ["BAAI/bge-base-en-v1.5",        "768",       "512",             "English model"],
         ["BAAI/bge-small-en-v1.5",       "384",       "512",             "English model"],
     ]
-    inference_backend = "zerollama.models.baai.backend.bge:BGEM3"
+    inference_backend = "zerollama.models.baai.backend.retriever:BGERetriever"
 
 
 if __name__ == '__main__':
     def get_model(model_name):
         model_kwargs = {}
 
-        model_class = BGEM3.inference_backend
+        model_class = BGERetriever.inference_backend
         module_name, class_name = model_class.split(":")
         import importlib
 

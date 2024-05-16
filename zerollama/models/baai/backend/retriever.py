@@ -7,7 +7,7 @@ from zerollama.tasks.retriever.protocol import RetrieverResponse
 from zerollama.tasks.retriever.collection import get_model_config_by_name
 
 
-class BGEM3(RetrieverInterface):
+class BGERetriever(RetrieverInterface):
     def __init__(self, model_name, local_files_only=True, device="cuda"):
         model_config = get_model_config_by_name(model_name)
 
