@@ -11,6 +11,10 @@ class ZeroInferenceEngine(Z_MethodZeroServer):
     def __init__(self, model_name, model_kwargs, **kwargs):
         self.model_name = model_name
         self.model_class = self.get_model_by_name(model_name)
+
+        if self.model_class is None:
+            raise ValueError(f"[{model_name}] not support.")
+
         self.inference_backend = self.model_class.inference_backend
 
         print("use inference backend:")

@@ -8,15 +8,16 @@ import traceback
 import zmq.green as zmq
 from gevent.pool import Pool
 from multiprocessing import Event, Process, Value, Pipe, Manager
+
 from zerollama.core.framework.zero.protocol import (
     Timeout,
+    ZeroMSQ,
     convert_errors,
     ValidationError,
     ZeroServerRequest,
     ZeroServerResponse,
     ZeroServerResponseOk,
     ZeroServerStreamResponseOk,
-    ZeroServerResponseOkWithPayload,
     ZeroServerResponseError
 )
 
@@ -134,7 +135,9 @@ class ZeroServer(object):
             err_msg = convert_errors(err_msg)
 
         rep = ZeroServerResponseError(msg=err_msg)
-        self.socket.send_multipart([uuid, req_id] + rep.b)
+
+        data, payload = ZeroMSQ.load(rep.dict())
+        self.socket.send_multipart([uuid, req_id, data] + payload)
 
     def zero_send(self, req: ZeroServerRequest, rep: ZeroServerResponse):
         if isinstance(rep, ZeroServerStreamResponseOk):
@@ -142,22 +145,24 @@ class ZeroServer(object):
         else:
             rep_id = req.req_id
 
-        self.socket.send_multipart([req.uuid, rep_id] + rep.b)
+        data, payload = ZeroMSQ.load(rep.dict())
+
+        self.socket.send_multipart([req.uuid, rep_id, data] + payload)
 
     def close(self):
         self.event.clear()
 
 
 class Z_MethodZeroServer(ZeroServer):
-    def process(self, msg):
+    def process(self, data):
         try:
-            uuid, req_id, msg, *payload = msg
+            uuid, req_id, data, *payload = data
         except Exception:
             traceback.print_exc()
             return
 
         try:
-            msg = json.loads(msg)
+            msg = ZeroMSQ.unload(data, payload)
         except json.JSONDecodeError as e:
             self.handle_error(str(e), uuid, req_id)
             return
@@ -170,7 +175,6 @@ class Z_MethodZeroServer(ZeroServer):
 
         req.uuid = uuid
         req.req_id = req_id
-        req.payload = payload
 
         method_name = msg["method"]
         method = getattr(self, "z_" + method_name, self.default)
@@ -190,7 +194,10 @@ class Z_MethodZeroServer(ZeroServer):
 
     def z_support_methods(self, req: ZeroServerRequest):
         support_methods = [m[2:] for m in dir(self) if m.startswith('z_')]
-        rep = ZeroServerResponseOk(msg={"support_methods": support_methods})
+        rep = ZeroServerResponseOk(msg={
+            "name": self.__class__.__name__,
+            "support_methods": support_methods
+        })
         self.zero_send(req, rep)
 
     def z_info(self, req: ZeroServerRequest):

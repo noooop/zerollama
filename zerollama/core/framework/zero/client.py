@@ -6,7 +6,8 @@ import numpy as np
 from os import getpid
 import zmq.green as zmq
 from queue import Queue
-from zerollama.core.framework.zero.protocol import ZeroServerResponse, ZeroServerResponseOkWithPayload, Timeout
+from zerollama.core.framework.zero.protocol import ZeroMSQ
+from zerollama.core.framework.zero.protocol import ZeroServerResponse, Timeout
 
 
 class Socket(object):
@@ -85,7 +86,7 @@ class Client(object):
     def __init__(self, addr):
         self.addr = addr
 
-    def _query(self, data, n_try=3, timeout=None):
+    def _query(self, req, req_payload, n_try=3, timeout=None):
         _timeout = timeout or getattr(self, "timeout", None)
 
         for i in range(n_try):
@@ -94,7 +95,7 @@ class Client(object):
 
             try:
                 with gevent.Timeout(_timeout):
-                    socket.send_multipart([req_id, data])
+                    socket.send_multipart([req_id, req]+req_payload)
                     msg = socket.recv_multipart()
                     socket_pool.put(socket, self.addr)
                     return msg
@@ -103,7 +104,7 @@ class Client(object):
 
         raise Timeout(f"{self.addr} timeout")
 
-    def _stream_query(self, data, n_try=3, timeout=None):
+    def _stream_query(self, req, req_payload, n_try=3, timeout=None):
         _timeout = timeout or getattr(self, "timeout", None)
 
         for i in range(n_try):
@@ -111,7 +112,7 @@ class Client(object):
             socket = socket_pool.get(self.addr)
             try:
                 with gevent.Timeout(_timeout):
-                    socket.send_multipart([req_id, data])
+                    socket.send_multipart([req_id, req]+req_payload)
                     out = socket.recv_multipart()
             except gevent.timeout.Timeout:
                 socket_pool.delete(socket)
@@ -136,28 +137,15 @@ class Client(object):
 
         raise Timeout(f"{self.addr} timeout")
 
-    def _load(self, req_id, msg, payload):
-        msg = json.loads(msg)
-        if len(payload) > 0:
-            msg = ZeroServerResponseOkWithPayload(**msg)
-            msg.payload = []
-            for m, p in zip(msg.meta, payload):
-                msg.payload.append(np.frombuffer(p, dtype=m.dtype).reshape(m.shape))
-            return msg
-        else:
-            msg = ZeroServerResponse(**msg)
-            return msg
-
     def stream_query(self, data, **kwargs):
-        data = json.dumps(data).encode('utf8')
-        for req_id, msg, *payload in self._stream_query(data=data, **kwargs):
-            yield self._load(req_id, msg, payload)
+        req, req_payload = ZeroMSQ.load(data)
+        for req_id, msg, *payload in self._stream_query(req, req_payload, **kwargs):
+            yield ZeroServerResponse(**ZeroMSQ.unload(msg, payload))
 
     def query(self, data, **kwargs):
-        data = json.dumps(data).encode('utf8')
-
-        req_id, msg, *payload = self._query(data=data, **kwargs)
-        return self._load(req_id, msg, payload)
+        req, req_payload = ZeroMSQ.load(data)
+        req_id, msg, *payload = self._query(req, req_payload, **kwargs)
+        return ZeroServerResponse(**ZeroMSQ.unload(msg, payload))
 
 
 class Z_Client(Client):

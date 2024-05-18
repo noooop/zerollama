@@ -26,8 +26,7 @@ class RerankerClient(ZeroClient):
             return rep
 
         if rep.state == "ok":
-            rep = rep.unload()
-            rep = RerankerResponse(**rep)
+            rep = RerankerResponse(**rep.msg)
         return rep
 
 

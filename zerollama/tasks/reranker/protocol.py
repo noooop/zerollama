@@ -10,7 +10,6 @@ from zerollama.core.framework.zero.protocol import (
     ZeroServerResponse,
     ZeroServerResponseOk,
     ZeroServerStreamResponseOk,
-    ZeroServerResponseOkWithPayload,
     ZeroServerResponseError
 )
 

@@ -78,7 +78,7 @@ if __name__ == '__main__':
     print("stream == False")
     response = client.chat(model_name, messages)
     print(response.msg.content)
-    print("response_length:", response.msg.response_length)
+    print("response_length:", response.msg.completion_tokens)
 
     print("="*80)
     print("stream == True")
