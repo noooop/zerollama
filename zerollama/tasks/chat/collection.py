@@ -1,6 +1,6 @@
 
 
-from zerollama.models.deepseek.model import DeepSeekLLM
+from zerollama.models.deepseek.chat import DeepSeekLLM
 from zerollama.models.openbmb.minicpm import MiniCPM
 from zerollama.models.qwen.qwen1_5 import Qwen1_5, Qwen1_5_GGUF
 from zerollama.models.yi.chat import Yi, Yi_1_5
