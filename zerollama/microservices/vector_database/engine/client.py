@@ -40,13 +40,15 @@ class VectorDatabaseClient(ZeroClient):
 
 if __name__ == '__main__':
     import pickle
-    from pathlib import Path
     CLIENT_VALIDATION = False
 
-    rag_path = Path.home() / ".zerollama/rag/documents"
+    from zerollama.core.config.main import config_setup
+
+    config = config_setup()
+
     filename = "test"
     embedding_model = "BAAI/bge-m3"
-    file = list((rag_path / filename).glob("*.txt"))[0]
+    file = list((config.rag.path / filename).glob("*.txt"))[0]
     book_name = file.stem.split("-")[0]
 
     client = VectorDatabaseClient()
