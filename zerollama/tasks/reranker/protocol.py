@@ -13,8 +13,14 @@ from zerollama.core.framework.zero.protocol import (
     ZeroServerResponseError
 )
 
+
+ENGINE_CLASS = "zerollama.tasks.reranker.engine.server:ZeroRerankerInferenceEngine"
 MANAGER_NAME = "ZeroRerankerInferenceManager"
 PROTOCOL = "reranker"
+
+Reranker_ENGINE_CLASS = ENGINE_CLASS
+Reranker_MANAGER_NAME = MANAGER_NAME
+Reranker_PROTOCOL = PROTOCOL
 
 
 class RerankerModelConfig(BaseModel):

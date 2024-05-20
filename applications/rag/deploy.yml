@@ -1,0 +1,14 @@
+chat:
+  models: ["Qwen/Qwen1.5-0.5B-Chat-AWQ"]
+
+retriever:
+  models: ["BAAI/bge-m3"]
+
+reranker:
+  models: ["BAAI/bge-reranker-v2-m3"]
+
+vector_database:
+  backend: "BruteForceVectorDatabase"
+
+documents:
+  collections: ["test"]

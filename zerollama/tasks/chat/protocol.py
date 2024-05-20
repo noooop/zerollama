@@ -9,8 +9,14 @@ from zerollama.core.framework.zero.protocol import (
     ZeroServerResponseError
 )
 
+ENGINE_CLASS = "zerollama.tasks.chat.engine.server:ZeroChatInferenceEngine"
 MANAGER_NAME = "ZeroChatInferenceManager"
 PROTOCOL = "chat"
+
+
+Chat_ENGINE_CLASS = ENGINE_CLASS
+Chat_MANAGER_NAME = MANAGER_NAME
+Chat_PROTOCOL = PROTOCOL
 
 
 class ChatCompletionRequest(BaseModel):

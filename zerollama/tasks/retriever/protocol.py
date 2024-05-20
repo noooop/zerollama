@@ -13,8 +13,13 @@ from zerollama.core.framework.zero.protocol import (
     ZeroServerResponseError
 )
 
+ENGINE_CLASS = "zerollama.tasks.retriever.engine.server:ZeroRetrieverInferenceEngine"
 MANAGER_NAME = "ZeroRetrieverInferenceManager"
 PROTOCOL = "retriever"
+
+Retriever_ENGINE_CLASS = ENGINE_CLASS
+Retriever_MANAGER_NAME = MANAGER_NAME
+Retriever_PROTOCOL = PROTOCOL
 
 
 class RetrieverModelConfig(BaseModel):
