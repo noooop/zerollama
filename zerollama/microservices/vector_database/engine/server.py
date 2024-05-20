@@ -1,14 +1,11 @@
 
 from hashlib import md5
-from pathlib import Path
 from gevent.lock import Semaphore
 from gevent.threadpool import ThreadPoolExecutor
 from zerollama.core.framework.zero.server import Z_MethodZeroServer
 from zerollama.microservices.vector_database.protocol import VectorDatabaseTopKRequest
 from zerollama.microservices.vector_database.protocol import ZeroServerResponseOk
-
-
-rag_path = Path.home() / ".zerollama/rag/documents"
+from zerollama.core.config.main import config_setup
 
 
 class ZeroVectorDatabaseEngine(Z_MethodZeroServer):
@@ -35,7 +32,9 @@ class ZeroVectorDatabaseEngine(Z_MethodZeroServer):
                                     port=None, do_register=True, **kwargs)
 
     def init(self):
-        file = list((rag_path / self.filename).glob("*.txt"))[0]
+        config = config_setup()
+
+        file = list((config.rag.path / self.filename).glob("*.txt"))[0]
         #book_name = file.stem.split("-")[0]
 
         self.vdb = self.vdb_class.load_from_file(f"{file.parent / (self.hash + '.pkl')}")

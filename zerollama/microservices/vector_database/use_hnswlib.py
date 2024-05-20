@@ -31,12 +31,13 @@ class HnswlibVectorDatabase(VectorDatabaseInterface):
 
 if __name__ == '__main__':
     from hashlib import md5
-    from pathlib import Path
+    from zerollama.core.config.main import config_setup
 
-    rag_path = Path.home() / ".zerollama/rag/documents"
+    config = config_setup()
+
     filename = "test"
     embedding_model = "BAAI/bge-m3"
-    file = list((rag_path / filename).glob("*.txt"))[0]
+    file = list((config.rag.path / filename).glob("*.txt"))[0]
     book_name = file.stem.split("-")[0]
 
     pickle_name = md5(f"zerollama:{file.stem}:{embedding_model}:embeddings".encode("utf-8")).hexdigest()
