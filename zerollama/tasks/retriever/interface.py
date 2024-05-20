@@ -6,7 +6,7 @@ from zerollama.tasks.retriever.protocol import RetrieverResponse, RetrieverModel
 
 class Retriever(ModelBase):
     protocol = PROTOCOL
-    download_backend = "zerollama.inference_backend.transformers_green.download:download"
+    download_backend = "zerollama.microservices.inference.transformers_green.download:download"
 
     @classmethod
     def get_model_config(cls, model_name):

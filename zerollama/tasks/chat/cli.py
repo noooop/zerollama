@@ -25,8 +25,9 @@ def list_family(name):
 @click.command()
 @click.argument('model_name')
 def pull(model_name):
-    from zerollama.tasks.chat.download import download
-    download(model_name)
+    from zerollama.tasks.base.download import download
+    from zerollama.tasks.chat.collection import get_model_by_name
+    download(model_name, get_model_by_name)
 
 
 @click.command()

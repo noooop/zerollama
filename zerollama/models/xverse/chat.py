@@ -49,10 +49,9 @@ class XVERSE_GGUF(ChatGGUFModel):
 
 if __name__ == '__main__':
     import torch
-    from zerollama.inference_backend.transformers_green.chat import run_test
-
 
     def transformers_test():
+        from zerollama.microservices.inference.transformers_green.chat import run_test
         for model_name in ["xverse/XVERSE-7B-Chat"]:
             run_test(model_name, stream=False)
 
@@ -64,7 +63,7 @@ if __name__ == '__main__':
             print(torch.cuda.memory_allocated() / 1024 ** 2)
 
     def llama_cpp_test():
-        from zerollama.inference_backend.llama_cpp_green.chat import run_test
+        from zerollama.microservices.inference.llama_cpp_green.chat import run_test
 
         for model_name in ["xverse/XVERSE-7B-Chat-GGUF+*q4_0.gguf"]:
             run_test(model_name, stream=False)

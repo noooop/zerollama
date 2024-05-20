@@ -2,7 +2,7 @@
 from zerollama.tasks.chat.collection import get_model_by_name
 from zerollama.tasks.chat.protocol import ChatCompletionRequest, ChatCompletionStreamResponseDone
 from zerollama.tasks.chat.protocol import ZeroServerResponseOk, ZeroServerStreamResponseOk
-from zerollama.tasks.base.inference_engine.server import ZeroInferenceEngine
+from zerollama.tasks.base.engine.server import ZeroInferenceEngine
 
 
 class ZeroChatInferenceEngine(ZeroInferenceEngine):
@@ -26,7 +26,7 @@ if __name__ == '__main__':
     from zerollama.core.framework.zero.server import ZeroServerProcess
 
     nameserver = ZeroServerProcess("zerollama.core.framework.nameserver.server:ZeroNameServer")
-    engine = ZeroServerProcess("zerollama.tasks.chat.inference_engine.server:ZeroChatInferenceEngine",
+    engine = ZeroServerProcess("zerollama.tasks.chat.engine.server:ZeroChatInferenceEngine",
                                server_kwargs={
                                    "model_name": "Qwen/Qwen1.5-0.5B-Chat",
                                    "model_kwargs": {}

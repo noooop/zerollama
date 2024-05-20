@@ -1,9 +1,9 @@
 
 from hashlib import md5
 from zerollama.core.framework.nameserver.client import ZeroClient
-from zerollama.workflow.vector_database.protocol import PROTOCOL
-from zerollama.workflow.vector_database.protocol import VectorDatabaseTopKRequest
-from zerollama.workflow.vector_database.protocol import VectorDatabaseTopKResponse
+from zerollama.microservices.vector_database.protocol import PROTOCOL
+from zerollama.microservices.vector_database.protocol import VectorDatabaseTopKRequest
+from zerollama.microservices.vector_database.protocol import VectorDatabaseTopKResponse
 
 CLIENT_VALIDATION = True
 

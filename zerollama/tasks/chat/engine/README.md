@@ -4,12 +4,12 @@
 ## demo
 ```
 第一个窗口
-$ python -m zerollama.tasks.chat.inference_engine.server
+$ python -m zerollama.tasks.chat.engine.server
 ZeroNameServer: InMemoryNameServer running! port: 9527
 ZeroInferenceEngine:  Qwen/Qwen1.5-0.5B-Chat is running! port: 59296
 
 第二个窗口
-$ python -m zerollama.tasks.chat.inference_engine.client
+$ python -m zerollama.tasks.chat.engine.client
 ================================================================================
 Wait Qwen/Qwen1.5-0.5B-Chat available
 [ServerInfo(name='Qwen/Qwen1.5-0.5B-Chat', host='localhost', port=55258, protocol='chat')]

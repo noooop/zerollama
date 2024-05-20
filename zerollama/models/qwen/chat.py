@@ -79,7 +79,7 @@ if __name__ == '__main__':
     import torch
 
     def transformers_test():
-        from zerollama.inference_backend.transformers_green.chat import run_test
+        from zerollama.microservices.inference.transformers_green.chat import run_test
 
         for model_name in ["Qwen/Qwen1.5-0.5B-Chat",
                            "Qwen/Qwen1.5-0.5B-Chat-GPTQ-Int4",
@@ -96,7 +96,7 @@ if __name__ == '__main__':
             print("memory_allocated:", torch.cuda.memory_allocated() / 1024 ** 2)
 
     def llama_cpp_test():
-        from zerollama.inference_backend.llama_cpp_green.chat import run_test
+        from zerollama.microservices.inference.llama_cpp_green.chat import run_test
 
         for model_name in ["Qwen/Qwen1.5-0.5B-Chat-GGUF+*q8_0.gguf",
                            "Qwen/Qwen1.5-0.5B-Chat-GGUF+*q2_k.gguf"]:
@@ -107,5 +107,5 @@ if __name__ == '__main__':
             run_test(model_name, stream=True)
 
 
-    #transformers_test()
+    transformers_test()
     llama_cpp_test()

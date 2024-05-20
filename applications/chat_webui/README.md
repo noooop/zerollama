@@ -91,6 +91,7 @@ MiniCPM
 Qwen1.5
 Qwen1.5_gguf
 Yi
+Yi-1.5
 llama3
 llama3zh
 xverse

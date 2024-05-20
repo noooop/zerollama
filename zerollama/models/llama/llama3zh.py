@@ -15,7 +15,7 @@ class Llama3ZH(ChatModel):
 
 if __name__ == '__main__':
     import torch
-    from zerollama.inference_backend.transformers_green.chat import run_test
+    from zerollama.microservices.inference.transformers_green.chat import run_test
 
     for model_name in ["hfl/llama-3-chinese-8b-instruct"]:
         run_test(model_name, stream=False)

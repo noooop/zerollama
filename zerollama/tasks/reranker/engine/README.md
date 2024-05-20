@@ -18,14 +18,15 @@ Commands:
 
 ### list-families 列出支持的模型家族
 ```
-$ python -m zerollama.tasks.reranker.cli list-families
+$ python -m python -m zerollama.tasks.reranker.cli list-families
 Supported retriever families:
-BGEReranker
+bge-reranker
+bce-reranker
 ```
 
 ### list-family 列出支持的模型家族成员
 ```
-$ python -m zerollama.tasks.reranker.cli list-family BGEReranker
+$ python -m zerollama.tasks.reranker.cli list-family bge-reranker
 +----------------------------------------+-----------+-----------+---------------------+---------------------+------------------------------------------------------------------------+-------------+----------+
 | name                                   | type      | layerwise | Base model          | Language            | feature                                                                | family      | protocol |
 +----------------------------------------+-----------+-----------+---------------------+---------------------+------------------------------------------------------------------------+-------------+----------+
@@ -42,23 +43,23 @@ $ python -m zerollama.tasks.reranker.cli pull BAAI/bge-reranker-v2-m3
 
 ## demo 服务端启动
 ```
-$ python -m zerollama.tasks.reranker.inference_engine.server
+$ python -m zerollama.tasks.reranker.engine.server
 use inference backend:
 zerollama.models.baai.backend.reranker:BGEReranker
 ZeroNameServer: InMemoryNameServer running! port: 9527
-ZeroRetrieverInferenceEngine:  BAAI/bge-reranker-v2-m3 is running! port: 50939
+ZeroRetrieverInferenceEngine:  BAAI/bge-reranker-v2-m3 is running! port: 58897
 ```
 
 ## demo 客户端运行
 ```
-$ python -m zerollama.tasks.reranker.inference_engine.client
+$ python -m zerollama.tasks.reranker.engine.client
 ================================================================================
 Wait BAAI/bge-reranker-v2-m3 available
-[ServerInfo(name='BAAI/bge-reranker-v2-m3', host='localhost', port=51312, protocol='reranker')]
+[ServerInfo(name='BAAI/bge-reranker-v2-m3', host='localhost', port=58897, protocol='reranker')]
 ================================================================================
 ZeroRetrieverInferenceEngine support_methods
-state='ok' msg={'support_methods': ['inference', 'info', 'support_methods']}
-state='ok' msg={'name': 'BAAI/bge-reranker-v2-m3', 'type': 'normal', 'layerwise': None, 'Base model': 'bge-m3', 'Language': 'Multilingual', 'feature': 'Lightweight reranker model, possesses strong multilingual capabilities, easy to deploy, with fast inference.', 'family': 'BGEReranker', 'protocol': 'reranker'}
+state='ok' msg={'name': 'ZeroRetrieverInferenceEngine', 'support_methods': ['inference', 'info', 'support_methods']}
+state='ok' msg={'name': 'BAAI/bge-reranker-v2-m3', 'type': 'normal', 'layerwise': None, 'Base model': 'bge-m3', 'Language': 'Multilingual', 'feature': 'Lightweight reranker model, possesses strong multilingual capabilities, easy to deploy, with fast inference.', 'family': 'bge-reranker', 'protocol': 'reranker'}
 ================================================================================
 [0.00027803096387751553, 0.9948403768236574]
 ```

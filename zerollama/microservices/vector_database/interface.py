@@ -1,7 +1,7 @@
 
 import pickle
-from zerollama.workflow.vector_database.protocol import PROTOCOL
-from zerollama.workflow.vector_database.protocol import VectorDatabaseTopKRequest, VectorDatabaseTopKResponse
+from zerollama.microservices.vector_database.protocol import PROTOCOL
+from zerollama.microservices.vector_database.protocol import VectorDatabaseTopKRequest, VectorDatabaseTopKResponse
 
 
 class VectorDatabaseInterface(object):

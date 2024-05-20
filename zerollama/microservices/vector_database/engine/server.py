@@ -4,8 +4,8 @@ from pathlib import Path
 from gevent.lock import Semaphore
 from gevent.threadpool import ThreadPoolExecutor
 from zerollama.core.framework.zero.server import Z_MethodZeroServer
-from zerollama.workflow.vector_database.protocol import VectorDatabaseTopKRequest
-from zerollama.workflow.vector_database.protocol import ZeroServerResponseOk
+from zerollama.microservices.vector_database.protocol import VectorDatabaseTopKRequest
+from zerollama.microservices.vector_database.protocol import ZeroServerResponseOk
 
 
 rag_path = Path.home() / ".zerollama/rag/documents"
@@ -65,9 +65,9 @@ if __name__ == '__main__':
     embedding_model = "BAAI/bge-m3"
 
     nameserver = ZeroServerProcess("zerollama.core.framework.nameserver.server:ZeroNameServer")
-    engine = ZeroServerProcess("zerollama.workflow.vector_database.engine.server:ZeroVectorDatabaseEngine",
+    engine = ZeroServerProcess("zerollama.microservices.vector_database.engine.server:ZeroVectorDatabaseEngine",
                                server_kwargs={
-                                   "vdb_class": "zerollama.workflow.vector_database.use_bruteforce:BruteForceVectorDatabase",
+                                   "vdb_class": "zerollama.microservices.vector_database.use_bruteforce:BruteForceVectorDatabase",
                                    "filename": filename,
                                    "embedding_model": embedding_model
                                })

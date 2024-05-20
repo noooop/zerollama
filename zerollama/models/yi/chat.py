@@ -33,7 +33,7 @@ class Yi_1_5(ChatModel):
 
 if __name__ == '__main__':
     import torch
-    from zerollama.inference_backend.transformers_green.chat import run_test
+    from zerollama.microservices.inference.transformers_green.chat import run_test
 
     for model_name in [#"01-ai/Yi-6B-Chat",
                        #"01-ai/Yi-6B-Chat-8bits",

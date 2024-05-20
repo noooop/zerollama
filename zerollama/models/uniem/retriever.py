@@ -12,7 +12,7 @@ class M3ERetriever(Retriever):
         ["moka-ai/m3e-base",  "110M", "768", "是", "是", "是", "是", "否", "是", "优"],
         ["moka-ai/m3e-large", "340M", "768", "是", "否", "是", "是", "否", "是", "优"],
     ]
-    inference_backend = "zerollama.inference_backend.sentence_transformer_green.retriever:SentenceTransformerRetriever"
+    inference_backend = "zerollama.microservices.inference.sentence_transformer_green.retriever:SentenceTransformerRetriever"
 
 
 if __name__ == '__main__':

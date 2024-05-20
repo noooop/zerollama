@@ -13,7 +13,7 @@ def run(model_name):
     nameserver.start()
     nameserver_port = nameserver.wait_port_available()
 
-    engine = ZeroServerProcess("zerollama.tasks.chat.inference_engine.server:ZeroChatInferenceEngine",
+    engine = ZeroServerProcess("zerollama.tasks.chat.engine.server:ZeroChatInferenceEngine",
                                server_kwargs={
                                    "model_name": model_name,
                                    "model_kwargs": {},
@@ -22,7 +22,7 @@ def run(model_name):
                                ignore_warnings=True)
     engine.start()
 
-    from zerollama.tasks.chat.inference_engine.client import ChatClient
+    from zerollama.tasks.chat.engine.client import ChatClient
     chat_client = ChatClient(nameserver_port=nameserver_port)
 
     print("正在加载模型...")

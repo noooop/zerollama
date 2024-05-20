@@ -1,9 +1,9 @@
 
 
 import numpy as np
-from zerollama.workflow.vector_database.interface import VectorDatabaseInterface
-from zerollama.workflow.vector_database.protocol import VectorDatabaseTopKRequest
-from zerollama.workflow.vector_database.protocol import TopKNode, VectorDatabaseTopKResponse
+from zerollama.microservices.vector_database.interface import VectorDatabaseInterface
+from zerollama.microservices.vector_database.protocol import VectorDatabaseTopKRequest
+from zerollama.microservices.vector_database.protocol import TopKNode, VectorDatabaseTopKResponse
 
 
 class BruteForceVectorDatabase(VectorDatabaseInterface):

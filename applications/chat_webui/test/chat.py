@@ -34,7 +34,7 @@ def test(x):
             {"role": "user", "content": prompt}
         ]
 
-        from zerollama.tasks.chat.inference_engine.client import ChatClient
+        from zerollama.tasks.chat.engine.client import ChatClient
 
         client = ChatClient()
         print("=" * 80)
@@ -55,7 +55,6 @@ def test(x):
         print("stream == True")
         for msg in client.stream_chat(model_name, messages):
             pprint(msg)
-
 
     for model_name in model_names:
         test_inference_engine(model_name)

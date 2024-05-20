@@ -2,7 +2,6 @@ from zerollama.core.framework.zero_manager.client import ZeroManagerClient
 from zerollama.tasks.retriever.protocol import MANAGER_NAME
 
 if __name__ == '__main__':
-    from pprint import pprint
     manager_client = ZeroManagerClient(MANAGER_NAME)
 
     print("=" * 80)
@@ -33,7 +32,7 @@ if __name__ == '__main__':
             "BGE M3 is an embedding model supporting dense retrieval, lexical matching and multi-vector interaction.",
             "BM25 is a bag-of-words retrieval function that ranks a set of documents based on the query terms appearing in each document"]
 
-        from zerollama.tasks.retriever.inference_engine.client import RetrieverClient
+        from zerollama.tasks.retriever.engine.client import RetrieverClient
 
         client = RetrieverClient()
         print("=" * 80)

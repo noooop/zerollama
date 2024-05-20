@@ -2,8 +2,8 @@
 from fastapi import FastAPI
 from fastapi.responses import StreamingResponse, JSONResponse
 
-from zerollama.tasks.chat.inference_engine.client import ChatClient
-from zerollama.tasks.retriever.inference_engine.client import RetrieverClient
+from zerollama.tasks.chat.engine.client import ChatClient
+from zerollama.tasks.retriever.engine.client import RetrieverClient
 
 from zerollama.tasks.chat.protocol import ChatCompletionStreamResponseDone
 from .protocol import (

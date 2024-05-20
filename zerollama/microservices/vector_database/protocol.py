@@ -3,7 +3,7 @@ from typing import Literal, Optional, List, Dict, Any, Union, Tuple
 
 from zerollama.core.framework.zero.protocol import ZeroServerResponseOk
 
-MANAGER_NAME = "ZeroVectorDatabaseInferenceManager"
+MANAGER_NAME = "ZeroVectorDatabaseManager"
 PROTOCOL = "vector_database"
 
 
