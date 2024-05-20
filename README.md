@@ -35,6 +35,7 @@
 ## Retriever(Embeddings) 模型
 - [bge-retrieval](https://github.com/noooop/zerollama/tree/main/zerollama/models/baai)
 - [bce-embedding](https://github.com/noooop/zerollama/tree/main/zerollama/models/bce)
+- [uniem(m3e)](https://github.com/noooop/zerollama/tree/main/zerollama/models/uniem)
 
 ## Reranker 模型
 - [bge-reranker](https://github.com/noooop/zerollama/tree/main/zerollama/models/baai)

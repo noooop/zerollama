@@ -2,9 +2,10 @@
 
 from zerollama.models.baai.retriever import BGERetriever
 from zerollama.models.bce.retriever import BCERetriever
+from zerollama.models.uniem.retriever import M3ERetriever
 
 
-MODELS = [BGERetriever, BCERetriever]
+MODELS = [BGERetriever, BCERetriever, M3ERetriever]
 MODELS_NAME_MAP = dict()
 MODELS_FAMILY_MAP = {m.family: m for m in MODELS}
 
