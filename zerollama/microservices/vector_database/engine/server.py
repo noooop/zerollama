@@ -5,36 +5,41 @@ from gevent.threadpool import ThreadPoolExecutor
 from zerollama.core.framework.zero.server import Z_MethodZeroServer
 from zerollama.microservices.vector_database.protocol import VectorDatabaseTopKRequest
 from zerollama.microservices.vector_database.protocol import ZeroServerResponseOk
+from zerollama.microservices.vector_database.collection import get_backend_by_name
 from zerollama.core.config.main import config_setup
 
 
 class ZeroVectorDatabaseEngine(Z_MethodZeroServer):
-    def __init__(self, vdb_class, filename, embedding_model, **kwargs):
-        self.vdb_class = vdb_class
-        self.filename = filename
+    def __init__(self, class_name, collection, embedding_model, **kwargs):
+        self.class_name = class_name
+        self.module_name = get_backend_by_name(class_name)
+
+        if self.module_name is None:
+            raise FileNotFoundError(f"VectorDatabase [{self.class_name}] not supported.")
+
+        self.collection = collection
         self.embedding_model = embedding_model
-        self.pickle_name = f"zerollama:{filename}:{embedding_model}:embeddings"
+        self.pickle_name = f"zerollama:{collection}:{embedding_model}:embeddings"
         self.hash = md5(self.pickle_name.encode("utf-8")).hexdigest()
 
         print("Use Vector Database backend:")
-        print(self.vdb_class)
+        print(f"{self.module_name}:{self.class_name}")
 
-        if isinstance(self.vdb_class, str):
-            module_name, class_name = self.vdb_class.split(":")
-            import importlib
-            module = importlib.import_module(module_name)
-            self.vdb_class = getattr(module, class_name)
+        import importlib
+        module = importlib.import_module(self.module_name)
+        self.vdb_class = getattr(module, class_name)
 
         self.vdb = None
         self.semaphore = Semaphore(self.vdb_class.n_concurrent)
 
+        kwargs.pop("name")
         Z_MethodZeroServer.__init__(self, name=self.hash, protocol=self.vdb_class.protocol,
                                     port=None, do_register=True, **kwargs)
 
     def init(self):
         config = config_setup()
 
-        file = list((config.rag.path / self.filename).glob("*.txt"))[0]
+        file = list((config.rag.path / self.collection).glob("*.txt"))[0]
         #book_name = file.stem.split("-")[0]
 
         self.vdb = self.vdb_class.load_from_file(f"{file.parent / (self.hash + '.pkl')}")
@@ -60,14 +65,14 @@ class ZeroVectorDatabaseEngine(Z_MethodZeroServer):
 if __name__ == '__main__':
     from zerollama.core.framework.zero.server import ZeroServerProcess
 
-    filename = "test"
+    collection = "test"
     embedding_model = "BAAI/bge-m3"
 
     nameserver = ZeroServerProcess("zerollama.core.framework.nameserver.server:ZeroNameServer")
     engine = ZeroServerProcess("zerollama.microservices.vector_database.engine.server:ZeroVectorDatabaseEngine",
                                server_kwargs={
-                                   "vdb_class": "zerollama.microservices.vector_database.use_bruteforce:BruteForceVectorDatabase",
-                                   "filename": filename,
+                                   "class_name": "BruteForceVectorDatabase",
+                                   "collection": collection,
                                    "embedding_model": embedding_model
                                })
 

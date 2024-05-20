@@ -14,12 +14,13 @@ class VectorDatabaseClient(ZeroClient):
     def __init__(self, nameserver_port=None):
         ZeroClient.__init__(self, self.protocol, nameserver_port)
 
-    def get_db_name(self, filename, embedding_model):
-        pickle_name = f"zerollama:{filename}:{embedding_model}:embeddings"
+    @staticmethod
+    def get_db_name(collection, embedding_model):
+        pickle_name = f"zerollama:{collection}:{embedding_model}:embeddings"
         name = md5(pickle_name.encode("utf-8")).hexdigest()
         return name
 
-    def top_k(self, filename, embedding_model, query_dense_vecs, k=10):
+    def top_k(self, collection, embedding_model, query_dense_vecs, k=10):
         method = "top_k"
         data = {"embedding_model": embedding_model,
                 "query_dense_vecs": query_dense_vecs,
@@ -27,7 +28,7 @@ class VectorDatabaseClient(ZeroClient):
         if CLIENT_VALIDATION:
             data = VectorDatabaseTopKRequest(**data).dict()
 
-        name = self.get_db_name(filename, embedding_model)
+        name = self.get_db_name(collection, embedding_model)
 
         rep = self.query(name, method, data)
         if rep is None:
@@ -46,14 +47,14 @@ if __name__ == '__main__':
 
     config = config_setup()
 
-    filename = "test"
+    collection = "test"
     embedding_model = "BAAI/bge-m3"
-    file = list((config.rag.path / filename).glob("*.txt"))[0]
+    file = list((config.rag.path / collection).glob("*.txt"))[0]
     book_name = file.stem.split("-")[0]
 
     client = VectorDatabaseClient()
 
-    name = client.get_db_name(filename, embedding_model)
+    name = client.get_db_name(collection, embedding_model)
 
     print("=" * 80)
     print(f"Wait VectorDatabase available")
@@ -69,7 +70,7 @@ if __name__ == '__main__':
     data = pickle.load(open(f"{file.parent / (name + '.pkl')}", "rb"))
     embeddings = data["embeddings"]
 
-    top_k = client.top_k(filename, embedding_model, query_dense_vecs=embeddings[10], k=10)
+    top_k = client.top_k(collection, embedding_model, query_dense_vecs=embeddings[10], k=10)
 
     for n in top_k.data:
         print(n.score)

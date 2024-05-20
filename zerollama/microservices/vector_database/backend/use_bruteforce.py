@@ -28,12 +28,12 @@ if __name__ == '__main__':
 
     config = config_setup()
 
-    filename = "test"
+    collection = "test"
     embedding_model = "BAAI/bge-m3"
-    file = list((config.rag.path / filename).glob("*.txt"))[0]
+    file = list((config.rag.path / collection).glob("*.txt"))[0]
     book_name = file.stem.split("-")[0]
 
-    pickle_name = md5(f"zerollama:{file.stem}:{embedding_model}:embeddings".encode("utf-8")).hexdigest()
+    pickle_name = md5(f"zerollama:{collection}:{embedding_model}:embeddings".encode("utf-8")).hexdigest()
 
     vdb = BruteForceVectorDatabase.load_from_file(f"{file.parent / (pickle_name + '.pkl')}")
 
