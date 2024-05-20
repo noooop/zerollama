@@ -38,6 +38,7 @@ class ZeroServer(object):
             except zmq.error.ZMQError as e:
                 self.port = port
                 self.address_in_use = True
+                share_port.value = -2
                 return
 
         self.port = port
