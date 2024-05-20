@@ -8,12 +8,12 @@ from zerollama.tasks.chat.protocol import ZeroServerResponseOk
 class ZeroInferenceEngine(Z_MethodZeroServer):
     get_model_by_name = None
 
-    def __init__(self, model_name, model_kwargs, **kwargs):
-        self.model_name = model_name
-        self.model_class = self.get_model_by_name(model_name)
+    def __init__(self, name, engine_kwargs, **kwargs):
+        self.model_name = name
+        self.model_class = self.get_model_by_name(name)
 
         if self.model_class is None:
-            raise ValueError(f"[{model_name}] not support.")
+            raise ValueError(f"[{self.model_name}] not support.")
 
         self.inference_backend = self.model_class.inference_backend
 
@@ -26,11 +26,11 @@ class ZeroInferenceEngine(Z_MethodZeroServer):
             module = importlib.import_module(module_name)
             self.inference_backend = getattr(module, class_name)
 
-        self.inference = self.inference_backend(model_name=model_name, **model_kwargs)
+        self.inference = self.inference_backend(model_name=self.model_name, **engine_kwargs)
 
         self.semaphore = Semaphore(self.inference.n_concurrent)
 
-        Z_MethodZeroServer.__init__(self, name=model_name, protocol=self.inference.protocol,
+        Z_MethodZeroServer.__init__(self, name=self.model_name, protocol=self.inference.protocol,
                                     port=None, do_register=True, **kwargs)
 
     def init(self):

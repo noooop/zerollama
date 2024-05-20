@@ -13,9 +13,9 @@ class ZeroManagerClient(ZeroClient):
         self.name = name
         ZeroClient.__init__(self, self.protocol)
 
-    def start(self, model_name, model_kwargs=None):
-        data = {"name": model_name,
-                "model_kwargs": model_kwargs or {}}
+    def start(self, name, kwargs=None):
+        data = {"name": name,
+                "kwargs": kwargs or {}}
         method = "start"
 
         if CLIENT_VALIDATION:
@@ -23,10 +23,10 @@ class ZeroManagerClient(ZeroClient):
 
         return self.query(self.name, method, data)
 
-    def terminate(self, model_name):
+    def terminate(self, name):
         method = "terminate"
         data = {
-            "name": model_name,
+            "name": name,
         }
         if CLIENT_VALIDATION:
             data = TerminateRequest(**data).dict()
@@ -40,21 +40,21 @@ class ZeroManagerClient(ZeroClient):
         method = "statuses"
         return self.query(self.name, method)
 
-    def status(self, model_name):
+    def status(self, name):
         method = "status"
         data = {
-            "name": model_name,
+            "name": name,
         }
         if CLIENT_VALIDATION:
             data = StatusRequest(**data).dict()
         return self.query(self.name, method, data)
 
-    def wait_service_status(self, model_name, timeout=10000, verbose=True):
+    def wait_service_status(self, name, timeout=10000, verbose=True):
         t = timeout + time.time()
 
         while time.time() < t:
             time.sleep(0.5)
-            rep = self.status(model_name)
+            rep = self.status(name)
             if rep.state == "error":
                 continue
 
@@ -62,14 +62,14 @@ class ZeroManagerClient(ZeroClient):
             exception = rep.msg["exception"]
             if status in ["prepare", "started"]:
                 if verbose:
-                    print(f"{model_name} {status}.")
+                    print(f"{name} {status}.")
             elif status in ["error"]:
                 if verbose:
-                    print(f"{model_name} {status}. {exception}.")
+                    print(f"{name} {status}. {exception}.")
                 return status, exception
             elif status in ["running"]:
                 if verbose:
-                    print(f"{model_name} available now.")
+                    print(f"{name} available now.")
                 return status, exception
 
         raise Timeout
@@ -110,7 +110,7 @@ if __name__ == '__main__':
             {"role": "user", "content": prompt}
         ]
 
-        from zerollama.tasks.chat.inference_engine.client import ChatClient
+        from zerollama.tasks.chat.engine.client import ChatClient
 
         client = ChatClient()
         print("=" * 80)
