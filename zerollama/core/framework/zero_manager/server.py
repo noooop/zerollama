@@ -8,14 +8,10 @@ from zerollama.core.framework.zero_manager.protocol import StartRequest, Termina
 class ZeroManager(Z_MethodZeroServer):
     protocol = "manager"
 
-    def __init__(self, name, engine_kwargs=None, server_class=None, **kwargs):
+    def __init__(self, name, server_class=None, **kwargs):
         super().__init__(name=name, port=None, do_register=True, **kwargs)
         self._engines = None
-
-        if engine_kwargs is not None and "server_class" in engine_kwargs:
-            self.server_class = engine_kwargs["server_class"]
-        else:
-            self.server_class = server_class
+        self.server_class = server_class
 
         if isinstance(self.server_class, str):
             self.module_name, self.class_name = self.server_class.split(":")
@@ -40,10 +36,10 @@ class ZeroManager(Z_MethodZeroServer):
             self.zero_send(req, rep)
             return
 
-        server_kwargs = {"name": kwargs.name,
-                         "engine_kwargs": kwargs.engine_kwargs}
+        if "name" not in kwargs.engine_kwargs:
+            kwargs.engine_kwargs["name"] = kwargs.name
 
-        engine = ZeroServerProcess(self.server_class, server_kwargs)
+        engine = ZeroServerProcess(self.server_class, kwargs.engine_kwargs)
         self._engines[kwargs.name] = engine
 
         with ThreadPoolExecutor(1) as executor:

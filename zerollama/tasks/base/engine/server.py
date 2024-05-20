@@ -8,7 +8,8 @@ from zerollama.tasks.chat.protocol import ZeroServerResponseOk
 class ZeroInferenceEngine(Z_MethodZeroServer):
     get_model_by_name = None
 
-    def __init__(self, name, engine_kwargs, **kwargs):
+    def __init__(self, name, engine_kwargs=None, **kwargs):
+        engine_kwargs = engine_kwargs or {}
         self.model_name = name
         self.model_class = self.get_model_by_name(name)
 
