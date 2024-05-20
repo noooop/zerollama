@@ -6,6 +6,7 @@ import signal
 import greenlet
 import traceback
 import zmq.green as zmq
+from zmq.error import ZMQError
 from gevent.pool import Pool
 from multiprocessing import Event, Process, Value, Pipe, Manager
 
@@ -35,7 +36,7 @@ class ZeroServer(object):
         else:
             try:
                 socket.bind(f"tcp://*:{port}")
-            except zmq.error.ZMQError as e:
+            except ZMQError as e:
                 self.port = port
                 self.address_in_use = True
                 share_port.value = -2
@@ -95,8 +96,7 @@ class ZeroServer(object):
 
     def run(self):
         if self.address_in_use:
-            print(f"Address in use (addr='tcp://*:{self.port}')")
-            return
+            raise RuntimeError(f"Address in use (addr='tcp://*:{self.port}')")
 
         if self.do_register:
             self._register()
