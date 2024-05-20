@@ -5,7 +5,7 @@ from zerollama.tasks.reranker.protocol import ZeroServerResponseOk
 from zerollama.tasks.base.engine.server import ZeroInferenceEngine
 
 
-class ZeroRetrieverInferenceEngine(ZeroInferenceEngine):
+class ZeroRerankerInferenceEngine(ZeroInferenceEngine):
     get_model_by_name = staticmethod(get_model_by_name)
 
     def inference_worker(self, req):
@@ -19,10 +19,10 @@ if __name__ == '__main__':
     from zerollama.core.framework.zero.server import ZeroServerProcess
 
     nameserver = ZeroServerProcess("zerollama.core.framework.nameserver.server:ZeroNameServer")
-    engine = ZeroServerProcess("zerollama.tasks.reranker.engine.server:ZeroRetrieverInferenceEngine",
+    engine = ZeroServerProcess("zerollama.tasks.reranker.engine.server:ZeroRerankerInferenceEngine",
                                server_kwargs={
-                                   "model_name": "BAAI/bge-reranker-v2-m3",
-                                   "model_kwargs": {}
+                                   "name": "BAAI/bge-reranker-v2-m3",
+                                   "engine_kwargs": {}
                                })
 
     nameserver.start()

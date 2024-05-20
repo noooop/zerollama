@@ -21,8 +21,8 @@ if __name__ == '__main__':
     nameserver = ZeroServerProcess("zerollama.core.framework.nameserver.server:ZeroNameServer")
     engine = ZeroServerProcess("zerollama.tasks.retriever.engine.server:ZeroRetrieverInferenceEngine",
                                server_kwargs={
-                                   "model_name": "BAAI/bge-m3",
-                                   "model_kwargs": {}
+                                   "name": "BAAI/bge-m3",
+                                   "engine_kwargs": {}
                                })
 
     nameserver.start()

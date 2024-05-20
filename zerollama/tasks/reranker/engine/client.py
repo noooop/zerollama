@@ -42,7 +42,7 @@ if __name__ == '__main__':
     print(client.get_services(model_name))
 
     print("=" * 80)
-    print('ZeroRetrieverInferenceEngine support_methods')
+    print('ZeroRerankerInferenceEngine support_methods')
     print(client.support_methods(model_name))
     print(client.info(model_name))
 
