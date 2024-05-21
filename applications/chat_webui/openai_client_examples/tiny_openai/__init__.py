@@ -1,7 +1,7 @@
 import json
 
 import requests
-from zerollama.entrypoints.openai_compatible.protocol import (
+from zerollama.microservices.entrypoints.openai_compatible.protocol import (
     ChatCompletionRequest,
     ChatCompletionResponse,
     ChatCompletionResponseStreamChoice,

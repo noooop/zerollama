@@ -3,11 +3,15 @@ from multiprocess import Process
 
 
 class HttpEntrypoint(Process):
-    def __init__(self, server_class, server_kwargs=None):
+    def __init__(self, name, server_class, server_kwargs, **kwargs):
         super().__init__()
 
+        self.name = name
         self.server_class = server_class
         self.server_kwargs = server_kwargs or {}
+
+    def init(self):
+        pass
 
     def run(self):
         import uvicorn
@@ -18,7 +22,7 @@ class HttpEntrypoint(Process):
         self.server_kwargs["host"] = host
         self.server_kwargs["port"] = port
 
-        print("HttpEntrypoints running!", host, port)
+        print(f"HttpEntrypoints {self.name} running!", host, port)
 
         try:
             uvicorn.run(self.server_class, **self.server_kwargs)
@@ -36,8 +40,10 @@ class HttpEntrypoint(Process):
 
 
 if __name__ == '__main__':
-    gateway = HttpEntrypoint(server_class="zerollama.tasks.chat.entrypoints.ollama_compatible.api:app",
-                             server_kwargs={"port": 11434, "host": "127.0.0.1"})
+    gateway = HttpEntrypoint(
+        name="ollama_compatible",
+        server_class="zerollama.microservices.entrypoints.ollama_compatible.api:app",
+        server_kwargs={"port": 11434, "host": "127.0.0.1"})
     gateway.start()
     gateway.wait()
 

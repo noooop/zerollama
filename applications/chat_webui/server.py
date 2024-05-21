@@ -15,11 +15,15 @@ def setup():
                                             "name": "ZeroRetrieverInferenceManager",
                                             "server_class": "zerollama.tasks.retriever.engine.server:ZeroRetrieverInferenceEngine"
                                         })
-    entrypoint1 = HttpEntrypoint(server_class="zerollama.microservices.entrypoints.ollama_compatible.api:app",
-                                 server_kwargs={"port": 11434})
+    entrypoint1 = HttpEntrypoint(
+        name="ollama_compatible",
+        server_class="zerollama.microservices.entrypoints.ollama_compatible.api:app",
+        server_kwargs={"port": 11434})
 
-    entrypoint2 = HttpEntrypoint(server_class="zerollama.microservices.entrypoints.openai_compatible.api:app",
-                                 server_kwargs={"port": 8080})
+    entrypoint2 = HttpEntrypoint(
+        name="openai_compatible",
+        server_class="zerollama.microservices.entrypoints.openai_compatible.api:app",
+        server_kwargs={"port": 8080})
 
     handle = [nameserver, chat_manager, retriever_manager, entrypoint1, entrypoint2]
     return handle
