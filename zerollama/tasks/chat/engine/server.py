@@ -28,8 +28,8 @@ if __name__ == '__main__':
     nameserver = ZeroServerProcess("zerollama.core.framework.nameserver.server:ZeroNameServer")
     engine = ZeroServerProcess("zerollama.tasks.chat.engine.server:ZeroChatInferenceEngine",
                                server_kwargs={
-                                   "model_name": "Qwen/Qwen1.5-0.5B-Chat",
-                                   "model_kwargs": {}
+                                   "name": "Qwen/Qwen1.5-0.5B-Chat",
+                                   "engine_kwargs": {}
                                })
 
     nameserver.start()

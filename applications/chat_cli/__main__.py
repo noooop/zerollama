@@ -15,8 +15,7 @@ def run(model_name):
 
     engine = ZeroServerProcess("zerollama.tasks.chat.engine.server:ZeroChatInferenceEngine",
                                server_kwargs={
-                                   "model_name": model_name,
-                                   "model_kwargs": {},
+                                   "name": model_name,
                                    "nameserver_port": nameserver_port
                                },
                                ignore_warnings=True)
