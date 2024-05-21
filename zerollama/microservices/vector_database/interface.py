@@ -1,7 +1,7 @@
 
 import pickle
 from zerollama.microservices.vector_database.protocol import PROTOCOL
-from zerollama.microservices.vector_database.protocol import VectorDatabaseTopKRequest, VectorDatabaseTopKResponse
+from zerollama.microservices.vector_database.protocol import VectorDatabaseTopKResponse
 
 
 class VectorDatabaseInterface(object):
@@ -23,7 +23,7 @@ class VectorDatabaseInterface(object):
         """
         raise NotImplementedError
 
-    def top_k(self, req: VectorDatabaseTopKRequest) -> VectorDatabaseTopKResponse:
+    def top_k(self, query_dense_vecs, embedding_model, k=10) -> VectorDatabaseTopKResponse:
         raise NotImplementedError
 
     @classmethod

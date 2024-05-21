@@ -32,13 +32,13 @@ def text_window_parser(file, window_size=4):
 
 
 if __name__ == '__main__':
-    from pathlib import Path
+    from zerollama.core.config.main import config_setup
 
-    rag_path = Path.home() / ".zerollama/rag/documents"
+    config = config_setup()
 
-    for dir in rag_path.glob("*"):
+    for dir in config.rag.path.glob("*"):
         print(dir)
-        for file in dir.glob("*.txt"):
+        for file in (dir / "text").glob("*.txt"):
             lines, sentence_list, nodes = text_window_parser(file)
             book_name = file.stem.split("-")[0]
             print(book_name)

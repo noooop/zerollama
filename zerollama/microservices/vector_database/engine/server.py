@@ -19,8 +19,7 @@ class ZeroVectorDatabaseEngine(Z_MethodZeroServer):
 
         self.collection = collection
         self.embedding_model = embedding_model
-        self.pickle_name = f"zerollama:{collection}:{embedding_model}:embeddings"
-        self.hash = md5(self.pickle_name.encode("utf-8")).hexdigest()
+        self.pickle_name = md5(f"zerollama:{self.collection}:{self.embedding_model}:embeddings".encode("utf-8")).hexdigest()
 
         print("Use Vector Database backend:")
         print(f"{self.module_name}:{self.class_name}")
@@ -32,17 +31,16 @@ class ZeroVectorDatabaseEngine(Z_MethodZeroServer):
         self.vdb = None
         self.semaphore = Semaphore(self.vdb_class.n_concurrent)
 
-        kwargs.pop("name")
-        Z_MethodZeroServer.__init__(self, name=self.hash, protocol=self.vdb_class.protocol,
+        kwargs.pop("name", None)
+        Z_MethodZeroServer.__init__(self, name=self.pickle_name, protocol=self.vdb_class.protocol,
                                     port=None, do_register=True, **kwargs)
 
     def init(self):
         config = config_setup()
 
-        file = list((config.rag.path / self.collection).glob("*.txt"))[0]
-        #book_name = file.stem.split("-")[0]
+        pickle_file = f"{config.rag.path / self.collection / 'embeddings' / (self.pickle_name + '.pkl')}"
 
-        self.vdb = self.vdb_class.load_from_file(f"{file.parent / (self.hash + '.pkl')}")
+        self.vdb = self.vdb_class.load_from_file(pickle_file)
         print(f"{self.vdb.__class__.__name__}: is running!", "port:", self.port)
 
     def z_top_k(self, req):
@@ -53,7 +51,7 @@ class ZeroVectorDatabaseEngine(Z_MethodZeroServer):
 
     def worker(self, req):
         data = VectorDatabaseTopKRequest(**req.data)
-        response = self.vdb.top_k(data)
+        response = self.vdb.top_k(**data.dict())
         rep = ZeroServerResponseOk(msg=response)
         self.zero_send(req, rep)
 

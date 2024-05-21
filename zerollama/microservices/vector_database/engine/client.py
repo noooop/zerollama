@@ -49,8 +49,8 @@ if __name__ == '__main__':
 
     collection = "test"
     embedding_model = "BAAI/bge-m3"
-    file = list((config.rag.path / collection).glob("*.txt"))[0]
-    book_name = file.stem.split("-")[0]
+    pickle_name = md5(f"zerollama:{collection}:{embedding_model}:embeddings".encode("utf-8")).hexdigest()
+    pickle_file = f"{config.rag.path / collection / 'embeddings' / (pickle_name + '.pkl')}"
 
     client = VectorDatabaseClient()
 
@@ -67,7 +67,7 @@ if __name__ == '__main__':
     print(client.support_methods(name))
     print(client.info(name))
 
-    data = pickle.load(open(f"{file.parent / (name + '.pkl')}", "rb"))
+    data = pickle.load(open(pickle_file, "rb"))
     embeddings = data["embeddings"]
 
     top_k = client.top_k(collection, embedding_model, query_dense_vecs=embeddings[10], k=10)

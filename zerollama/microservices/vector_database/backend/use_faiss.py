@@ -1,6 +1,5 @@
 
 from zerollama.microservices.vector_database.interface import VectorDatabaseInterface
-from zerollama.microservices.vector_database.protocol import VectorDatabaseTopKRequest
 from zerollama.microservices.vector_database.protocol import TopKNode, VectorDatabaseTopKResponse
 
 
@@ -23,17 +22,17 @@ class FaissVectorDatabase(VectorDatabaseInterface):
 
         self.index.add(self.embeddings)
 
-    def top_k(self, req: VectorDatabaseTopKRequest):
-        if req.embedding_model != self.embedding_model:
-            raise ValueError(f"[{req.embedding_model}] not support")
+    def top_k(self, query_dense_vecs, embedding_model, k=10):
+        if embedding_model != self.embedding_model:
+            raise ValueError(f"[{embedding_model}] not support")
 
         if self.Index == "IndexHNSWFlat":
-            distances, index = self.index.search(req.query_dense_vecs[None, :], req.k)
+            distances, index = self.index.search(query_dense_vecs[None, :], k)
             data = [TopKNode(index=i, score=1-score, node=self.nodes[int(i)])
                     for i, score in zip(index[0], distances[0])]
 
         elif self.Index == "IndexFlatIP":
-            distances, index = self.index.search(req.query_dense_vecs[None, :], req.k)
+            distances, index = self.index.search(query_dense_vecs[None, :], k)
 
             data = [TopKNode(index=i, score=score, node=self.nodes[int(i)])
                     for i, score in zip(index[0], distances[0])]
@@ -51,16 +50,12 @@ if __name__ == '__main__':
 
     collection = "test"
     embedding_model = "BAAI/bge-m3"
-    file = list((config.rag.path / collection).glob("*.txt"))[0]
-    book_name = file.stem.split("-")[0]
-
     pickle_name = md5(f"zerollama:{collection}:{embedding_model}:embeddings".encode("utf-8")).hexdigest()
+    pickle_file = f"{config.rag.path / collection / 'embeddings' / (pickle_name + '.pkl')}"
 
-    vdb = FaissVectorDatabase.load_from_file(f"{file.parent / (pickle_name + '.pkl')}")
+    vdb = FaissVectorDatabase.load_from_file(pickle_file)
 
-    req = VectorDatabaseTopKRequest(embedding_model=embedding_model, query_dense_vecs=vdb.embeddings[10], k=10)
-
-    top_k = vdb.top_k(req)
+    top_k = vdb.top_k(embedding_model=embedding_model, query_dense_vecs=vdb.embeddings[10], k=10)
 
     for n in top_k.data:
         print(n.score)

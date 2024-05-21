@@ -1,6 +1,5 @@
 
 from zerollama.microservices.vector_database.interface import VectorDatabaseInterface
-from zerollama.microservices.vector_database.protocol import VectorDatabaseTopKRequest
 from zerollama.microservices.vector_database.protocol import TopKNode, VectorDatabaseTopKResponse
 
 
@@ -20,13 +19,13 @@ class ChromadbVectorDatabase(VectorDatabaseInterface):
         #self.embeddings = None
         self.nodes = None
 
-    def top_k(self, req: VectorDatabaseTopKRequest):
-        if req.embedding_model != self.embedding_model:
-            raise ValueError(f"[{req.embedding_model}] not support")
+    def top_k(self, query_dense_vecs, embedding_model, k=10):
+        if embedding_model != self.embedding_model:
+            raise ValueError(f"[{embedding_model}] not support")
 
         results = self.collection.query(
-            query_embeddings=req.query_dense_vecs.tolist(),
-            n_results=req.k,
+            query_embeddings=query_dense_vecs.tolist(),
+            n_results=k,
             include=['documents', 'distances']
         )
 
@@ -46,16 +45,12 @@ if __name__ == '__main__':
 
     collection = "test"
     embedding_model = "BAAI/bge-m3"
-    file = list((config.rag.path / collection).glob("*.txt"))[0]
-    book_name = file.stem.split("-")[0]
-
     pickle_name = md5(f"zerollama:{collection}:{embedding_model}:embeddings".encode("utf-8")).hexdigest()
+    pickle_file = f"{config.rag.path / collection / 'embeddings' / (pickle_name + '.pkl')}"
 
-    vdb = ChromadbVectorDatabase.load_from_file(f"{file.parent / (pickle_name + '.pkl')}")
+    vdb = ChromadbVectorDatabase.load_from_file(pickle_file)
 
-    req = VectorDatabaseTopKRequest(embedding_model=embedding_model, query_dense_vecs=vdb.embeddings[10], k=10)
-
-    top_k = vdb.top_k(req)
+    top_k = vdb.top_k(embedding_model=embedding_model, query_dense_vecs=vdb.embeddings[10], k=10)
 
     for n in top_k.data:
         print(n.score)
