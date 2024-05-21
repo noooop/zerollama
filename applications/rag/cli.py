@@ -33,9 +33,10 @@ def main():
 
 main.add_command(chat)
 main.add_command(retriever)
-main.add_command(retriever)
 main.add_command(reranker)
+
 main.add_command(deploy)
+main.add_command(server)
 
 
 if __name__ == '__main__':

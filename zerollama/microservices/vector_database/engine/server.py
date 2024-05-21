@@ -56,7 +56,10 @@ class ZeroVectorDatabaseEngine(Z_MethodZeroServer):
         self.zero_send(req, rep)
 
     def z_info(self, req):
-        rep = ZeroServerResponseOk(msg={"vector database class": self.vdb.__class__.__name__})
+        rep = ZeroServerResponseOk(msg={
+            "class_name": self.class_name,
+            "collection": self.collection,
+            "embedding_model": self.embedding_model})
         self.zero_send(req, rep)
 
 

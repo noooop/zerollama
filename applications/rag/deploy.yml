@@ -11,4 +11,4 @@ vector_database:
   backend: "BruteForceVectorDatabase"
 
 documents:
-  collections: ["test"]
+  collections: ["test_collection"]
