@@ -41,13 +41,15 @@ class ChatClient(ZeroClient):
 
         for rep in self.stream_query(name, method, data, **kwargs):
             if rep is None:
-                return rep
+                raise RuntimeError(f"Chat [{name}] server not found.")
 
             if rep.state == "ok":
                 if rep.msg["finish_reason"] is None:
                     rep.msg = ChatCompletionStreamResponse(**rep.msg)
                 else:
                     rep.msg = ChatCompletionStreamResponseDone(**rep.msg)
+            else:
+                raise RuntimeError(f"Chat [{name}] error, with error msg [{rep.msg}]")
             yield rep
 
 

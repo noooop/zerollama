@@ -32,10 +32,12 @@ class VectorDatabaseClient(ZeroClient):
 
         rep = self.query(name, method, data)
         if rep is None:
-            return rep
+            raise RuntimeError(f"VectorDatabase [{collection}] server not found.")
 
         if rep.state == "ok":
             rep = VectorDatabaseTopKResponse(**rep.msg)
+        else:
+            raise RuntimeError(f"VectorDatabase [{collection}] error, with error msg [{rep.msg}]")
         return rep
 
 

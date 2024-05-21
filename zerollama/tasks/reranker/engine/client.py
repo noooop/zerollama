@@ -23,10 +23,12 @@ class RerankerClient(ZeroClient):
 
         rep = self.query(name, method, data)
         if rep is None:
-            return rep
+            raise RuntimeError(f"Reranker [{name}] server not found.")
 
         if rep.state == "ok":
             rep = RerankerResponse(**rep.msg)
+        else:
+            raise RuntimeError(f"Reranker [{name}] error, with error msg [{rep.msg}]")
         return rep
 
 

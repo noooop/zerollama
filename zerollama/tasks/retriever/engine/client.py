@@ -23,10 +23,12 @@ class RetrieverClient(ZeroClient):
 
         rep = self.query(name, method, data)
         if rep is None:
-            return rep
+            raise RuntimeError(f"Retriever [{name}] server not found.")
 
         if rep.state == "ok":
             rep = RetrieverResponse(**rep.msg)
+        else:
+            raise RuntimeError(f"Retriever [{name}] error, with error msg [{rep.msg}]")
         return rep
 
 
