@@ -18,7 +18,7 @@ class ZeroManager(Z_MethodZeroServer):
 
     def init(self):
         self._engines = {}
-        print(f"{self.__class__.__name__} for {self.class_name} running!", "port:", self.port)
+        print(f"{self.__class__.__name__} for {self.name} running!", "port:", self.port)
 
     def clean_up(self):
         for k, engine in self._engines.items():
