@@ -21,7 +21,8 @@
 
 # 应用
 1. [与大模型对话 客户端](./applications/chat_cli)
-2. [与大模型对话 webui 浏览器插件 vscode插件](./applications/chat_webui)
+2. [与大模型对话 webui](./applications/chat_webui)
+3. [检索增强生成 (RAG)](./applications/rag)
 
 # 支持的模型
 ## Chat 模型
