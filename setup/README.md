@@ -27,13 +27,13 @@ $ conda env create -f environment_windows.yml
 ## 手动配置
 ```
 # 创建虚拟环境
-$ conda create -n zerollama_v0.2 python=3.11 anaconda
+$ conda create -n zerollama_v0.3 python=3.11 anaconda
 
 # 查看虚拟环境
 $ conda env list 
 
 # 激活虚拟环境
-$ conda activate zerollama_v0.2
+$ conda activate zerollama_v0.3
 
 # 安装依赖, 只会安装在这个虚拟环境里
 # pip install .....
@@ -42,7 +42,7 @@ $ conda activate zerollama_v0.2
 $ conda deactivate
 
 # 删除虚拟环境
-conda remove -n zerollama_v0.2 --all
+conda remove -n zerollama_v0.3 --all
 ```
 
 ## 安装依赖
@@ -105,7 +105,10 @@ autoawq-0.2.4 (Pin transformers>=4.35.0,<=4.38.2) [详情](https://github.com/ca
 $ git clone https://github.com/noooop/zerollama.git
 ```
 
-# 安装 llama-cpp-python
+# 其他需要手工安装的库
+很遗憾，并不是所有库都可以自动安装好，有些库有复杂的依赖，或者跟其他库之间有冲突，需要人工安装
+
+## 安装 llama-cpp-python
 使用 cuda 12.1 与 pytorch 2.2 一致
 
 [下载并安装 CUDA Toolkit 12.1](https://developer.nvidia.com/cuda-12-1-1-download-archive)
@@ -120,6 +123,43 @@ pip install llama-cpp-python==0.2.69 \
 以下版本经过测试
 
 llama-cpp-python==0.2.69 + cuda 12.1
+
+## 安装 BCEmbedding
+
+[BCEmbedding](https://github.com/noooop/zerollama/tree/main/zerollama/models/bce) 依赖 transformers>=4.35.0,<4.37.0
+
+[qwen1.5](https://github.com/noooop/zerollama/tree/main/zerollama/models/qwen) 依赖 transformers>=4.37.0
+
+本项目在 transformers==4.38.2 下测试，并考虑下个版本使用最新的 transformers==v4.41.0。
+
+实测先安装BCEmbedding，然后再升级到transformers==4.38.2也是可用的。
+
+```
+pip install BCEmbedding==0.1.5
+```
+
+## 向量数据库
+
+### faiss
+```
+conda install -c pytorch faiss-cpu
+```
+
+### hnswlib
+[Building AVX Extensions ](https://github.com/chroma-core/hnswlib?tab=readme-ov-file#building-avx-extensions)
+
+For maximum compatibility, the distributed wheels are not compiled to make use of Advanced Vector Extensions (AVX). If your hardware supports AVX, you may get better performance by recompiling this library on the machine on which it is intended to run.
+
+```
+pip install chroma-hnswlib==0.7.3
+```
+
+### chromadb
+
+chromadb 依赖 hnswlib， 所以使用Building AVX Extensions 会提高性能。
+```
+pip install chromadb==0.5.0
+```
 
 # 切换到工作目录
 项目默认的工作目录是项目根目录
