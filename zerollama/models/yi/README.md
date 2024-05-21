@@ -10,10 +10,25 @@ Yi 系列模型是 [01.AI](https://01.ai/) 从零训练的下一代开源大语�
 
 - （致谢 Llama ）感谢 Transformer 和 Llama 开源社区，不仅简化了开发者从零开始构建大模型的工作，开发者还可以利用 Llama 生态中现有的工具、库和资源，提高开发效率。
 
+
+# Yi-1.5
+
+##  TL;DR
+
+Yi-1.5 is an upgraded version of Yi. It is continuously pre-trained on Yi with a high-quality corpus of 500B tokens and fine-tuned on 3M diverse fine-tuning samples. 
+
+Compared with Yi, Yi-1.5 delivers stronger performance in coding, math, reasoning, and instruction-following capability, while still maintaining excellent capabilities in language understanding, commonsense reasoning, and reading comprehension. 
+
+Yi-1.5 comes in 3 model sizes: 34B, 9B, and 6B. For model details and benchmarks, see [Model Card](https://huggingface.co/collections/01-ai/yi-15-2024-05-663f3ecab5f815a3eaca7ca8).
+
+
+
 ## Todo
 GPTQ-Int8 模型报错 同 qwen 1.5
 
 ## News
+- 2024-05-13: The Yi-1.5 series models are open-sourced, further improving coding, math, reasoning, and instruction-following abilities. 
+
 🎯 2024-03-16：发布并开源了 Yi-9B-200K 模型。
 
 🎯 2024-03-08: 发布了 Yi 技术报告！

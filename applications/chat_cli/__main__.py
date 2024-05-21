@@ -1,5 +1,6 @@
 
 from zerollama.tasks.chat.cli import click, list_families, list_family, pull
+from zerollama.tasks.chat.protocol import ChatCompletionStreamResponseDone
 
 
 @click.command()
@@ -12,16 +13,15 @@ def run(model_name):
     nameserver.start()
     nameserver_port = nameserver.wait_port_available()
 
-    engine = ZeroServerProcess("zerollama.tasks.chat.inference_engine.server:ZeroChatInferenceEngine",
+    engine = ZeroServerProcess("zerollama.tasks.chat.engine.server:ZeroChatInferenceEngine",
                                server_kwargs={
-                                   "model_name": model_name,
-                                   "model_kwargs": {},
+                                   "name": model_name,
                                    "nameserver_port": nameserver_port
                                },
                                ignore_warnings=True)
     engine.start()
 
-    from zerollama.tasks.chat.inference_engine.client import ChatClient
+    from zerollama.tasks.chat.engine.client import ChatClient
     chat_client = ChatClient(nameserver_port=nameserver_port)
 
     print("正在加载模型...")
@@ -55,10 +55,13 @@ def run(model_name):
                         return
                     rep = rep.msg
 
-                    if not rep.done:
-                        print(rep.content, end="", flush=True)
-                        content += rep.content
-                print("\n", flush=True)
+                    if isinstance(rep, ChatCompletionStreamResponseDone):
+                        print("\n", flush=True)
+                        break
+                    else:
+                        print(rep.delta_content, end="", flush=True)
+                        content += rep.delta_content
+
                 messages.append({"role": "assistant", "content": content})
                 i += 1
     except (KeyboardInterrupt, EOFError):

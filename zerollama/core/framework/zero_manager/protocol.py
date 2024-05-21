@@ -14,11 +14,7 @@ from zerollama.tasks.chat.protocol import ChatCompletionResponse, ChatCompletion
 
 class StartRequest(BaseModel):
     name: str
-    model_kwargs: dict = Field(default_factory=dict)
-
-    model_config = ConfigDict(
-        protected_namespaces=()
-    )
+    engine_kwargs: dict = Field(default_factory=dict)
 
 
 class TerminateRequest(BaseModel):

@@ -29,12 +29,17 @@
 - [MiniCPM](https://github.com/noooop/zerollama/tree/main/zerollama/models/openbmb)
 - [Qwen1.5](https://github.com/noooop/zerollama/tree/main/zerollama/models/qwen)
 - [Yi](https://github.com/noooop/zerollama/tree/main/zerollama/models/yi)
-- [llama3](https://github.com/noooop/zerollama/tree/main/zerollama/models/llama)
-- [llama3zh](https://github.com/noooop/zerollama/tree/main/zerollama/models/llama)
-
+- [llama3](https://github.com/noooop/zerollama/tree/main/zerollama/models/llama) [llama3zh](https://github.com/noooop/zerollama/tree/main/zerollama/models/llama)
+- [XVERSE](https://github.com/noooop/zerollama/tree/main/zerollama/models/xverse)
 
 ## Retriever(Embeddings) 模型
-- [BGE](https://github.com/noooop/zerollama/tree/main/zerollama/models/baai)
+- [bge-retrieval](https://github.com/noooop/zerollama/tree/main/zerollama/models/baai)
+- [bce-embedding](https://github.com/noooop/zerollama/tree/main/zerollama/models/bce)
+- [uniem(m3e)](https://github.com/noooop/zerollama/tree/main/zerollama/models/uniem)
+
+## Reranker 模型
+- [bge-reranker](https://github.com/noooop/zerollama/tree/main/zerollama/models/baai)
+- [bce-reranker](https://github.com/noooop/zerollama/tree/main/zerollama/models/bce)
 
 ## Contribute
 贡献代码请交逻辑清晰思路、简单直接的代码、不要有魔法，甚至可以牺牲一部分性能换取可读性

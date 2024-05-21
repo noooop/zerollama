@@ -1,23 +1,31 @@
-import time
-import zmq
+
 import json
+import time
+import gevent
+import signal
+import greenlet
 import traceback
+import zmq.green as zmq
+from zmq.error import ZMQError
+from gevent.pool import Pool
 from multiprocessing import Event, Process, Value, Pipe, Manager
-from zerollama.core.framework.zero.client import Timeout
+
 from zerollama.core.framework.zero.protocol import (
+    Timeout,
+    ZeroMSQ,
     convert_errors,
     ValidationError,
     ZeroServerRequest,
     ZeroServerResponse,
     ZeroServerResponseOk,
     ZeroServerStreamResponseOk,
-    ZeroServerResponseOkWithPayload,
     ZeroServerResponseError
 )
 
 
 class ZeroServer(object):
     POLL_INTERVAL = 1000
+    POOL_SIZE = 64
 
     def __init__(self, name=None, protocol=None, port=None, event=None, do_register=True, share_port=None,
                  nameserver_port=None):
@@ -28,9 +36,10 @@ class ZeroServer(object):
         else:
             try:
                 socket.bind(f"tcp://*:{port}")
-            except zmq.error.ZMQError as e:
+            except ZMQError as e:
                 self.port = port
                 self.address_in_use = True
+                share_port.value = -2
                 return
 
         self.port = port
@@ -68,9 +77,7 @@ class ZeroServer(object):
     def clean_up(self):
         print(f"{self.__class__.__name__} clean_up!")
 
-    def process(self):
-        msg = self.socket.recv_multipart()
-
+    def process(self, msg):
         try:
             uuid, req_id, msg, *payload = msg
         except Exception:
@@ -81,12 +88,15 @@ class ZeroServer(object):
 
     def start(self):
         self.init()
+
+        gevent.signal_handler(signal.SIGTERM, self.close)
+        gevent.signal_handler(signal.SIGINT, self.close)
+
         self.run()
 
     def run(self):
         if self.address_in_use:
-            print(f"Address in use (addr='tcp://*:{self.port}')")
-            return
+            raise RuntimeError(f"Address in use (addr='tcp://*:{self.port}')")
 
         if self.do_register:
             self._register()
@@ -94,14 +104,21 @@ class ZeroServer(object):
         poller = zmq.Poller()
         poller.register(self.socket, zmq.POLLIN)
 
-        while self.event.is_set():
-            try:
-                socks = dict(poller.poll(self.POLL_INTERVAL))
-            except (KeyboardInterrupt, EOFError):
-                break
+        def get_task():
+            while self.event.is_set():
+                try:
+                    socks = dict(poller.poll(self.POLL_INTERVAL))
+                except (KeyboardInterrupt, EOFError):
+                    return
 
-            if socks.get(self.socket) == zmq.POLLIN:
-                self.process()
+                if socks.get(self.socket) == zmq.POLLIN:
+                    msg = self.socket.recv_multipart()
+                    yield msg
+
+        p = Pool(self.POOL_SIZE)
+
+        for x in p.imap_unordered(self.process, get_task()):
+            pass
 
         if self.do_register:
             try:
@@ -118,8 +135,10 @@ class ZeroServer(object):
         if isinstance(err_msg, ValidationError):
             err_msg = convert_errors(err_msg)
 
-        response = ZeroServerResponseError(msg=err_msg)
-        self.socket.send_multipart([uuid, req_id, response.b])
+        rep = ZeroServerResponseError(msg=err_msg)
+
+        data, payload = ZeroMSQ.load(rep.dict())
+        self.socket.send_multipart([uuid, req_id, data] + payload)
 
     def zero_send(self, req: ZeroServerRequest, rep: ZeroServerResponse):
         if isinstance(rep, ZeroServerStreamResponseOk):
@@ -127,21 +146,24 @@ class ZeroServer(object):
         else:
             rep_id = req.req_id
 
-        self.socket.send_multipart([req.uuid, rep_id] + rep.b)
+        data, payload = ZeroMSQ.load(rep.dict())
+
+        self.socket.send_multipart([req.uuid, rep_id, data] + payload)
+
+    def close(self):
+        self.event.clear()
 
 
 class Z_MethodZeroServer(ZeroServer):
-    def process(self):
-        msg = self.socket.recv_multipart()
-
+    def process(self, data):
         try:
-            uuid, req_id, msg, *payload = msg
+            uuid, req_id, data, *payload = data
         except Exception:
             traceback.print_exc()
             return
 
         try:
-            msg = json.loads(msg)
+            msg = ZeroMSQ.unload(data, payload)
         except json.JSONDecodeError as e:
             self.handle_error(str(e), uuid, req_id)
             return
@@ -154,7 +176,6 @@ class Z_MethodZeroServer(ZeroServer):
 
         req.uuid = uuid
         req.req_id = req_id
-        req.payload = payload
 
         method_name = msg["method"]
         method = getattr(self, "z_" + method_name, self.default)
@@ -174,7 +195,10 @@ class Z_MethodZeroServer(ZeroServer):
 
     def z_support_methods(self, req: ZeroServerRequest):
         support_methods = [m[2:] for m in dir(self) if m.startswith('z_')]
-        rep = ZeroServerResponseOk(msg={"support_methods": support_methods})
+        rep = ZeroServerResponseOk(msg={
+            "name": self.__class__.__name__,
+            "support_methods": support_methods
+        })
         self.zero_send(req, rep)
 
     def z_info(self, req: ZeroServerRequest):
@@ -211,6 +235,34 @@ class ZeroServerProcess(Process):
 
         self._set_status("prepare")
 
+        # slow log
+        self.__last_switch_time_ms, self.__last_switch_cpu_tick = None, None
+        self.__threshold_ms = 0.1
+
+    def _slow_log(self, event, args):
+        if event not in {'switch', 'throw'}:
+            return
+
+        origin, target = args
+
+        then_time, then_tick = self.__last_switch_time_ms, self.__last_switch_cpu_tick
+        now_time, now_tick = time.time(), time.process_time()
+        self.__last_switch_time_ms, self.__last_switch_cpu_tick = now_time, now_tick
+
+        if None in (then_time, then_tick):
+            return
+
+        if origin is gevent.hub.get_hub():
+            return
+
+        elapsed_ms = now_time - then_time
+        elapsed_ticks = now_tick - then_tick
+
+        if elapsed_ms <= self.__threshold_ms:
+            return
+
+        print(f"[SLOW LOG] Transfer from {origin} to {target} with {event} elapsed_ms: [{elapsed_ms}] elapsed_ticks [{elapsed_ticks}]")
+
     def _set_status(self, status):
         self._status['status'] = status
 
@@ -241,11 +293,13 @@ class ZeroServerProcess(Process):
 
             self.server = self.server_class(**self.server_kwargs)
         except (FileNotFoundError, EnvironmentError) as e:
+            print(e)
             self._set_status("error")
             tb = traceback.format_exc()
             self._child_conn.send((e, tb))
             return
         except Exception as e:
+            print(e)
             traceback.print_exc()
             self._set_status("error")
             tb = traceback.format_exc()
@@ -257,11 +311,13 @@ class ZeroServerProcess(Process):
         try:
             self.server.init()
         except (FileNotFoundError, EnvironmentError) as e:
+            print(e)
             self._set_status("error")
             tb = traceback.format_exc()
             self._child_conn.send((e, tb))
             return
         except Exception as e:
+            print(e)
             traceback.print_exc()
             self._set_status("error")
             tb = traceback.format_exc()
@@ -270,17 +326,25 @@ class ZeroServerProcess(Process):
 
         self._set_status("running")
 
+        greenlet.settrace(self._slow_log)
+        gevent.signal_handler(signal.SIGTERM, self.close)
+        gevent.signal_handler(signal.SIGINT, self.close)
+
         try:
             self.server.run()
         except Exception as e:
+            print(e)
             self._set_status("error")
             tb = traceback.format_exc()
             self._child_conn.send((e, tb))
             return
 
-    def terminate(self):
+    def close(self):
         self._set_status("stopped")
         self.event.clear()
+
+    def terminate(self):
+        self.close()
         self.join()
 
     def wait(self):

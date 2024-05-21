@@ -1,4 +1,5 @@
 
+import json
 import numpy as np
 from pydantic import BaseModel, Field, ValidationError
 from typing import Literal, Optional, List, Dict, Any, Union, Tuple
@@ -31,16 +32,11 @@ class ZeroServerRequest(BaseModel):
     uuid: Optional[bytes] = None
     req_id: Optional[bytes] = None
     data: Optional[dict] = None
-    payload: Optional[list] = None
 
 
 class ZeroServerResponse(BaseModel):
     state: str = Literal["ok", "error"]
     msg: Any = ""
-
-    @property
-    def b(self):
-        return [self.model_dump_json().encode('utf8')]
 
 
 class ZeroServerResponseOk(ZeroServerResponse):
@@ -58,46 +54,61 @@ class ZeroServerResponseError(ZeroServerResponse):
 
 
 class Meta(BaseModel):
-    name: str
+    name: list
     dtype: str
     shape: tuple
 
 
-class ZeroServerResponseOkWithPayload(ZeroServerResponseOk):
-    meta: List[Meta] = Field(default_factory=list)
-    payload: Optional[list] = None
+class Timeout(Exception):
+    pass
 
-    @classmethod
-    def combine(cls, m, tensor_field):
-        msg = m.model_dump(exclude={tensor_field})
-        msg["tensor_field"] = tensor_field
 
-        meta = []
+class ZeroMSQ(object):
+    @staticmethod
+    def load(data):
         payload = []
+        meta = []
+        msg = {}
 
-        data = getattr(m, tensor_field)
+        def _load(d, m, n):
+            for k, v in d.items():
+                if type(v) is np.ndarray:
+                    meta.append(Meta(name=n+[k], dtype=str(v.dtype), shape=v.shape).dict())
+                    payload.append(np.ascontiguousarray(v))
+                elif isinstance(v, dict):
+                    m[k] = {}
+                    _load(v, m[k], n+[k])
+                else:
+                    m[k] = v
 
-        for k, vecs in data.items():
-            if vecs is None:
-                continue
-            meta.append(Meta(name=k, dtype=str(vecs.dtype), shape=vecs.shape))
-            payload.append(np.ascontiguousarray(vecs))
+        _load(data, msg, [])
 
-        return cls(msg=msg, meta=meta, payload=payload)
+        req = {"msg": msg}
 
-    def separate(self):
-        msg = self.msg.copy()
-        tensor_field = msg.pop("tensor_field")
-        msg[tensor_field] = {}
-        for m, p in zip(self.meta, self.payload):
-            msg[tensor_field][m.name] = p
+        if meta:
+            req["meta"] = meta
+
+        req = json.dumps(req).encode('utf8')
+        return req, payload
+
+    @staticmethod
+    def unload(req, payload):
+        req = json.loads(req)
+        msg = req["msg"]
+
+        if not payload:
+            return msg
+
+        meta = [Meta(**x) for x in req["meta"]]
+        for m, p in zip(meta, payload):
+            d = msg
+            for i in range(len(m.name)-1):
+                if m.name[i] not in d:
+                    d[m.name[i]] = {}
+                d = d[m.name[i]]
+
+            d[m.name[-1]] = np.frombuffer(p, dtype=m.dtype).reshape(m.shape)
         return msg
-
-
-
-    @property
-    def b(self):
-        return [self.model_dump_json(exclude={"payload"}).encode('utf8')] + self.payload
 
 
 if __name__ == '__main__':

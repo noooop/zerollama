@@ -15,8 +15,6 @@ Commands:
   list-family
   pull
   run
-  start
-  terminate
 ```
 
 ## list-families 列出支持的模型家族
@@ -26,7 +24,13 @@ Supported chat families:
 deepseek-llm
 MiniCPM
 Qwen1.5
+Qwen1.5_gguf
 Yi
+Yi-1.5
+llama3
+llama3zh
+xverse
+xverse_gguf
 ```
 
 ## list-family 列出支持的模型家族成员
@@ -97,4 +101,10 @@ Hello! How can I help you today? Is there something specific you'd like to know 
 ZeroInferenceEngine clean_up!
 ZeroNameServer clean_up!
 quit gracefully
+```
+
+支持 llama cpp gguf 模型 
+```
+$ python -m applications.chat_cli pull Qwen/Qwen1.5-0.5B-Chat-GGUF+*q8_0.gguf
+$ python -m applications.chat_cli run Qwen/Qwen1.5-0.5B-Chat-GGUF+*q8_0.gguf
 ```

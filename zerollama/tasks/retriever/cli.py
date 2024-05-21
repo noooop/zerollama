@@ -25,8 +25,9 @@ def list_family(name):
 @click.command()
 @click.argument('model_name')
 def pull(model_name):
-    from zerollama.inference_backend.hf_transformers.download import download
-    download(model_name)
+    from zerollama.tasks.retriever.collection import get_model_by_name
+    from zerollama.tasks.base.download import download
+    download(model_name, get_model_by_name)
 
 
 @click.command()

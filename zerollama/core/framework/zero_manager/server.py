@@ -1,5 +1,5 @@
 
-import json
+from gevent.threadpool import ThreadPoolExecutor
 from zerollama.core.framework.zero.server import ZeroServerProcess, Z_MethodZeroServer
 from zerollama.core.framework.zero_manager.protocol import ZeroServerResponseOk, ZeroServerResponseError
 from zerollama.core.framework.zero_manager.protocol import StartRequest, TerminateRequest, StatusRequest
@@ -8,19 +8,20 @@ from zerollama.core.framework.zero_manager.protocol import StartRequest, Termina
 class ZeroManager(Z_MethodZeroServer):
     protocol = "manager"
 
-    def __init__(self, name, server_class, **kwargs):
+    def __init__(self, name, server_class=None, **kwargs):
         super().__init__(name=name, port=None, do_register=True, **kwargs)
-        self._inference_engines = None
+        self._engines = None
         self.server_class = server_class
-        if isinstance(server_class, str):
-            self.module_name, self.class_name = server_class.split(":")
+
+        if isinstance(self.server_class, str):
+            self.module_name, self.class_name = self.server_class.split(":")
 
     def init(self):
-        self._inference_engines = {}
-        print(f"{self.__class__.__name__} for {self.class_name} running!", "port:", self.port)
+        self._engines = {}
+        print(f"{self.__class__.__name__} for {self.name} running!", "port:", self.port)
 
     def clean_up(self):
-        for k, engine in self._inference_engines.items():
+        for k, engine in self._engines.items():
             try:
                 engine.terminate()
             except Exception as e:
@@ -30,30 +31,34 @@ class ZeroManager(Z_MethodZeroServer):
     def z_start(self, req):
         kwargs = StartRequest(**req.data)
 
-        if kwargs.name in self._inference_engines:
+        if kwargs.name in self._engines:
             rep = ZeroServerResponseOk(msg={"already_started": True})
             self.zero_send(req, rep)
             return
 
-        server_kwargs = {"model_name": kwargs.name,
-                         "model_kwargs": kwargs.model_kwargs}
+        if "name" not in kwargs.engine_kwargs:
+            kwargs.engine_kwargs["name"] = kwargs.name
 
-        engine = ZeroServerProcess(self.server_class, server_kwargs)
-        engine.start()
+        engine = ZeroServerProcess(self.server_class, kwargs.engine_kwargs)
+        self._engines[kwargs.name] = engine
 
-        self._inference_engines[kwargs.name] = engine
+        with ThreadPoolExecutor(1) as executor:
+            f = executor.submit(engine.start)
+            f.result()
+        ## engine.start() ?????
+
         rep = ZeroServerResponseOk(msg={"already_started": False})
         self.zero_send(req, rep)
 
     def z_terminate(self, req):
         kwargs = TerminateRequest(**req.data)
 
-        if kwargs.name not in self._inference_engines:
+        if kwargs.name not in self._engines:
             rep = ZeroServerResponseOk(msg={"founded": False})
             self.zero_send(req, rep)
             return
 
-        engine = self._inference_engines.pop(kwargs.name)
+        engine = self._engines.pop(kwargs.name)
 
         exception = engine.exception
         if exception is not None:
@@ -65,22 +70,22 @@ class ZeroManager(Z_MethodZeroServer):
         self.zero_send(req, rep)
 
     def z_list(self, req):
-        rep = ZeroServerResponseOk(msg=list(self._inference_engines.keys()))
+        rep = ZeroServerResponseOk(msg=list(self._engines.keys()))
         self.zero_send(req, rep)
 
     def z_statuses(self, req):
-        msg = {k: v.status for k, v in self._inference_engines.items()}
+        msg = {k: v.status for k, v in self._engines.items()}
         rep = ZeroServerResponseOk(msg=msg)
         self.zero_send(req, rep)
 
     def z_status(self, req):
         kwargs = StatusRequest(**req.data)
-        if kwargs.name not in self._inference_engines:
+        if kwargs.name not in self._engines:
             err_msg = f"[kwargs.name] not found."
             self.handle_error(err_msg, req=req)
             return
 
-        engine = self._inference_engines[kwargs.name]
+        engine = self._engines[kwargs.name]
 
         exception = engine.exception
 
@@ -94,7 +99,7 @@ class ZeroManager(Z_MethodZeroServer):
 
 if __name__ == '__main__':
     name = "ZeroChatInferenceManager"
-    server_class = "zerollama.tasks.chat.inference_engine.server:ZeroChatInferenceEngine"
+    server_class = "zerollama.tasks.chat.engine.server:ZeroChatInferenceEngine"
 
     nameserver = ZeroServerProcess("zerollama.core.framework.nameserver.server:ZeroNameServer")
     manager = ZeroServerProcess("zerollama.core.framework.zero_manager.server:ZeroManager",

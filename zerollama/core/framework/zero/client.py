@@ -1,11 +1,13 @@
 
-import zmq
 import json
+import gevent
 import shortuuid
 import numpy as np
 from os import getpid
+import zmq.green as zmq
 from queue import Queue
-from zerollama.core.framework.zero.protocol import ZeroServerResponse, ZeroServerResponseOkWithPayload
+from zerollama.core.framework.zero.protocol import ZeroMSQ
+from zerollama.core.framework.zero.protocol import ZeroServerResponse, Timeout
 
 
 class Socket(object):
@@ -13,9 +15,6 @@ class Socket(object):
         self.addr = addr
         self.socket = context.socket(zmq.DEALER)
         self.socket.connect(addr)
-
-    def set_timeout(self, timeout):
-        self.socket.RCVTIMEO = timeout
 
     def send(self, data):
         self.socket.send(data, copy=False)
@@ -81,101 +80,78 @@ class SocketPool(object):
 socket_pool = SocketPool()
 
 
-class Timeout(Exception):
-    pass
-
-
 class Client(object):
     timeout = 100000
 
     def __init__(self, addr):
         self.addr = addr
 
-    def _query(self, data, timeout=None):
-        for i in range(3):
+    def _query(self, req, req_payload, n_try=3, timeout=None):
+        _timeout = timeout or getattr(self, "timeout", None)
+
+        for i in range(n_try):
+            req_id = f"{shortuuid.random(length=22)}".encode("utf-8")
             socket = socket_pool.get(self.addr)
 
-            if getattr(self, "timeout", None) is not None:
-                socket.set_timeout(self.timeout)
-
-            if timeout is not None:
-                socket.set_timeout(timeout)
-
             try:
-                req_id = f"{shortuuid.random(length=22)}".encode("utf-8")
-                socket.send_multipart([req_id, data])
-                msg = socket.recv_multipart()
-                socket_pool.put(socket, self.addr)
-                return msg
-            except zmq.error.Again:
+                with gevent.Timeout(_timeout):
+                    socket.send_multipart([req_id, req]+req_payload)
+                    msg = socket.recv_multipart()
+                    socket_pool.put(socket, self.addr)
+                    return msg
+            except gevent.timeout.Timeout:
                 socket_pool.delete(socket)
 
         raise Timeout(f"{self.addr} timeout")
 
-    def _stream_query(self, data, timeout=None):
-        for i in range(3):
+    def _stream_query(self, req, req_payload, n_try=3, timeout=None):
+        _timeout = timeout or getattr(self, "timeout", None)
+
+        for i in range(n_try):
+            req_id = f"{shortuuid.random(length=22)}".encode("utf-8")
             socket = socket_pool.get(self.addr)
-
-            if getattr(self, "timeout", None) is not None:
-                socket.set_timeout(self.timeout)
-
-            if timeout is not None:
-                socket.set_timeout(timeout)
-
             try:
-                req_id = f"{shortuuid.random(length=22)}".encode("utf-8")
-                socket.send_multipart([req_id, data])
-                out = socket.recv_multipart()
-                rep_id, msg, *payload = out
-                req_id, rcv_more, rep_id = rep_id[:22], rep_id[22:23], rep_id[23:]
-
-                yield out
-
-                while rcv_more == b"M":
+                with gevent.Timeout(_timeout):
+                    socket.send_multipart([req_id, req]+req_payload)
                     out = socket.recv_multipart()
-                    rep_id, msg, *payload = out
-                    req_id, rcv_more, rep_id = rep_id[:22], rep_id[22:23], rep_id[23:]
-                    yield out
-
-                socket_pool.put(socket, self.addr)
-            except zmq.error.Again:
+            except gevent.timeout.Timeout:
                 socket_pool.delete(socket)
+                continue
+
+            rep_id, msg, *payload = out
+            req_id, rcv_more, rep_id = rep_id[:22], rep_id[22:23], rep_id[23:]
+            yield out
+
+            while rcv_more == b"M":
+                try:
+                    with gevent.Timeout(_timeout):
+                        out = socket.recv_multipart()
+                        rep_id, msg, *payload = out
+                        req_id, rcv_more, rep_id = rep_id[:22], rep_id[22:23], rep_id[23:]
+                        yield out
+                except gevent.timeout.Timeout:
+                    socket_pool.delete(socket)
+                    raise Timeout(f"{self.addr} timeout")
             else:
                 return
 
         raise Timeout(f"{self.addr} timeout")
 
-    def _load(self, req_id, msg, payload):
-        msg = json.loads(msg)
-        if len(payload) > 0:
-            msg = ZeroServerResponseOkWithPayload(**msg)
-            msg.payload = []
-            for m, p in zip(msg.meta, payload):
-                msg.payload.append(np.frombuffer(p, dtype=m.dtype).reshape(m.shape))
-            return msg
-        else:
-            msg = ZeroServerResponse(**msg)
-            return msg
-
     def stream_query(self, data, **kwargs):
-        data = json.dumps(data).encode('utf8')
-        for req_id, msg, *payload in self._stream_query(data=data, **kwargs):
-            yield self._load(req_id, msg, payload)
+        req, req_payload = ZeroMSQ.load(data)
+        for req_id, msg, *payload in self._stream_query(req, req_payload, **kwargs):
+            yield ZeroServerResponse(**ZeroMSQ.unload(msg, payload))
 
     def query(self, data, **kwargs):
-        data = json.dumps(data).encode('utf8')
-
-        req_id, msg, *payload = self._query(data=data, **kwargs)
-        return self._load(req_id, msg, payload)
-
-
-
+        req, req_payload = ZeroMSQ.load(data)
+        req_id, msg, *payload = self._query(req, req_payload, **kwargs)
+        return ZeroServerResponse(**ZeroMSQ.unload(msg, payload))
 
 
 class Z_Client(Client):
-    def support_methods(self):
+    def support_methods(self, **kwargs):
         data = {"method": "support_methods"}
-        return self.query(data)
+        return self.query(data, **kwargs)
 
 
 if __name__ == '__main__':

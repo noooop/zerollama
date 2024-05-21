@@ -12,7 +12,9 @@ Introducing DeepSeek LLM, an advanced language model comprising 67 billion param
 
 
 ## News
-🎯 2023-11-29：发布 DeepSeek LLM 7B/67B
+- 2024.05.16: We released the DeepSeek-V2-Lite.
+- 2024-05-06：发布 DeepSeek-V2 236B total parameters, 21B are activated
+- 2023-11-29：发布 DeepSeek LLM 7B/67B
 
 
 ## License Agreement

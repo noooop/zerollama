@@ -37,6 +37,13 @@ def config_setup():
         if "MODELSCOPE_CACHE" in config_modelscope:
             os.environ["MODELSCOPE_CACHE"] = config_modelscope["MODELSCOPE_CACHE"]
 
+    rag_path = Path.home() / ".zerollama/rag/documents"
+    config.rag = edict({"path": rag_path})
+    if "rag" in config_global:
+        config_rag = config_global["rag"]
+        if "path" in config_rag:
+            config.rag.path = Path(config_rag["path"])
+
     return config
 
 
