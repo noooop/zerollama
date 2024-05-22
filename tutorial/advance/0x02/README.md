@@ -746,7 +746,7 @@ AWQ 的事实标准是 [AutoAWQ](https://github.com/casper-hansen/AutoAWQ)。原
 - WQLinear
 
 [代码](https://github.com/casper-hansen/AutoAWQ/blob/5f3785dcaa107ca76f5fa5355f459370c86f82d6/awq/models/base.py#L577) 里支持的 WQLinear version挺多的，但是导出什么类型，导入就得什么类型，没办法在线转换。
-qwen1.5 官方导出版本是gemm，可以支持 WQLinear_GEMM，WQLinear_Exllama， WQLinear_ExllamaV2。要测试其他方案得重新导出。
+qwen1.5 官方导出版本是gemm，可以支持 WQLinear_GEMM，WQLinear_Exllama， WQLinear_ExllamaV2。要测试其他方案得重新导出。 想了解更多可以围观 [1](https://github.com/casper-hansen/AutoAWQ/pull/313) 和 [2](https://github.com/huggingface/transformers/pull/28634)
 
 ```
 marlin          WQLinear_Marlin
@@ -850,7 +850,7 @@ llama.cpp使用库的好处是依赖少，不必像Transformers 库一样先装 
 
 - 24G 的 4090 可以加载 GPTQ Int4 的 14B 甚至 32B 模型
 
-### 6.3.3. AWQ 模型显存占用
+### 6.3.4. AWQ 模型显存占用
 
 | 模型   | bfloat16 理论 （对照） | AWQ 实际模型文件大小 | AWQ 显存实际占用 | 
 |------|------------------|--------------|------------|
@@ -866,7 +866,7 @@ llama.cpp使用库的好处是依赖少，不必像Transformers 库一样先装 
 - AWQ 默认会做 Fused modules，需要占用额外显存，32B 4bit模型本身就要占 21G 显存，华容道不开
 - 后续会有关闭 Fused modules 的速度对比实验
 
-### 6.3.4. llama.cpp GGUF 实际模型文件大小
+### 6.3.5. llama.cpp GGUF 实际模型文件大小
 
 | 模型   | bfloat16 理论 （对照） | q8_0      | q6_k     | q5_k_m  | q5_0    | q4_k_m  | q4_0    | q3_k_m  | q2_k    |
 |------|------------------|-----------|----------|---------|---------|---------|---------|---------|---------|
@@ -879,7 +879,7 @@ llama.cpp使用库的好处是依赖少，不必像Transformers 库一样先装 
 | 72B  | 134.64GB         | 76.80 GB  | 59.4 GB  | 51.4 GB | 49.8 GB | 44.2 GB | 41.0 GB | 35.9 GB | 28.5 GB |
 | 110B | 207.14GB         | 118.20 GB | 91.20 GB | 78.8 GB | 76.6 GB | 67.2 GB | 62.8 GB | 53.8 GB | 41.2 GB |
 
-### 6.3.5. llama.cpp GGUF 模型大小 BPW
+### 6.3.6. llama.cpp GGUF 模型大小 BPW
 
 数据来自 llm_load_print_meta: model size 日志输出
 
@@ -896,7 +896,7 @@ llama.cpp使用库的好处是依赖少，不必像Transformers 库一样先装 
 - GGUF 部分格式使用了混合量化技术，按照对结果的影响，模型不同权重使用不同精度的数据格式，所以不同尺寸的模型BPW有些许差别
 - 解码 （Decoding） 阶段，主要与BPW有关，对比时需要将其考虑在内
 
-### 6.3.5. llama.cpp GGUF 显存占用
+### 6.3.7. llama.cpp GGUF 显存占用
 
 数据来自 llm_load_tensors:      CUDA0 buffer size 日志输出
 
@@ -909,7 +909,7 @@ llama.cpp使用库的好处是依赖少，不必像Transformers 库一样先装 
 | 14B  | 28.34 GB     | 13.25 GB | 10.86 GB | 9.31 GB  | 8.67 GB  | 8.15 GB  | 7.20 GB  | 6.59 GB  | 5.43 GB  |
 | 32B  | 65.04 GB     | oom      | oom      | 20.99 GB | 20.42 GB | 17.93 GB | 16.81 GB | 14.41 GB | 11.14 GB |
 
-### 6.3.5. llama.cpp GGUF KV cache 占用 (1024 tokens)
+### 6.3.8. llama.cpp GGUF KV cache 占用 (1024 tokens)
 数据来自 llama_kv_cache_init:      CUDA0 KV buffer size 日志输出
 
 | 模型大小 | 理论 KV 缓存参数量 | 实际占用显存     |
@@ -925,8 +925,11 @@ llama.cpp使用库的好处是依赖少，不必像Transformers 库一样先装 
 - llama cpp 的 KV cache 浮点数都是用的16bit存储。理论和实际显存占用一致。
 - 32B 使用GQA可以有效降低 KV cache 大小，增加输出长度。
 
-### 6.3.6. KV cache 静态分配 vs 动态分配
-HuggingFace Transformers库默认使用动态分配
+### 6.3.9. KV cache 静态分配 vs 动态分配
+HuggingFace Transformers库 默认使用动态分配。
+> 静态分配[Static cache](https://github.com/huggingface/transformers/releases/tag/v4.38.0) 在4.38加入，还处于实验阶段
+> 
+> Support for generate is not included yet. This feature is experimental and subject to changes in subsequent releases.
 - 优势：可以自适应支持不同长度的输出，模型不使用时还可以释放缓存给其他程序使用
 - 劣势：动态分配会导致生成速度波动，也会因为显存碎片不能回收，最长输出长度没有静态分配大
 
@@ -937,6 +940,23 @@ llama.cpp库默认使用静态分配
 光从 KV cache 角度的建议：
 - 模型小，显存资源充足，用动态分配，灵活自适应
 - 模型大，显存资源有限，用静态分配，保证模型正常运行
+
+### 6.3.10. 极限推理长度
+
+HuggingFace Transformers 动态输出至 oom
+
+
+llama.cpp 使用二分法寻找最大能申请的 n_ctx 最大大小，
+
+| 模型   | w8kv16理论（对照） | w4kv16理论（对照） | q8_0   | q6_k   | q5_k_m | q5_0   | q4_k_m | q4_0   | q3_k_m | q2_k   |
+|------|--------------|--------------|--------|--------|--------|--------|--------|--------|--------|--------|
+| 0.5B | 257424       | 259784       | 180468 | 181236 | 181501 | 181501 | 181744 | 181744 | 182009 | 182253 |
+| 1.8B | 123312       | 127192       | 98808  | 100082 | 100863 | 101109 | 101355 | 101627 | 102123 | 102646 |
+| 4B   | 54220        | 58567        | 45565  | 47609  | 48376  | 48376  | 49131  | 49395  | 49901  | 50680  |
+| 7B   | 35612        | 42382        | 28398  | 31469  | 32757  | 32757  | 33780  | 34290  | 35060  | 36344  |
+| 14B  | 15114        | 23285        | 11250  | 14063  | 15846  | 16617  | 17395  | 18431  | 19186  | 20479  |
+| 32B  | oom          | 37778        | oom    | oom    | 5370   | 7158   | 15086  | 18419  | 25852  | 36076  |
+
 
 ## 6.4 解码 (Decoding) 阶段 测试
 
