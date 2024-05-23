@@ -40,6 +40,10 @@ Introducing DeepSeek-VL, an open-source Vision-Language (VL) Model designed for 
 ### News 
  -  <b>2024-03-11</b>: DeepSeek-VL family released, including <code>DeepSeek-VL-7B-base</code>, <code>DeepSeek-VL-7B-chat</code>, <code>DeepSeek-VL-1.3B-base</code>, and <code>DeepSeek-VL-1.3B-chat</code>
 
+### License Agreement
+
+This code repository is licensed under [the MIT License](https://github.com/deepseek-ai/DeepSeek-LLM/blob/HEAD/LICENSE-CODE). The use of DeepSeek-VL Base/Chat models is subject to [DeepSeek Model License](https://github.com/deepseek-ai/DeepSeek-LLM/blob/HEAD/LICENSE-MODEL). DeepSeek-VL series (including Base and Chat) supports commercial use.
+
 ### Reference
 [Homepage](https://www.deepseek.com/)
 
