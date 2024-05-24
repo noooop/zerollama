@@ -14,8 +14,10 @@ TORCH_TYPE = torch.bfloat16 if torch.cuda.is_available() and torch.cuda.get_devi
 
 
 class HuggingFaceTransformers(object):
+    get_model_config_by_name = staticmethod(get_model_config_by_name)
+
     def __init__(self, model_name, local_files_only=True, quantization_config=None, device="cuda"):
-        model_config = get_model_config_by_name(model_name)
+        model_config = self.get_model_config_by_name(model_name)
 
         if model_config is None:
             raise FileNotFoundError(f"model [{model_name}] not supported.")
@@ -27,6 +29,7 @@ class HuggingFaceTransformers(object):
         self.local_files_only = local_files_only
         self.quantization_config = quantization_config
         self.trust_remote_code = self.model_config.model_kwargs.get("trust_remote_code", False)
+        self.torch_dtype = None
 
         self.model = None
         self.tokenizer = None
@@ -36,14 +39,23 @@ class HuggingFaceTransformers(object):
     def load(self):
         config = config_setup()
 
+        pretrained_model_name_or_path = self.model_name
+
         if config.use_modelscope:
             from modelscope import AutoModelForCausalLM, AutoTokenizer
             from transformers import TextIteratorStreamer, BitsAndBytesConfig
+            if "modelscope_name" in self.model_info:
+                pretrained_model_name_or_path = self.model_info["modelscope_name"]
         else:
             from transformers import AutoModelForCausalLM, AutoTokenizer, TextIteratorStreamer, BitsAndBytesConfig
+            if "hf_name" in self.model_info:
+                pretrained_model_name_or_path = self.model_info["hf_name"]
 
         torch_dtype = "auto"
-        if self.info["quantization"] != "" or self.quantization_config is not None:
+        if "quantization" in self.info and self.info["quantization"] != "":
+            torch_dtype = torch.float16
+
+        if self.quantization_config is not None:
             torch_dtype = torch.float16
 
         if "torch_dtype" in self.info:
@@ -54,11 +66,14 @@ class HuggingFaceTransformers(object):
             elif self.info["torch_dtype"] == "fp16":
                 torch_dtype = torch.float16
 
-        model_kwargs = {"pretrained_model_name_or_path": self.model_name,
+        self.torch_dtype = torch_dtype
+
+        model_kwargs = {"pretrained_model_name_or_path": pretrained_model_name_or_path,
                         "torch_dtype": torch_dtype,
                         "device_map": "auto",
                         "local_files_only": self.local_files_only,
                         "trust_remote_code": self.trust_remote_code}
+
         if self.quantization_config is not None:
             if isinstance(self.quantization_config, BitsAndBytesConfig):
                 self.quantization_config.bnb_4bit_compute_dtype = TORCH_TYPE
@@ -71,7 +86,7 @@ class HuggingFaceTransformers(object):
         except EnvironmentError:
             raise FileNotFoundError(f"model '{self.model_name}' not found, try pulling it first") from None
 
-        tokenizer = AutoTokenizer.from_pretrained(self.model_name)
+        tokenizer = AutoTokenizer.from_pretrained(pretrained_model_name_or_path)
         streamer = TextIteratorStreamer(tokenizer, skip_prompt=True, skip_special_tokens=True)
 
         self.model = model
@@ -83,8 +98,11 @@ class HuggingFaceTransformers(object):
         self.tokenizer = None
         self.streamer = None
 
-        gc.collect()
-        torch.cuda.empty_cache()
+        try:
+            gc.collect()
+            torch.cuda.empty_cache()
+        except Exception:
+            pass
 
     @property
     def info(self):
