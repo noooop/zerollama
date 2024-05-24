@@ -59,5 +59,5 @@ if __name__ == '__main__':
 
     answer = model.chat(messages, images)
 
-    print(answer)
+    print(answer.content)
 

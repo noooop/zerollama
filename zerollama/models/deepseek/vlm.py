@@ -54,7 +54,6 @@ if __name__ == '__main__':
     images = [PIL.Image.open(path).convert("RGB") for path in images]
     images = [np.array(image) for image in images]
 
-    answer = model.chat(messages, images)
-
-    print(answer)
+    response = model.chat(messages, images)
+    print(response.content)
 

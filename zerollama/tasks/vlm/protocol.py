@@ -30,3 +30,15 @@ class VLMModelConfig(BaseModel):
         protected_namespaces=()
     )
 
+
+class VLMChatCompletionRequest(BaseModel):
+    model: str
+    images: Optional[list] = None
+    messages: list = Field(default_factory=list)
+    options: dict = Field(default_factory=dict)
+    stream: bool = False
+
+
+class VLMChatCompletionResponse(BaseModel):
+    model: str
+    content: str

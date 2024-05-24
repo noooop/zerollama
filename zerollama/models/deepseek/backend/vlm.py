@@ -5,6 +5,7 @@ import PIL.Image
 from functools import partial
 from zerollama.core.config.main import config_setup
 from zerollama.tasks.vlm.interface import VLMInterface
+from zerollama.tasks.vlm.protocol import VLMChatCompletionResponse
 from zerollama.tasks.vlm.collection import get_model_config_by_name
 
 
@@ -84,7 +85,7 @@ class DeepseekVL(VLMInterface):
         )
 
         answer = self.tokenizer.decode(outputs[0].cpu().tolist(), skip_special_tokens=True)
-        return answer
+        return VLMChatCompletionResponse(model=self.model_name, content=answer)
 
     @property
     def info(self):
