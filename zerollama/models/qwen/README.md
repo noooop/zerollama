@@ -24,6 +24,8 @@ Check the license of each model inside its HF repo. It is NOT necessary for you 
 
 ### Todo
 GPTQ-Int8 模型报错, 感觉是GPTQ放弃Int8模型了
+[Inference bug of the MoE GPTQ models](https://github.com/huggingface/transformers/issues/30515)
+
 
 ### Reference
 [GITHUB](https://github.com/QwenLM/Qwen1.5)
