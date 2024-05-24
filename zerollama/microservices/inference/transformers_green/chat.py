@@ -9,9 +9,12 @@ from zerollama.tasks.chat.protocol import ChatCompletionResponse
 from zerollama.tasks.chat.protocol import ChatCompletionStreamResponse, ChatCompletionStreamResponseDone
 from zerollama.tasks.chat.collection import get_model_config_by_name
 
+TORCH_TYPE = torch.bfloat16 if torch.cuda.is_available() and torch.cuda.get_device_capability()[
+    0] >= 8 else torch.float16
+
 
 class HuggingFaceTransformers(object):
-    def __init__(self, model_name, local_files_only=True, device="cuda"):
+    def __init__(self, model_name, local_files_only=True, quantization_config=None, device="cuda"):
         model_config = get_model_config_by_name(model_name)
 
         if model_config is None:
@@ -22,6 +25,7 @@ class HuggingFaceTransformers(object):
         self.model_config = model_config
         self.model_info = self.model_config.info
         self.local_files_only = local_files_only
+        self.quantization_config = quantization_config
         self.trust_remote_code = self.model_config.model_kwargs.get("trust_remote_code", False)
 
         self.model = None
@@ -34,12 +38,12 @@ class HuggingFaceTransformers(object):
 
         if config.use_modelscope:
             from modelscope import AutoModelForCausalLM, AutoTokenizer
-            from transformers import TextIteratorStreamer
+            from transformers import TextIteratorStreamer, BitsAndBytesConfig
         else:
-            from transformers import AutoModelForCausalLM, AutoTokenizer, TextIteratorStreamer
+            from transformers import AutoModelForCausalLM, AutoTokenizer, TextIteratorStreamer, BitsAndBytesConfig
 
         torch_dtype = "auto"
-        if self.info["quantization"] != "":
+        if self.info["quantization"] != "" or self.quantization_config is not None:
             torch_dtype = torch.float16
 
         if "torch_dtype" in self.info:
@@ -50,14 +54,18 @@ class HuggingFaceTransformers(object):
             elif self.info["torch_dtype"] == "fp16":
                 torch_dtype = torch.float16
 
+        model_kwargs = {"pretrained_model_name_or_path": self.model_name,
+                        "torch_dtype": torch_dtype,
+                        "device_map": "auto",
+                        "local_files_only": self.local_files_only,
+                        "trust_remote_code": self.trust_remote_code}
+        if self.quantization_config is not None:
+            if isinstance(self.quantization_config, BitsAndBytesConfig):
+                self.quantization_config.bnb_4bit_compute_dtype = TORCH_TYPE
+            model_kwargs["quantization_config"] = self.quantization_config
+
         try:
-            model = AutoModelForCausalLM.from_pretrained(
-                self.model_name,
-                torch_dtype=torch_dtype,
-                device_map="auto",
-                local_files_only=self.local_files_only,
-                trust_remote_code=self.trust_remote_code
-            )
+            model = AutoModelForCausalLM.from_pretrained(**model_kwargs)
         except requests.exceptions.HTTPError:
             raise FileNotFoundError(f"model '{self.model_name}' not found, try pulling it first") from None
         except EnvironmentError:
@@ -66,7 +74,7 @@ class HuggingFaceTransformers(object):
         tokenizer = AutoTokenizer.from_pretrained(self.model_name)
         streamer = TextIteratorStreamer(tokenizer, skip_prompt=True, skip_special_tokens=True)
 
-        self.model = model.to(self.device)
+        self.model = model
         self.tokenizer = tokenizer
         self.streamer = streamer
 
@@ -156,10 +164,10 @@ class HuggingFaceTransformersChat(HuggingFaceTransformers, ChatInterface):
         thread.join()
 
 
-def run_test(model_name, stream=False):
+def run_test(model_name, stream=False, **kwargs):
     print("=" * 80)
 
-    model = HuggingFaceTransformersChat(model_name, local_files_only=False)
+    model = HuggingFaceTransformersChat(model_name, local_files_only=False, **kwargs)
     model.load()
     print(model.info)
 
