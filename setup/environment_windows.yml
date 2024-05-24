@@ -8,9 +8,10 @@ dependencies:
   - python=3.11
   - anaconda
   - pytorch-cuda=12.1
-  - pytorch
+  - pytorch==2.3.0
   - pip
   - pip:
+      - torchvision==0.18.0
       - huggingface_hub==0.22.2
       - transformers==4.40.2
       - accelerate==0.30.1
