@@ -35,7 +35,7 @@ The models and weights of MiniCPM are completely free for academic research.
 If you intend to utilize the model for commercial purposes, please reach out to cpm@modelbest.cn to obtain the certificate of authorization.
 
 ### Reference
-[openbmb](https://www.openbmb.cn/home)
+[Homepage](https://www.openbmb.cn/home)
 
 [MiniCPM 技术报告](https://shengdinghu.notion.site/MiniCPM-c805a17c5c8046398914e47f0542095a)
 
@@ -90,7 +90,7 @@ The parameters are fully open to academic research
 Please contact cpm@modelbest.cn to obtain written authorization for commercial uses. Free commercial use is also allowed after registration.
 
 ### Reference
-[openbmb](https://www.openbmb.cn/home)
+[Homepage](https://www.openbmb.cn/home)
 
 [MiniCPM-V 技术报告](https://openbmb.vercel.app/minicpm-v-2)
 
