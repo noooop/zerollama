@@ -2,11 +2,10 @@
 import torch
 import requests
 import PIL.Image
-from functools import partial
-from zerollama.core.config.main import config_setup
 from zerollama.tasks.vlm.interface import VLMInterface
 from zerollama.tasks.vlm.protocol import VLMChatCompletionResponse
-from zerollama.tasks.vlm.collection import get_model_config_by_name
+from zerollama.tasks.vlm.collection import get_model_config_by_name, get_model_by_name
+from zerollama.tasks.base.download import get_pretrained_model_name_or_path
 
 
 class DeepseekVL(VLMInterface):
@@ -21,6 +20,10 @@ class DeepseekVL(VLMInterface):
         self.model_config = model_config
         self.model_info = self.model_config.info
         self.local_files_only = local_files_only
+        self.pretrained_model_name_or_path = get_pretrained_model_name_or_path(model_name=model_name,
+                                                                               local_files_only=local_files_only,
+                                                                               get_model_by_name=get_model_by_name,
+                                                                               get_model_config_by_name=get_model_config_by_name)
 
         self.tokenizer = None
         self.model = None
@@ -29,22 +32,14 @@ class DeepseekVL(VLMInterface):
         self.n_concurrent = 1
 
     def load(self):
-        config_setup()
-
-        if self.local_files_only:
-            import huggingface_hub
-            huggingface_hub.snapshot_download = partial(huggingface_hub.snapshot_download,
-                                                        local_files_only=True)
-
         from transformers import AutoModelForCausalLM
         from deepseek_vl.models import VLChatProcessor, MultiModalityCausalLM
 
-
         try:
-            vl_chat_processor = VLChatProcessor.from_pretrained(self.model_name)
+            vl_chat_processor = VLChatProcessor.from_pretrained(self.pretrained_model_name_or_path)
             tokenizer = vl_chat_processor.tokenizer
 
-            model = AutoModelForCausalLM.from_pretrained(self.model_name, trust_remote_code=True)
+            model = AutoModelForCausalLM.from_pretrained(self.pretrained_model_name_or_path, trust_remote_code=True)
             model = model.to(torch.bfloat16).to(self.device).eval()
         except requests.exceptions.HTTPError:
             raise FileNotFoundError(f"model '{self.model_name}' not found, try pulling it first.") from None

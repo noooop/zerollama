@@ -4,7 +4,7 @@ import PIL.Image
 from zerollama.tasks.vlm.interface import VLMInterface
 from zerollama.tasks.vlm.collection import get_model_config_by_name
 from zerollama.tasks.vlm.protocol import VLMChatCompletionResponse
-from zerollama.microservices.inference.transformers_green.chat import HuggingFaceTransformers, TORCH_TYPE
+from zerollama.microservices.inference.transformers_green.chat import HuggingFaceTransformers
 
 
 class CogVLM(HuggingFaceTransformers, VLMInterface):

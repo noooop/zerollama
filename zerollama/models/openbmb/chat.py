@@ -5,25 +5,25 @@ from zerollama.tasks.chat.interface import ChatModel
 class MiniCPM(ChatModel):
     family = "MiniCPM"
     model_kwargs = {"trust_remote_code": True}
-    header = ["name", "size", "quantization", "bits", "torch_dtype"]
+    header = ["name", "modelscope_name", "size", "quantization", "bits", "torch_dtype"]
     info = [
-        # name                                          size    quantization(_, GPTQ, AWQ)     bits, torch_dtype
-        ["openbmb/MiniCPM-2B-sft-fp32",                 "2B",   "",                            "",   "fp32"],
-        ["openbmb/MiniCPM-2B-sft-bf16",                 "2B",   "",                            "",   "bf16"],
-        ["openbmb/MiniCPM-2B-sft-int4",                 "2B",   "",                            "",   "int4"],
+        # name                                          modelscope_name                size    quantization(_, GPTQ, AWQ)     bits, torch_dtype
+        ["openbmb/MiniCPM-2B-sft-fp32",                 "",                            "2B",   "",                            "",   "fp32"],
+        ["openbmb/MiniCPM-2B-sft-bf16",                 "OpenBMB/miniCPM-bf16",        "2B",   "",                            "",   "bf16"],
+        ["openbmb/MiniCPM-2B-sft-int4",                 "",                            "2B",   "",                            "",   "int4"],
 
-        ["openbmb/MiniCPM-2B-sft-fp32-llama-format",    "2B",   "",                            "",   "fp32"],
-        ["openbmb/MiniCPM-2B-sft-bf16-llama-format",    "2B",   "",                            "",   "bf16"],
-        ["openbmb/MiniCPM-2B-dpo-bf16-llama-format",    "2B",   "",                            "",   "bf16"],
+        ["openbmb/MiniCPM-2B-sft-fp32-llama-format",    "",                            "2B",   "",                            "",   "fp32"],
+        ["openbmb/MiniCPM-2B-sft-bf16-llama-format",    "",                            "2B",   "",                            "",   "bf16"],
+        ["openbmb/MiniCPM-2B-dpo-bf16-llama-format",    "",                            "2B",   "",                            "",   "bf16"],
 
-        ["openbmb/MiniCPM-2B-dpo-fp32",                 "2B",   "",                            "",   "fp32"],
-        ["openbmb/MiniCPM-2B-dpo-fp16",                 "2B",   "",                            "",   "fp16"],
-        ["openbmb/MiniCPM-2B-dpo-bf16",                 "2B",   "",                            "",   "bf16"],
-        ["openbmb/MiniCPM-2B-dpo-int4",                 "2B",   "",                            "",   "int4"],
+        ["openbmb/MiniCPM-2B-dpo-fp32",                 "",                            "2B",   "",                            "",   "fp32"],
+        ["openbmb/MiniCPM-2B-dpo-fp16",                 "",                            "2B",   "",                            "",   "fp16"],
+        ["openbmb/MiniCPM-2B-dpo-bf16",                 "OpenBMB/MiniCPM-2B-dpo-bf16", "2B",   "",                            "",   "bf16"],
+        ["openbmb/MiniCPM-2B-dpo-int4",                 "",                            "2B",   "",                            "",   "int4"],
 
-        ["openbmb/MiniCPM-1B-sft-bf16",                 "1B",   "",                            "",   "bf16"],
-        ["openbmb/MiniCPM-2B-128k",                     "2B",   "",                            "",   "fp32"],
-        ["openbmb/MiniCPM-MoE-8x2B",                    "8x2B", "",                            "",   "fp32"],
+        ["openbmb/MiniCPM-1B-sft-bf16",                 "MiniCPM-1B-sft-bf16",         "1B",   "",                            "",   "bf16"],
+        ["openbmb/MiniCPM-2B-128k",                     "openbmb/MiniCPM-2B-128k",     "2B",   "",                            "",   "fp32"],
+        ["openbmb/MiniCPM-MoE-8x2B",                    "OpenBMB/MiniCPM-MoE-8x2B",    "8x2B", "",                            "",   "fp32"],
     ]
 
 

@@ -5,6 +5,13 @@ from pathlib import Path
 from easydict import EasyDict as edict
 
 
+def get_modelscope_cache_dir():
+    import os
+    default_cache_dir = Path.home().joinpath('.cache', 'modelscope')
+    base_path = os.getenv('MODELSCOPE_CACHE', os.path.join(default_cache_dir, 'hub'))
+    return base_path
+
+
 def config_setup():
     home = Path.home()
 
@@ -17,7 +24,8 @@ def config_setup():
         config_global = {}
 
     config = edict({})
-    config.use_modelscope = False
+    config.use_modelscope = True
+    config.modelscope = {}
 
     if "huggingface" in config_global:
         config_huggingface = config_global["huggingface"]
@@ -36,6 +44,7 @@ def config_setup():
 
         if "MODELSCOPE_CACHE" in config_modelscope:
             os.environ["MODELSCOPE_CACHE"] = config_modelscope["MODELSCOPE_CACHE"]
+            config.modelscope.cache_dir = Path(get_modelscope_cache_dir())
 
     rag_path = Path.home() / ".zerollama/rag/documents"
     config.rag = edict({"path": rag_path})

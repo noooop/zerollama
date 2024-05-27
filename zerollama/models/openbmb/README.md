@@ -71,6 +71,9 @@ If you intend to utilize the model for commercial purposes, please reach out to 
 * [2024.03.01] MiniCPM-V 现在支持在 Mac 电脑上进行部署！
 * [2024.02.01] 我们开源了 MiniCPM-V 和 OmniLMM-12B，分别可以支持高效的端侧部署和同规模领先的多模态能力！
 
+### 
+MiniCPM-V 依赖 timm
+
 ### License 
 
 本仓库中代码依照 Apache-2.0 协议开源

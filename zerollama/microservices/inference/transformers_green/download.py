@@ -2,8 +2,17 @@
 from zerollama.core.config.main import config_setup
 
 
-def download(model_name):
+def download(model_name, model_class=None):
     config = config_setup()
+
+    if model_class is not None:
+        model_info = model_class.get_model_config(model_name).info
+        if config.use_modelscope:
+            if "modelscope_name" in model_info:
+                model_name = model_info["modelscope_name"]
+        else:
+            if "hf_name" in model_info:
+                model_name = model_info["hf_name"]
 
     if config.use_modelscope:
         from modelscope import snapshot_download
