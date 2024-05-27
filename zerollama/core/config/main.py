@@ -25,7 +25,7 @@ def config_setup():
 
     config = edict({})
     config.use_modelscope = True
-    config.modelscope = {}
+
 
     if "huggingface" in config_global:
         config_huggingface = config_global["huggingface"]
@@ -44,7 +44,9 @@ def config_setup():
 
         if "MODELSCOPE_CACHE" in config_modelscope:
             os.environ["MODELSCOPE_CACHE"] = config_modelscope["MODELSCOPE_CACHE"]
-            config.modelscope.cache_dir = Path(get_modelscope_cache_dir())
+
+    config.modelscope = {}
+    config.modelscope.cache_dir = Path(get_modelscope_cache_dir())
 
     rag_path = Path.home() / ".zerollama/rag/documents"
     config.rag = edict({"path": rag_path})
