@@ -1,0 +1,3 @@
+omegaconf==2.3.0
+fairscale==0.4.13
+timm==0.9.7
