@@ -1121,34 +1121,36 @@ llama.cpp库默认使用静态分配
 - 不同 BPW 的模型已经开始拉开差距。从最大的 q8_0 深蓝色，到最小的q2_k 棕色。
 - 斜率几乎一样，也验证了，llama.cpp 各模型的 kv cache 实现是一样的
 
-<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/decoding/1.8B-2.png?raw=true" width="800">
+<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/decoding/4B-2.png?raw=true" width="800">
 
 - bnb int8就不提了。int4速度也不太行，跟其他 BPW 等于4的模型差距有点大
 - bfloat16 毕竟 BPW 16，比 GGUF 模型都慢
 - GPTQ int4 exllamav2 开始比 GGUF 模型 都快。但斜率大，增长快，HuggingFace Transformers 的 kv cache 还是不行
 
-<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/decoding/1.8B-3.png?raw=true" width="800">
+<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/decoding/4B-3.png?raw=true" width="800">
 
 - 结论跟1.8B一致
 - fuse_layers 效果立竿见影，断层领先，速度还稳定丝滑，果然默认开启是好的
 - AWQ GEMM 最慢，AWQ exllama 第二，AWQ exllamav2 最快
 - GEMM 不使用 fuse_layers 的毛刺最大，都超出图片范围了
 
-<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/decoding/1.8B-4.png?raw=true" width="800">
+<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/decoding/4B-4.png?raw=true" width="800">
 
-AWQ 还支持 max_seq_len 和 batch_size 参数，有机会预分配 kv cache，结果就有趣了
+AWQ 还支持 max_seq_len 和 batch_size 参数，有机会预分配 kv cache，结果就有趣了 （发现了巨大的坑
 
 - 不使用fuse_layers，曲线重合，max_seq_len 和 batch_size 参数不起作用
 - 使用fuse_layers，token 长度 2048后，指定 max_seq_len 的线性增长，对比之前应该是对的
-- 没指定 max_seq_len 的 虽然一跳一跳的，但保持稳定？ 也就是，输出延迟不随输出长度的增加而增加
+- 没指定 max_seq_len 的 虽然一跳一跳的，但保持稳定？ 也就是，输出延迟不随输出长度的增加而增加？
 - 难道它是只读 2048 个 kv cache 吗？ 我的天，到底什么样实现才能出现这样的曲线？
-
 
 [WindowedCache](https://github.com/casper-hansen/AutoAWQ/blob/main/awq/modules/fused/cache.py)
 
 > The window size is the same as the max_seq_len. The window will automatically roll once max_seq_len is exceeded.
 > 
 > 它这是要实现Sliding Window Attention吗，但没有任何文档介绍这会对模型结果造成影响。
+
+** 注意 ** 
+> 使用使用fuse_layers 时要设置足够长的 max_seq_len，默认是 2048
 
 | 名称                             | BPW  | Prefill  | W    | B        |
 |--------------------------------|------|----------|------|----------|
