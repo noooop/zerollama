@@ -1,9 +1,10 @@
-# Retriever 推理引擎
+# super resolution 
 
 ### 帮助
 ```
-$ python -m zerollama.tasks.retriever.cli --help
-Usage: python -m zerollama.tasks.retriever.cli [OPTIONS] COMMAND [ARGS]...
+$ python -m zerollama.tasks.super_resolution.cli
+Usage: python -m zerollama.tasks.super_resolution.cli [OPTIONS] COMMAND
+                                                      [ARGS]...
 
 Options:
   --help  Show this message and exit.
@@ -18,51 +19,43 @@ Commands:
 
 ### list-families 列出支持的模型家族
 ```
-$ python -m zerollama.tasks.retriever.cli list-families
+$ python -m zerollama.tasks.super_resolution.cli list-families
 Supported retriever families:
-bge-retrieval
-bce-embedding
-m3e
+APISR
 ```
 
 ### list-family 列出支持的模型家族成员
 ```
-$ python -m python -m zerollama.tasks.retriever.cli list-family m3e
-+-------------------+------+-----------+----+----+-----+-----+-----+-------------+---------------+--------+-----------+
-| name              | size | dimension | zh | en | s2s | s2p | s2c | open source | compatibility | family | protocol  |
-+-------------------+------+-----------+----+----+-----+-----+-----+-------------+---------------+--------+-----------+
-| moka-ai/m3e-small | 24M  | 512       | 是 | 否 | 是  | 否  | 否  | 是          | 优            | m3e    | retriever |
-| moka-ai/m3e-base  | 110M | 768       | 是 | 是 | 是  | 是  | 否  | 是          | 优            | m3e    | retriever |
-| moka-ai/m3e-large | 340M | 768       | 是 | 否 | 是  | 是  | 否  | 是          | 优            | m3e    | retriever |
-+-------------------+------+-----------+----+----+-----+-----+-----+-------------+---------------+--------+-----------+
+$ python -m zerollama.tasks.super_resolution.cli list-family APISR
++--------+-------+---------------------------------+--------+------------------+
+| name   | scale | weight_path                     | family | protocol         |
++--------+-------+---------------------------------+--------+------------------+
+| 4xGRL  | 4     | 4x_APISR_GRL_GAN_generator.pth  | APISR  | super_resolution |
+| 4xDAT  | 4     | 4x_APISR_DAT_GAN_generator.pth  | APISR  | super_resolution |
+| 4xRRDB | 4     | 4x_APISR_RRDB_GAN_generator.pth | APISR  | super_resolution |
+| 2xRRDB | 2     | 2x_APISR_RRDB_GAN_generator.pth | APISR  | super_resolution |
++--------+-------+---------------------------------+--------+------------------+
 ```
-
-## 下载模型
-```
-$ python -m zerollama.tasks.retriever.cli pull BAAI/bge-m3
-```
-
 
 ## demo 服务端启动
 ```
-$ python -m zerollama.tasks.retriever.engine.server
+$ python -m zerollama.tasks.super_resolution.engine.server
 use inference backend:
-zerollama.models.baai.backend.retriever:BGERetriever
+zerollama.models.apisr.backend.sr:APISR
 ZeroNameServer: InMemoryNameServer running! port: 9527
-ZeroRetrieverInferenceEngine:  BAAI/bge-m3 is running! port: 56539
+Number of parameters  1.03
+ZeroSRInferenceEngine:  4xGRL is running! port: 54965
 ```
 
 ## demo 客户端运行
 ```
-$ python -m zerollama.tasks.retriever.engine.client
+$ python -m zerollama.tasks.super_resolution.engine.client
 ================================================================================
-Wait BAAI/bge-m3 available
-[ServerInfo(name='BAAI/bge-m3', host='localhost', port=56539, protocol='retriever')]
+Wait 4xGRL available
+[ServerInfo(name='4xGRL', host='localhost', port=54965, protocol='super_resolution')]
 ================================================================================
-ZeroRetrieverInferenceEngine support_methods
-state='ok' msg={'name': 'ZeroRetrieverInferenceEngine', 'support_methods': ['inference', 'info', 'support_methods']}
-state='ok' msg={'name': 'BAAI/bge-m3', 'dimension': '1024', 'sequence_length': '8192', 'introduction': 'multilingual; unified fine-tuning (dense, sparse, and colbert) from bge-m3-unsupervised', 'family': 'bge-retrieval', 'protocol': 'retriever'}
-================================================================================
-[[0.6265 0.3477]
- [0.35   0.678 ]]
+ZeroSRInferenceEngine support_methods
+state='ok' msg={'name': 'ZeroSRInferenceEngine', 'support_methods': ['inference', 'info', 'support_methods']}
+state='ok' msg={}
+input shape (620, 878, 3), output shape (2480, 3504, 3)
 ```

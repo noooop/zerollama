@@ -42,10 +42,13 @@
 - [bge-reranker](https://github.com/noooop/zerollama/tree/main/zerollama/models/baai)
 - [bce-reranker](https://github.com/noooop/zerollama/tree/main/zerollama/models/bce)
 
-## Vision-Language Multimodal Model 
-- CogVLM2
-- MiniCPM-V
-- DeepSeek-VL
+## Vision-Language Multimodal 模型 
+- [CogVLM2](https://github.com/noooop/zerollama/tree/main/zerollama/models/thudm)
+- [MiniCPM-V](https://github.com/noooop/zerollama/tree/main/zerollama/models/openbmb)
+- [DeepSeek-VL](https://github.com/noooop/zerollama/tree/main/zerollama/models/deepseek)
+
+## Super Resolution 模型 
+- [APISR](https://github.com/noooop/zerollama/tree/main/zerollama/models/apisr)
 
 ## Contribute
 贡献代码请交逻辑清晰思路、简单直接的代码、不要有魔法，甚至可以牺牲一部分性能换取可读性

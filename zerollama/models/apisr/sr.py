@@ -44,5 +44,5 @@ if __name__ == '__main__':
         model = get_model(model_name)
         super_resolved_img = model.sr(img_lr)
 
-        im = Image.fromarray(super_resolved_img)
+        im = Image.fromarray(super_resolved_img.image)
         im.save(f"{model_name}-super_resolved_img.png", format="png")
