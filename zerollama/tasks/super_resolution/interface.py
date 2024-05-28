@@ -27,13 +27,7 @@ class SuperResolutionInterface(object):
         """
         raise NotImplementedError
 
-    def inference(self, sentences, **options):
-        """
-
-        :param sentences:
-        :param options:
-        :return:
-        """
+    def sr(self, img_lr, **options):
         raise NotImplementedError
 
 

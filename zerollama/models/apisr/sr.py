@@ -42,7 +42,7 @@ if __name__ == '__main__':
 
     for model_name in [x[0] for x in APISR.info]:
         model = get_model(model_name)
-        super_resolved_img = model.inference(img_lr)
+        super_resolved_img = model.sr(img_lr)
 
         im = Image.fromarray(super_resolved_img)
         im.save(f"{model_name}-super_resolved_img.png", format="png")

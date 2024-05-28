@@ -5,12 +5,14 @@ import torch
 from pathlib import Path
 from torchvision.transforms import ToTensor
 from torchvision.utils import make_grid
+from zerollama.tasks.super_resolution.protocol import SRResponse
+from zerollama.tasks.super_resolution.interface import SuperResolutionInterface
 from zerollama.tasks.super_resolution.collection import get_model_config_by_name, get_model_by_name
 
 apisr_path = Path(os.path.dirname(__file__)).parent.parent.parent.parent.parent / "APISR"
 
 
-class APISR(object):
+class APISR(SuperResolutionInterface):
     def __init__(self, model_name, float16_inference=False):
         model_config = get_model_config_by_name(model_name)
 
@@ -28,6 +30,7 @@ class APISR(object):
 
         self.model = None
         self.weight_dtype = None
+        self.n_concurrent = 1
 
     def load(self):
         import sys
@@ -55,7 +58,7 @@ class APISR(object):
         self.model = self.model.to(dtype=weight_dtype)
 
     @torch.no_grad()
-    def inference(self, img_lr, **options):
+    def sr(self, img_lr, **options):
         downsample_threshold = options.get("downsample_threshold", -1)
         crop_for_4x = options.get("crop_for_4x", True)
 
@@ -81,7 +84,7 @@ class APISR(object):
         with torch.cuda.amp.autocast():
             grid = make_grid(super_resolved_img)
             ndarr = grid.mul(255).add_(0.5).clamp_(0, 255).permute(1, 2, 0).to("cpu", torch.uint8).numpy()
-            return ndarr
+            return SRResponse(model=self.model_name, image=ndarr)
 
 
 
