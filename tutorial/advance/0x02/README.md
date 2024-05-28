@@ -1148,9 +1148,17 @@ AWQ 还支持 max_seq_len 和 batch_size 参数，有机会预分配 kv cache，
 > The window size is the same as the max_seq_len. The window will automatically roll once max_seq_len is exceeded.
 > 
 > 它这是要实现Sliding Window Attention吗，但没有任何文档介绍这会对模型结果造成影响。
+> 
+> 参考 [Λ-shape Window Mask](https://kexue.fm/archives/9948/comment-page-1)
+> 
+> **开头的几个Token很重要，不能扔掉。所以最后可用的Window Mask应该如上图右（LM-Infinite这篇论文管它叫“Λ-Mask”）。**
+> 
+> 
 
-** 注意 ** 
+**注意** 
 > 使用使用fuse_layers 时要设置足够长的 max_seq_len，默认是 2048
+> 
+
 
 | 名称                             | BPW  | Prefill  | W    | B        |
 |--------------------------------|------|----------|------|----------|
