@@ -86,7 +86,7 @@ def prefill_first_token_latency(model_name):
 
         try:
             tt = []
-            for i in range(10):
+            for i in range(3):
                 model.reset()
                 t = time.time()
                 model.eval(tokens)
@@ -102,21 +102,68 @@ def prefill_first_token_latency(model_name):
     return time_list
 
 
+def decoding_latency(model_name):
+    print(model_name)
+
+    repo_id, filename = model_name.split("+")
+
+    model = Llama.from_pretrained(
+        repo_id=repo_id,
+        filename=filename,
+        verbose=False,
+
+        n_gpu_layers=-1,
+        n_ctx=n_ctx + 1,
+    )
+
+    prompt_tokens = [151644, 8948, 198, 2610, 525, 264, 10950, 17847, 13, 151645, 198, 151644, 872, 198, 104169,
+                     109432, 101951, 102064, 104949, 1773, 151645, 198, 151644, 77091, 198]
+
+    data = []
+    for max_len in [100, 10000, 10000, 10000]:
+    #for max_len in [100, 5000, 5000, 5000]:
+        model.reset()
+
+        completion_tokens = []
+        tokens = list(prompt_tokens)
+
+        n_prompt_tokens = len(prompt_tokens)
+        sample_idx = n_prompt_tokens - 1
+        time_list = [time.time()]
+
+        #for index in trange(n_prompt_tokens, max_len, initial=n_prompt_tokens, total=max_len):
+        for index in range(n_prompt_tokens, max_len):
+            model.eval(tokens)
+            time_list.append(time.time())
+
+            token = sample(model, sample_idx)
+            completion_tokens.append(token)
+
+            sample_idx += 1
+            tokens.clear()
+            tokens.append(token)
+
+        data.append(time_list)
+
+    pickle.dump(data, open(f"./llama_cpp/{model_name.replace('/', '_')}.pkl", "wb"))
+
+
 if __name__ == '__main__':
+    import traceback
     from zerollama.utils.logging import sys_logging
+    from pathlib import Path
 
-    sys_logging()
-
+    sys_logging(Path("./llama_cpp/"))
 
     repo_id = [
- #       "Qwen/Qwen1.5-0.5B-Chat-GGUF",
-  #      "Qwen/Qwen1.5-1.8B-Chat-GGUF",
+        "Qwen/Qwen1.5-0.5B-Chat-GGUF",
+        "Qwen/Qwen1.5-1.8B-Chat-GGUF",
         "Qwen/Qwen1.5-4B-Chat-GGUF",
         "Qwen/Qwen1.5-7B-Chat-GGUF",
- #       "Qwen/Qwen1.5-14B-Chat-GGUF",
-#        "Qwen/Qwen1.5-32B-Chat-GGUF",
-#        "Qwen/Qwen1.5-72B-Chat-GGUF",
-#        "Qwen/Qwen1.5-110B-Chat-GGUF",
+         "Qwen/Qwen1.5-14B-Chat-GGUF",
+        "Qwen/Qwen1.5-32B-Chat-GGUF",
+        "Qwen/Qwen1.5-72B-Chat-GGUF",
+        "Qwen/Qwen1.5-110B-Chat-GGUF",
     ]
     filename = [
         "*q8_0.gguf",
@@ -129,7 +176,13 @@ if __name__ == '__main__':
         "*q2_k.gguf"
     ]
 
+    Path("./llama_cpp/").mkdir(exist_ok=True)
+
     for r in repo_id:
         for f in filename:
-            model_name = f"{r}+{f}"
-            prefill_first_token_latency(model_name)
+            try:
+                model_name = f"{r}+{f}"
+                prefill_first_token_latency(model_name)
+                decoding_latency(model_name)
+            except Exception:
+                traceback.print_exc()
