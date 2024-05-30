@@ -391,7 +391,7 @@ def prefill_first_token_latency_exactly(Lp, Hp, KVp, w_size, a_size, n, n_groups
 ## 4.4. 解码 （Decoding） 阶段 推理理论极限
 解码 （Decoding） 阶段对应于输出之后的 token 的输出。
 
-kv cache已经填入之前 token。 推理过程就是从下往上过一遍模型，最后从 lm_head 输出 logits 采样。
+kv cache 已经填入之前 token。 推理过程就是从下往上过一遍模型，最后从 lm_head 输出 logits 采样。
 
 当语言模型生成文本时，它是逐个 token 进行的，后一个词依赖前一个词，没有并行性的可能性，也玩不出什么花样。
 
@@ -400,6 +400,8 @@ kv cache已经填入之前 token。 推理过程就是从下往上过一遍模�
 Decoding 阶段 推理理论极限：
 - 读取延迟 = （模型参数量 * bpw + kv cache参数量 * kv cache 每浮点占用大小) / 显卡带宽
 - 计算延迟 = （模型参数量 + kv cache 参数量）* 每参数两次浮点运算 / 显卡算力
+
+> 由于，transformer 这种只需要对每个元素执行两次操作的场景，必定受到访存带宽的限制。
 - Latency = max(读取延迟，计算延迟) = 读取延迟
 
 变成更有物理意义的的参数形式
@@ -902,7 +904,7 @@ llama.cpp使用库的好处是依赖少，不必像Transformers 库一样先装 
 | 32B  | 65.04 GB     | oom                   | oom                   | 21.49 GiB (5.68 BPW)  | 20.92 GiB (5.53 BPW)  | 18.34 GiB (4.85 BPW)  | 17.22 GiB (4.55 BPW)  | 14.72 GiB (3.89 BPW)  | 11.38 GiB (3.01 BPW)  |
 
 - 模型文件大小比模型参数大小略大，是因为分词器数据也包含在GGUF模型文件内
-- GGUF 部分格式使用了混合量化技术，按照对结果的影响，模型不同权重使用不同精度的数据格式，所以不同尺寸的模型BPW有些许差别
+- GGUF 部分格式使用了混合量化技术，按照模型不同层量化对精度损失影响不同，不同层使用不同精度的数据格式，所以不同尺寸的模型BPW有些许差别
 - 解码 （Decoding） 阶段，主要与BPW有关，对比时需要将其考虑在内
 
 ### 6.3.7. llama.cpp GGUF 显存占用
@@ -947,7 +949,7 @@ llama.cpp 使用二分法寻找最大能申请的 n_ctx 最大大小，
 | 14B  | 15114        | 23285        | 11250  | 14063  | 15846  | 16617  | 17395  | 18431  | 19186  | 20479  |
 | 32B  | oom          | 37778        | oom    | oom    | 5370   | 7158   | 15086  | 18419  | 25852  | 36076  |
 
-- 跟理论极限推理长度在一个数量级，差距不是很大
+- 跟理论极限推理长度在一个数量级，差距不是很大，llama.cpp的显存管理非常优秀
 
 HuggingFace Transformers 动态输出至 max_length = 10W （Qwen1.5 默认 32k 上下文）
 
@@ -980,14 +982,13 @@ HuggingFace Transformers 动态输出至 max_length = 10W （Qwen1.5 默认 32k 
 
 <img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/decoding/4B-4.png?raw=true" width="800">
 
-- AWQ 支持 max_seq_len 和 batch_size 参数，使用了预分配 kv cache，结果就有趣了 （发现了巨大的坑
-
 - 不使用fuse_layers，曲线重合，max_seq_len 和 batch_size 参数不起作用，也就是没有使用预分配 kv cache
-- 使用fuse_layers，token 长度 2048后，指定 max_seq_len>1w 延迟随输出长度线性增长，对比类似模型，这样的速度曲线应该是对的
+- 使用 fuse_layers 的时候，支持 max_seq_len 和 batch_size 参数，预分配 kv cache
+- 使用 fuse_layers，token 长度 2048后，指定 max_seq_len>1w 延迟随输出长度线性增长，对比类似模型，这样的速度曲线应该是对的
 - 没指定 max_seq_len 的 虽然一跳一跳的，但保持稳定？ 也就是，输出延迟不随输出长度的增加而增加？
 - 难道它是只读 2048 个 kv cache 吗？ 我的天，到底什么样实现才能出现这样的曲线？
 
-AWQ 使用了 [WindowedCache](https://github.com/casper-hansen/AutoAWQ/blob/main/awq/modules/fused/cache.py)
+参考源代码，AWQ 使用了 [WindowedCache](https://github.com/casper-hansen/AutoAWQ/blob/main/awq/modules/fused/cache.py)
 
 > The window size is the same as the max_seq_len. The window will automatically roll once max_seq_len is exceeded.
 > 
@@ -1044,7 +1045,7 @@ llama.cpp库默认使用静态分配。AWQ fuse_layers 使用静态分配。
 
 - bfloat16 比 llama.cpp 快一截，增速也缓
 - 考虑到 bfloat16 的 BPW 等于 16，这个速度就很离谱
-- HuggingFace Transformers 跑 bfloat16，无论是启动一次开销，还是 kv cache开销，都比 llama.cpp 小
+- 也就是说，HuggingFace Transformers 跑 bfloat16，无论是启动一次开销，还是 kv cache开销，都比 llama.cpp 小
 - bnb int8 慢的有点离谱，是 4090 不支持 int8，还是实现有bug。退出后续比较
 - QLoRA 底层是用 bnb，实测 int8 也是不可用状态
 - bnb int4 速度也不快，速度倒是挺稳定，看大一些模型能不能扳回一些
@@ -1059,8 +1060,10 @@ llama.cpp库默认使用静态分配。AWQ fuse_layers 使用静态分配。
 <img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/decoding/0.5B-4.png?raw=true" width="800">
 
 - 接下来是有6名选手的 AWQ 量化方法
+- 分使用fuse_layers和不使用fuse_layers两组
+- 每组各有 AWQ GEMM、 AWQ exllama、 AWQ exllamav2 三名选手 
 - 不使用fuse_layers 情况下 AWQ exllama、GPTQ int4 exllamav2、AWQ exllamav2、bfloat16 认为在同一梯队
-- 不使用fuse_layers 情况下 AWQ GEMM 最慢，AWQ exllama 比 GPTQ int4 exllamav2 还要快一些，AWQ exllamav2 最快
+- 不使用fuse_layers 情况下 AWQ exllamav2 ≈ GPTQ int4 exllamav2 > AWQ exllama > AWQ GEMM
 - 使用 fuse_layers 效果立竿见影，只要使用就能跟之前方法拉开差距
 
 | 名称                              | BPW  | Prefill  | W      | W 理论实际比 | B        | B 换算成w16 | B 理论实际比 |
@@ -1138,7 +1141,7 @@ llama.cpp库默认使用静态分配。AWQ fuse_layers 使用静态分配。
 | AWQ <br/> ExllamaV2  fuse_layers | 4    | 5.52 ms  | 2538  | 46%     | 2.66 ms  | 10.64    | 26.5%   |
 
 - 理论跟实际差别在缩小
-- W 理论实际比，GGUF 模型 67% 左右，HuggingFace Transformers 34%~46%， kv cache 实现还是不太行
+- W 理论实际比，GGUF 模型 67% 左右，HuggingFace Transformers 34%~46%， 动态 kv cache 要慢一点
 - B 理论实际比，GGUF 模型 8.7% ~ 18%， AWQ ExllamaV2 fuse_layers 能达到 26%，bfloat16 能达到 47%
 
 ### 6.4.3 Decoding 4B 
@@ -1153,7 +1156,7 @@ llama.cpp库默认使用静态分配。AWQ fuse_layers 使用静态分配。
 
 - bnb int8就不提了。int4速度也不太行，跟其他 BPW 等于4的模型差距有点大
 - bfloat16 毕竟 BPW 16，比 GGUF 模型都慢
-- GPTQ int4 exllamav2 开始比 GGUF 模型 都快。但斜率大，增长快，HuggingFace Transformers 的 kv cache 实现还是不太行
+- GPTQ int4 exllamav2 开始比 GGUF 模型 都快。但斜率大，增长快，HuggingFace Transformers 的动态 kv cache 实现还是不太行
 
 <img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/decoding/4B-3.png?raw=true" width="800">
 
@@ -1185,7 +1188,7 @@ llama.cpp库默认使用静态分配。AWQ fuse_layers 使用静态分配。
 | AWQ <br/> ExllamaV2  fuse_layers | 4    | 5.85 ms  | 1492 | 56.5%   | 4.66 ms  | 18.64 ms  | 35.30%  |
 
 - 理论跟实际差别继续缩小
-- W 理论实际比，GGUF 模型 74% 左右，HuggingFace Transformers 30%~50%， kv cache 实现还是不太行
+- W 理论实际比，GGUF 模型 74% 左右，HuggingFace Transformers 30%~50%， 动态 kv cache 还是要慢一点
 - B 理论实际比，GGUF 模型 14% ~ 29%， AWQ ExllamaV2 fuse_layers 能达到 35%， bfloat16 能达到 57%
 
 ### 6.4.4 Decoding 7B 
@@ -1286,7 +1289,7 @@ llama.cpp库默认使用静态分配。AWQ fuse_layers 使用静态分配。
 
 <img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/decoding/32B-1.png?raw=true" width="800">
 
-- q8_0、q6_k、q5_k_m oom，q5_0 没办法输出 1W 个 token
+- q8_0、q6_k oom，q5_k_m 最长输出至 5370，q5_0 最长输出至 7158
 
 <img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/decoding/32B-2.png?raw=true" width="800">
 
@@ -1302,21 +1305,21 @@ llama.cpp库默认使用静态分配。AWQ fuse_layers 使用静态分配。
 
 | 名称                             | BPW  | Prefill | W    | W 理论实际比 | B      | B 换算成w16 | B 理论实际比 |
 |--------------------------------|------|---------|------|---------|--------|----------|---------|
-| 理论 w16kv16                     | 16   |         | 4129 | 100.0%  | 58.64  | 58.64    | 100.00% |
+| 理论 w16kv16                     | 16   |         | 4129 | 100.00% | 58.64  | 58.64    | 100.00% |
 | q8_0.gguf                      | oom  | oom     | oom  | oom     | oom    | oom      | oom     |
 | q6_k.gguf                      | oom  | oom     | oom  | oom     | oom    | oom      | oom     |
-| q5_k_m.gguf                    | oom  | oom     | oom  | oom     | oom    | oom      | oom     |
-| q5_0.gguf                      | 5.53 | 136.64  | 1623 | 39.3%   | 33.08  | 95.71    | 61.27%  |
-| q4_k_m.gguf                    | 4.85 | 115.86  | 1643 | 39.8%   | 30.37  | 100.19   | 58.53%  |
-| q4_0.gguf                      | 4.55 | 106.15  | 1566 | 37.9%   | 29.08  | 102.26   | 57.34%  |
-| q3_k_m.gguf                    | 3.89 | 178.87  | 1562 | 37.8%   | 26.55  | 109.20   | 53.70%  |
-| q2_k.gguf                      | 3.01 | 208.12  | 1592 | 38.6%   | 23     | 122.26   | 47.96%  |
+| q5_k_m.gguf                    | 5.68 | 164.72  | 1648 | 39.91%  | 33.67  | 94.85    | 61.83%  |
+| q5_0.gguf                      | 5.53 | 146.53  | 1572 | 38.07%  | 32.91  | 95.22    | 61.58%  |
+| q4_k_m.gguf                    | 4.85 | 121.23  | 1550 | 37.54%  | 30.02  | 99.04    | 59.21%  |
+| q4_0.gguf                      | 4.55 | 106.15  | 1566 | 37.93%  | 29.08  | 102.26   | 57.34%  |
+| q3_k_m.gguf                    | 3.89 | 178.87  | 1562 | 37.83%  | 26.55  | 109.20   | 53.70%  |
+| q2_k.gguf                      | 3.01 | 208.12  | 1592 | 38.56%  | 23     | 122.26   | 47.96%  |
 | bfloat16                       | 16   | oom     | oom  | oom     | oom    | oom      | oom     |
 | bnb int8                       | 8    | oom     | oom  | oom     | oom    | oom      | oom     |
-| bnb int4                       | 4    | 2.71    | 414  | 10.0%   | 32.47  | 129.88   | 45.15%  |
-| GPTQ-Int4 <br/> exllamav2 （默认) | 4    | 1.75    | 323  | 7.8%    | 26.55  | 106.20   | 55.22%  |
-| AWQ <br/> GEMM                 | 4    | 1.83    | 208  | 5.0%    | 163.62 | 654.48   | 8.96%   |
-| AWQ <br/> Exllama              | 4    | 2.28    | 819  | 19.8%   | 167.67 | 670.68   | 8.74%   |
+| bnb int4                       | 4    | 2.71    | 414  | 10.03%  | 32.47  | 129.88   | 45.15%  |
+| GPTQ-Int4 <br/> exllamav2 （默认) | 4    | 1.75    | 323  | 7.82%   | 26.55  | 106.20   | 55.22%  |
+| AWQ <br/> GEMM                 | 4    | 1.83    | 208  | 5.04%   | 163.62 | 654.48   | 8.96%   |
+| AWQ <br/> Exllama              | 4    | 2.28    | 819  | 19.84%  | 167.67 | 670.68   | 8.74%   |
 
 - HuggingFace Transformers 几乎是全军覆没。
 - W 理论实际比，GGUF 模型 38% 左右，对比 14B 模型 79% 左右，llama.cpp 对 GQA 支持还有加强的空间
@@ -1324,14 +1327,17 @@ llama.cpp库默认使用静态分配。AWQ fuse_layers 使用静态分配。
 
 ### 6.4.7 小结
 
-- llama.cpp kv cache静态 使得推理非常稳定，丝滑，极限推理长度也更长一些
-- bnb int8 不可用，int4速度也比较慢，所以只适合尝鲜使用，不建议线上部署
+- llama.cpp 使用了 kv cache静态，使得推理非常稳定，丝滑，极限推理长度也更长一些。再考虑到它依赖少，使用方便，个人使用第一推荐
+- bnb int8 不可用，int4速度也比较慢，所以只适合尝鲜使用，不建议线上部署。也为QLora捏把汗
 - 在本文关注的单用户 Decoding 场景， AWQ exllamav2 ≈ GPTQ int4 exllamav2 > AWQ exllama > AWQ GEMM
-- fuse_layers 效果立竿见影，断层领先，速度还稳定丝滑。但32B模型无法加载
+- fuse_layers 效果立竿见影，断层领先，速度还稳定丝滑。但32B模型无法加载，非常遗憾，尤其是考虑到 32B 模型是 Qwen1.5 家族性价比最高的模型
 - 随着模型尺寸增加，理论跟实际差别在缩小，以最强的AWQ exllamav2为例
 - W 理论实际比 1.8B 46%、4B 56.5%、7B 76.0%、14B 82.3% 
 - B 理论实际比 1.8B 26.5%、4B 35.30%、7B 49.77%、14B 57.3%
 
+最后用一张 q4_k_m 和 AWQ ExllamaV2  fuse_layer 延迟曲线图结束 Decoding 阶段
+
+<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/decoding/decoding.png?raw=true" width="800">
 
 ## 6.5. 预填充 (Prefill) 阶段
 
