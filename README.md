@@ -32,6 +32,8 @@
 - [Yi](https://github.com/noooop/zerollama/tree/main/zerollama/models/yi)
 - [llama3](https://github.com/noooop/zerollama/tree/main/zerollama/models/llama) [llama3zh](https://github.com/noooop/zerollama/tree/main/zerollama/models/llama)
 - [XVERSE](https://github.com/noooop/zerollama/tree/main/zerollama/models/xverse)
+- [Yuan](https://github.com/noooop/zerollama/tree/main/zerollama/models/yuan)
+- [Mistral](https://github.com/noooop/zerollama/tree/main/zerollama/models/mistral)
 
 ## Retriever(Embeddings) 模型
 - [bge-retrieval](https://github.com/noooop/zerollama/tree/main/zerollama/models/baai)
