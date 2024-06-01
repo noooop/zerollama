@@ -58,7 +58,6 @@ def sample(model, sample_idx):
 
 def prefill_first_token_latency(model_name):
     print(model_name)
-    print(torch.cuda.memory_allocated() / B)
 
     repo_id, filename = model_name.split("+")
 
@@ -72,34 +71,36 @@ def prefill_first_token_latency(model_name):
         n_batch=n_ctx + 1,
     )
 
-    ma = torch.cuda.memory_allocated()
-    print(model_name, f"{ma / B:0.2f}GB")
-
     prompt_tokens = [151644, 8948, 198, 2610, 525, 264, 10950, 17847, 13, 151645, 198, 151644, 872, 198, 104169,
                      109432, 101951, 102064, 104949, 1773, 151645, 198, 151644, 77091, 198]
 
     time_list = []
-    for m in range(len(prompt_tokens), 501):
-        tokens = list(prompt_tokens)
-        n_prompt_tokens = len(prompt_tokens)
+    for m in range(1, 501):
+        if m < len(prompt_tokens):
+            tokens = prompt_tokens[-m:]
+        else:
+            tokens = list(prompt_tokens)
+
+        n_prompt_tokens = len(tokens)
         sample_idx = n_prompt_tokens - 1
 
         try:
             tt = []
-            for i in range(3):
+            for i in range(5):
                 model.reset()
                 t = time.time()
                 model.eval(tokens)
                 token = sample(model, sample_idx)
                 tt.append(time.time() - t)
-            print(m, n_prompt_tokens, f"{np.median(tt) * 1000:0.2f}")
+            #print(m, n_prompt_tokens, f"{np.median(tt) * 1000:0.2f}")
             time_list.append((m, tt))
         except Exception as e:
             raise e
 
-        prompt_tokens = prompt_tokens[:20] + [random.randint(10000, 140000)] + prompt_tokens[20:]
+        if m >= len(prompt_tokens):
+            prompt_tokens = prompt_tokens[:20] + [random.randint(10000, 140000)] + prompt_tokens[20:]
 
-    return time_list
+    pickle.dump(time_list, open(f"./llama_cpp/{model_name.replace('/', '_')}.pkl", "wb"))
 
 
 def decoding_latency(model_name):
