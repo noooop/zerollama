@@ -1390,7 +1390,7 @@ llama.cpp库默认使用静态分配。AWQ fuse_layers 使用静态分配。
 
 <img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/prefill/prefill-gguf-500.png?raw=true" width="800">
 
-- d. 更大尺度上，34 之后 也趋于稳定
+- d. 更大尺度上，32 之后 也趋于稳定
 
 # 7. 总结
 
