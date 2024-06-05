@@ -26,7 +26,6 @@ def config_setup():
     config = edict({})
     config.use_modelscope = True
 
-
     if "huggingface" in config_global:
         config_huggingface = config_global["huggingface"]
 
@@ -55,6 +54,16 @@ def config_setup():
         if "path" in config_rag:
             config.rag.path = Path(config_rag["path"])
 
+    if "vllm" in config_global:
+        config_vllm = config_global["vllm"]
+        if "VLLM_DO_NOT_TRACK" in config_vllm:
+            os.environ["VLLM_DO_NOT_TRACK"] = str(config_vllm["VLLM_DO_NOT_TRACK"])
+
+        if "DO_NOT_TRACK" in config_vllm:
+            os.environ["DO_NOT_TRACK"] = str(config_vllm["DO_NOT_TRACK"])
+
+        if "VLLM_NO_USAGE_STATS" in config_vllm:
+            os.environ["VLLM_NO_USAGE_STATS"] = str(config_vllm["VLLM_NO_USAGE_STATS"])
     return config
 
 

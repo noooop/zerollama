@@ -18,10 +18,12 @@ def download(model_name, get_model_by_name):
     download_backend(model_name=model_name, model_class=model_class)
 
 
-def get_pretrained_model_name_or_path(model_name, local_files_only, get_model_by_name, get_model_config_by_name):
+def get_pretrained_model_name_or_path(model_name, local_files_only, get_model_by_name, get_model_config_by_name=None):
     config = config_setup()
 
-    model_info = get_model_config_by_name(model_name).info
+    model = get_model_by_name(model_name)
+    model_config = model.get_model_config(model_name)
+    model_info = model_config.info
 
     if local_files_only:
         import huggingface_hub
