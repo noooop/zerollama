@@ -4,18 +4,7 @@
 
 ## 使用zmq的大语言应用微服务框架
 
-### 知识点一
-[服务器端和客户端 server & client](https://github.com/noooop/zerollama/tree/main/tutorial/basis/0x01)
-
-### 知识点二
-[序列化和反序列化 serialize & unserialize](https://github.com/noooop/zerollama/tree/main/tutorial/basis/0x02)
-
-### 合起来
-[最小化可行产品 minimum viable product](https://github.com/noooop/zerollama/tree/main/tutorial/basis/0x03)
-
-相当于，扔两块木板到太平洋，看我们能到多远吧
-
-[更多教程](https://github.com/noooop/zerollama/tree/main/tutorial)
+[文档&教程](https://github.com/noooop/zerollama/tree/main/tutorial)
 
 [安装&配环境](./setup)
 
@@ -23,6 +12,15 @@
 1. [与大模型对话 客户端](./applications/chat_cli)
 2. [与大模型对话 webui](./applications/chat_webui)
 3. [检索增强生成 (RAG)](./applications/rag)
+
+# 支持的推理框架
+## Chat 模型
+- [huggingface transformers](https://github.com/noooop/zerollama/tree/main/zerollama/microservices/inference/transformers_green)
+- [llama.cpp](https://github.com/noooop/zerollama/tree/main/zerollama/microservices/inference/llama_cpp_green)
+- [vllm (gevent)](https://github.com/noooop/zerollama/tree/main/zerollama/microservices/inference/vllm_green)
+
+## Retriever(Embeddings) 模型
+- [sentence transformer](https://github.com/noooop/zerollama/tree/main/zerollama/microservices/inference/sentence_transformer_green)
 
 # 支持的模型
 ## Chat 模型
