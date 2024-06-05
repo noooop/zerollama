@@ -7,17 +7,19 @@ from zerollama.core.config.main import config_setup
 from zerollama.tasks.chat.interface import ChatInterface
 from zerollama.tasks.chat.protocol import ChatCompletionResponse
 from zerollama.tasks.chat.protocol import ChatCompletionStreamResponse, ChatCompletionStreamResponseDone
-from zerollama.tasks.chat.collection import get_model_config_by_name
+from zerollama.tasks.chat.collection import get_model_by_name
+from zerollama.tasks.base.download import get_pretrained_model_name_or_path
 
 TORCH_TYPE = torch.bfloat16 if torch.cuda.is_available() and torch.cuda.get_device_capability()[
     0] >= 8 else torch.float16
 
 
 class HuggingFaceTransformers(object):
-    get_model_config_by_name = staticmethod(get_model_config_by_name)
+    get_model_by_name = staticmethod(get_model_by_name)
 
     def __init__(self, model_name, local_files_only=True, quantization_config=None, device="cuda"):
-        model_config = self.get_model_config_by_name(model_name)
+        model = self.get_model_by_name(model_name)
+        model_config = model.get_model_config(model_name)
 
         if model_config is None:
             raise FileNotFoundError(f"model [{model_name}] not supported.")
@@ -29,6 +31,9 @@ class HuggingFaceTransformers(object):
         self.local_files_only = local_files_only
         self.quantization_config = quantization_config
         self.trust_remote_code = self.model_config.model_kwargs.get("trust_remote_code", False)
+        self.pretrained_model_name_or_path = get_pretrained_model_name_or_path(model_name=model_name,
+                                                                               local_files_only=local_files_only,
+                                                                               get_model_by_name=get_model_by_name)
         self.torch_dtype = None
 
         self.model = None
@@ -37,19 +42,7 @@ class HuggingFaceTransformers(object):
         self.n_concurrent = 1
 
     def load(self):
-        config = config_setup()
-
-        pretrained_model_name_or_path = self.model_name
-
-        if config.use_modelscope:
-            from modelscope import AutoModelForCausalLM, AutoTokenizer
-            from transformers import TextIteratorStreamer, BitsAndBytesConfig
-            if "modelscope_name" in self.model_info:
-                pretrained_model_name_or_path = self.model_info["modelscope_name"]
-        else:
-            from transformers import AutoModelForCausalLM, AutoTokenizer, TextIteratorStreamer, BitsAndBytesConfig
-            if "hf_name" in self.model_info:
-                pretrained_model_name_or_path = self.model_info["hf_name"]
+        from transformers import AutoModelForCausalLM, AutoTokenizer, TextIteratorStreamer, BitsAndBytesConfig
 
         torch_dtype = "auto"
         if "quantization" in self.info and self.info["quantization"] != "":
@@ -68,7 +61,7 @@ class HuggingFaceTransformers(object):
 
         self.torch_dtype = torch_dtype
 
-        model_kwargs = {"pretrained_model_name_or_path": pretrained_model_name_or_path,
+        model_kwargs = {"pretrained_model_name_or_path": self.pretrained_model_name_or_path,
                         "torch_dtype": torch_dtype,
                         "device_map": "auto",
                         "local_files_only": self.local_files_only,
@@ -86,7 +79,8 @@ class HuggingFaceTransformers(object):
         except EnvironmentError:
             raise FileNotFoundError(f"model '{self.model_name}' not found, try pulling it first") from None
 
-        tokenizer = AutoTokenizer.from_pretrained(pretrained_model_name_or_path)
+        tokenizer = AutoTokenizer.from_pretrained(self.pretrained_model_name_or_path,
+                                                  trust_remote_code=self.trust_remote_code)
         streamer = TextIteratorStreamer(tokenizer, skip_prompt=True, skip_special_tokens=True)
 
         self.model = model
