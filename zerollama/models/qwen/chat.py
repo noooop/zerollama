@@ -74,6 +74,35 @@ class Qwen1_5_GGUF(ChatGGUFModel):
     }
 
 
+class Qwen2(ChatModel):
+    family = "Qwen1.5"
+    model_kwargs = {}
+    header = ["name", "size", "quantization", "bits", "subtype"]
+    info = [
+        # name                                      size      quantization(_, GPTQ, AWQ)     bits,     subtype
+        # original
+        ["Qwen/Qwen2-0.5B-Instruct",                "0.5B",   "",                            "",       "chat"],
+        ["Qwen/Qwen2-1.5B-Instruct",                "1.5B",   "",                            "",       "chat"],
+        ["Qwen/Qwen2-7B-Instruct",                  "7B",     "",                            "",       "chat"],
+        ["Qwen/Qwen2-57B-A14B-Instruct",            "A14B",   "",                            "",       "chat"],
+        ["Qwen/Qwen2-72B-Instruct",                 "72B",    "",                            "",       "chat"],
+
+        # GPTQ-Int4
+        ["Qwen/Qwen2-0.5B-Instruct-GPTQ-Int4",      "0.5B",   "GPTQ",                        "4bits",   "chat"],
+        ["Qwen/Qwen2-1.5B-Instruct-GPTQ-Int4",      "1.5B",   "GPTQ",                        "4bits",   "chat"],
+        ["Qwen/Qwen2-7B-Instruct-GPTQ-Int4",        "7B",     "GPTQ",                        "4bits",   "chat"],
+        ["Qwen/Qwen2-57B-A14B-Instruct-GPTQ-Int4",  "A14B",   "GPTQ",                        "4bits",   "chat"],
+        ["Qwen/Qwen2-72B-Instruct-GPTQ-Int4",       "72B",    "GPTQ",                        "4bits",   "chat"],
+
+        # AWQ
+        ["Qwen/Qwen2-0.5B-Instruct-AWQ",             "0.5B",   "AWQ",                        "4bits",    "chat"],
+        ["Qwen/Qwen2-1.5B-Instruct-AWQ",             "1.5B",   "AWQ",                        "4bits",    "chat"],
+        ["Qwen/Qwen2-7B-Instruct-AWQ",               "7B",     "AWQ",                        "4bits",    "chat"],
+        ["Qwen/Qwen2-57B-A14B-Instruct-AWQ",         "A14B",   "AWQ",                        "4bits",    "chat"],
+        ["Qwen/Qwen2-72B-Instruct-AWQ",              "72B",    "AWQ",                        "4bits",    "chat"],
+    ]
+
+
 if __name__ == '__main__':
     import torch
 
@@ -81,37 +110,20 @@ if __name__ == '__main__':
         from zerollama.microservices.inference.transformers_green.chat import run_test
         from transformers import BitsAndBytesConfig
 
-        for model_name, kwargs in [("Qwen/Qwen1.5-0.5B-Chat", {}),
-                                   ("Qwen/Qwen1.5-0.5B-Chat-GPTQ-Int4", {}),
-                                   ("Qwen/Qwen1.5-0.5B-Chat-AWQ", {}),
-                                   ("Qwen/Qwen1.5-MoE-A2.7B-Chat", {"quantization_config": BitsAndBytesConfig(load_in_8bit=True)}),
-                                   ("Qwen/Qwen1.5-MoE-A2.7B-Chat", {"quantization_config": BitsAndBytesConfig(load_in_8bit=True)})]:
+        for model_name, kwargs in [("Qwen/Qwen2-0.5B-Instruct", {}),
+                                   ("Qwen/Qwen2-0.5B-Instruct-GPTQ-Int4", {}),
+                                   ("Qwen/Qwen2-0.5B-Instruct-AWQ", {})]:
             print(model_name)
             run_test(model_name, stream=False, **kwargs)
 
             print("memory_allocated:", torch.cuda.memory_allocated() / 1024 ** 2)
 
-        for model_name, kwargs in [("Qwen/Qwen1.5-0.5B-Chat", {}),
-                                   ("Qwen/Qwen1.5-0.5B-Chat-GPTQ-Int4", {}),
-                                   ("Qwen/Qwen1.5-0.5B-Chat-AWQ", {}),
-                                   ("Qwen/Qwen1.5-MoE-A2.7B-Chat", {"quantization_config": BitsAndBytesConfig(load_in_8bit=True)}),
-                                   ("Qwen/Qwen1.5-MoE-A2.7B-Chat", {"quantization_config": BitsAndBytesConfig(load_in_8bit=True)})]:
+        for model_name, kwargs in [("Qwen/Qwen2-0.5B-Instruct", {}),
+                                   ("Qwen/Qwen2-0.5B-Instruct-GPTQ-Int4", {}),
+                                   ("Qwen/Qwen2-0.5B-Instruct-AWQ", {})]:
             print(model_name)
             run_test(model_name, stream=True, **kwargs)
             print("memory_allocated:", torch.cuda.memory_allocated() / 1024 ** 2)
 
-    def llama_cpp_test():
-        from zerollama.microservices.inference.llama_cpp_green.chat import run_test
 
-        for model_name in ["Qwen/Qwen1.5-0.5B-Chat-GGUF+*q8_0.gguf",
-                           "Qwen/Qwen1.5-0.5B-Chat-GGUF+*q2_k.gguf"]:
-            print(model_name)
-            run_test(model_name, stream=False)
-
-        for model_name in ["Qwen/Qwen1.5-0.5B-Chat-GGUF+*q8_0.gguf",
-                           "Qwen/Qwen1.5-0.5B-Chat-GGUF+*q2_k.gguf"]:
-            print(model_name)
-            run_test(model_name, stream=True)
-
-    #transformers_test()
-    llama_cpp_test()
+    transformers_test()

@@ -1,5 +1,7 @@
 
 import gc
+import traceback
+
 import torch
 import requests
 from threading import Thread
@@ -42,7 +44,13 @@ class HuggingFaceTransformers(object):
         self.n_concurrent = 1
 
     def load(self):
-        from transformers import AutoModelForCausalLM, AutoTokenizer, TextIteratorStreamer, BitsAndBytesConfig
+        config = config_setup()
+
+        if config.use_modelscope:
+            from modelscope import AutoModelForCausalLM, AutoTokenizer
+            from transformers import TextIteratorStreamer, BitsAndBytesConfig
+        else:
+            from transformers import AutoModelForCausalLM, AutoTokenizer, TextIteratorStreamer, BitsAndBytesConfig
 
         torch_dtype = "auto"
         if "quantization" in self.info and self.info["quantization"] != "":
@@ -61,7 +69,7 @@ class HuggingFaceTransformers(object):
 
         self.torch_dtype = torch_dtype
 
-        model_kwargs = {"pretrained_model_name_or_path": self.pretrained_model_name_or_path,
+        model_kwargs = {"pretrained_model_name_or_path": self.model_name,
                         "torch_dtype": torch_dtype,
                         "device_map": "auto",
                         "local_files_only": self.local_files_only,
@@ -75,8 +83,10 @@ class HuggingFaceTransformers(object):
         try:
             model = AutoModelForCausalLM.from_pretrained(**model_kwargs)
         except requests.exceptions.HTTPError:
+            traceback.print_exc()
             raise FileNotFoundError(f"model '{self.model_name}' not found, try pulling it first") from None
         except EnvironmentError:
+            traceback.print_exc()
             raise FileNotFoundError(f"model '{self.model_name}' not found, try pulling it first") from None
 
         tokenizer = AutoTokenizer.from_pretrained(self.pretrained_model_name_or_path,

@@ -2,7 +2,7 @@
 
 from zerollama.models.deepseek.chat import DeepSeekLLM
 from zerollama.models.openbmb.chat import MiniCPM
-from zerollama.models.qwen.chat import Qwen1_5, Qwen1_5_GGUF
+from zerollama.models.qwen.chat import Qwen1_5, Qwen1_5_GGUF, Qwen2
 from zerollama.models.yi.chat import Yi, Yi_1_5
 from zerollama.models.llama.llama3 import Llama3
 from zerollama.models.llama.llama3zh import Llama3ZH
@@ -12,7 +12,7 @@ from zerollama.models.mistral.chat import Mistral
 from zerollama.models.thudm.chat import GLM4
 
 
-MODELS = [DeepSeekLLM, MiniCPM, Qwen1_5, Qwen1_5_GGUF,
+MODELS = [DeepSeekLLM, MiniCPM, Qwen1_5, Qwen1_5_GGUF, Qwen2,
           Yi, Yi_1_5, Llama3, Llama3ZH, XVERSE, XVERSE_GGUF,
           Yuan, Yuan_GGUF, Mistral, GLM4]
 
