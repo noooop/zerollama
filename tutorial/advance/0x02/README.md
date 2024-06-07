@@ -1512,7 +1512,8 @@ llama.cpp库默认使用静态分配。AWQ fuse_layers 使用静态分配。
 - 大于8的序列，先做 gemm_half_q_half_gptq_kernel 8，余下的再用1-7 补一刀
 - 为1-8小尺寸优化的，肯定不可能兼顾大尺寸。但 1-8 是用的最广的长度，对这个区间优化肯定非常重要
 
-其他尺寸模型
+其他尺寸模型速度曲线，主要内容更上面一样，看点就剩 bnb int8 的表演了
+
 <img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/prefill/prefill-0.5B-1.png?raw=true" width="800">
 
 <img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/prefill/prefill-0.5B-2.png?raw=true" width="800">
