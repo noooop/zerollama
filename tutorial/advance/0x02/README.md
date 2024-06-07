@@ -1483,6 +1483,63 @@ llama.cpp库默认使用静态分配。AWQ fuse_layers 使用静态分配。
 - 不至于，不至于
 - llama.cpp 将序列长度分成 1-8 使用 mul_mat_vec_q，9-32 使用 mul_mat_q，>32 使用 dequantize+gemm 优化粒度已经很小了
 
+### 6.5.4 HuggingFace Transformers bf16、bnb8、bnb4、GPTQ int4 实际测试
+
+先以 7B 模型为例
+
+<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/prefill/prefill-7B-1.png?raw=true" width="800">
+
+<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/prefill/prefill-7B-nsys-1.png?raw=true" width="800">
+
+- bf16 模型分为1-4、5-15、16-31、32-50阶段，全都使用不同尺寸的 gemm 实现
+- 其中 1-8 比使用 mul_mat_vec_q 的 GGUF 要慢一些。侧面验证了 AWQ 文档提到小尺寸使用 GEMV 快一些
+- 之后 bf16 比 GGUF 模型快，解量化也需要时间
+
+<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/prefill/prefill-7B-nsys-2.png?raw=true" width="800">
+
+- bnb int8 就很离谱，一共只有两个尺寸的 gemm，估计一个算KQV，一个算MLP。
+- 无论一个人还是50个人，都发一班公交。后面可以看到对于0.5B，1.8B 模型，就很离谱
+
+<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/prefill/prefill-7B-nsys-3.png?raw=true" width="800">
+
+- bnb int4 我的天，先把int4 解量化到 bf16，然后按现成优化很好的 bf16 算
+- 所以 bnb int4 就像是 bf16曲线的平移，一模一样
+
+<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/prefill/prefill-7B-nsys-4.png?raw=true" width="800">
+
+- GPTQ-Int4 默认使用 exllamav2
+- gemm_half_q_half_gptq_kernel 为长度 1-8 单独做了实现
+- 大于8的序列，先做 gemm_half_q_half_gptq_kernel 8，余下的再用1-7 补一刀
+- 为1-8小尺寸优化的，肯定不可能兼顾大尺寸。但 1-8 是用的最广的长度，对这个区间优化肯定非常重要
+
+其他尺寸模型
+<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/prefill/prefill-0.5B-1.png?raw=true" width="800">
+
+<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/prefill/prefill-0.5B-2.png?raw=true" width="800">
+
+- bnb int8 只有两个尺寸，显然对于0.5B来说太大了
+
+<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/prefill/prefill-1.8B-1.png?raw=true" width="800">
+
+<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/prefill/prefill-1.8B-1.png?raw=true" width="800">
+
+- bnb int8 只有两个尺寸，显然对于1.8B来说也太大了
+
+<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/prefill/prefill-4B-1.png?raw=true" width="800">
+
+<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/prefill/prefill-4B-2.png?raw=true" width="800">
+
+- bnb int8 只有两个尺寸，显然对于4B来说还是太大了
+
+<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/prefill/prefill-7B-1.png?raw=true" width="800">
+
+- bnb int8 只有两个尺寸，为 7B 模型准备的，行吧
+
+<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/prefill/prefill-14B-2.png?raw=true" width="800">
+
+<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/prefill/prefill-32B-1.png?raw=true" width="800">
+
+
 # 7. 总结
 
 # Reference
