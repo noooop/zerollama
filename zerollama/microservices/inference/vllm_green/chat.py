@@ -1,5 +1,7 @@
 
 import gc
+import traceback
+
 import torch
 import requests
 import shortuuid
@@ -8,7 +10,7 @@ from zerollama.tasks.chat.interface import ChatInterface
 from zerollama.tasks.chat.protocol import ChatCompletionResponse
 from zerollama.tasks.chat.protocol import ChatCompletionStreamResponse, ChatCompletionStreamResponseDone
 from zerollama.tasks.chat.collection import get_model_by_name
-from zerollama.tasks.base.download import get_pretrained_model_name_or_path
+from zerollama.tasks.base.download import get_pretrained_model_name
 
 
 class VLLMChat(ChatInterface):
@@ -27,9 +29,9 @@ class VLLMChat(ChatInterface):
         self.model_info = self.model_config.info
         self.local_files_only = local_files_only
         self.trust_remote_code = self.model_config.model_kwargs.get("trust_remote_code", False)
-        self.pretrained_model_name_or_path = get_pretrained_model_name_or_path(model_name=model_name,
-                                                                               local_files_only=local_files_only,
-                                                                               get_model_by_name=get_model_by_name)
+        self.pretrained_model_name = get_pretrained_model_name(model_name=model_name,
+                                                               local_files_only=local_files_only,
+                                                               get_model_by_name=get_model_by_name)
 
         self.engine = None
         self.SamplingParams = None
@@ -41,15 +43,17 @@ class VLLMChat(ChatInterface):
         from vllm.inputs import TextTokensPrompt
         from zerollama.microservices.inference.vllm_green.llm_engine_gevent import GeventLLMEngine, GeventEngineArgs
 
-        engine_args = GeventEngineArgs(model=self.pretrained_model_name_or_path,
+        engine_args = GeventEngineArgs(model=self.pretrained_model_name,
                                        trust_remote_code=self.trust_remote_code,
                                        device="cuda")
 
         try:
             engine = GeventLLMEngine.from_engine_args(engine_args)
         except requests.exceptions.HTTPError:
+            traceback.print_exc()
             raise FileNotFoundError(f"model '{self.model_name}' not found, try pulling it first") from None
         except EnvironmentError:
+            traceback.print_exc()
             raise FileNotFoundError(f"model '{self.model_name}' not found, try pulling it first") from None
 
         self.engine = engine
@@ -178,7 +182,7 @@ def run_test(model_name, stream=False, **kwargs):
 
 
 if __name__ == '__main__':
-    model_name = "Qwen/Qwen1.5-0.5B-Chat"
+    model_name = "Qwen/Qwen2-0.5B-Instruct"
 
     run_test(model_name, stream=False)
     run_test(model_name, stream=True)

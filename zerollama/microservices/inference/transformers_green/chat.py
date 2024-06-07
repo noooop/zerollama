@@ -10,7 +10,7 @@ from zerollama.tasks.chat.interface import ChatInterface
 from zerollama.tasks.chat.protocol import ChatCompletionResponse
 from zerollama.tasks.chat.protocol import ChatCompletionStreamResponse, ChatCompletionStreamResponseDone
 from zerollama.tasks.chat.collection import get_model_by_name
-from zerollama.tasks.base.download import get_pretrained_model_name_or_path
+from zerollama.tasks.base.download import get_pretrained_model_name
 
 TORCH_TYPE = torch.bfloat16 if torch.cuda.is_available() and torch.cuda.get_device_capability()[
     0] >= 8 else torch.float16
@@ -33,9 +33,9 @@ class HuggingFaceTransformers(object):
         self.local_files_only = local_files_only
         self.quantization_config = quantization_config
         self.trust_remote_code = self.model_config.model_kwargs.get("trust_remote_code", False)
-        self.pretrained_model_name_or_path = get_pretrained_model_name_or_path(model_name=model_name,
-                                                                               local_files_only=local_files_only,
-                                                                               get_model_by_name=get_model_by_name)
+        self.pretrained_model_name = get_pretrained_model_name(model_name=model_name,
+                                                               local_files_only=local_files_only,
+                                                               get_model_by_name=get_model_by_name)
         self.torch_dtype = None
 
         self.model = None
@@ -69,7 +69,7 @@ class HuggingFaceTransformers(object):
 
         self.torch_dtype = torch_dtype
 
-        model_kwargs = {"pretrained_model_name_or_path": self.model_name,
+        model_kwargs = {"pretrained_model_name_or_path": self.pretrained_model_name,
                         "torch_dtype": torch_dtype,
                         "device_map": "auto",
                         "local_files_only": self.local_files_only,
@@ -89,7 +89,7 @@ class HuggingFaceTransformers(object):
             traceback.print_exc()
             raise FileNotFoundError(f"model '{self.model_name}' not found, try pulling it first") from None
 
-        tokenizer = AutoTokenizer.from_pretrained(self.pretrained_model_name_or_path,
+        tokenizer = AutoTokenizer.from_pretrained(self.pretrained_model_name,
                                                   trust_remote_code=self.trust_remote_code)
         streamer = TextIteratorStreamer(tokenizer, skip_prompt=True, skip_special_tokens=True)
 

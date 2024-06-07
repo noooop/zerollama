@@ -38,14 +38,16 @@ def config_setup():
     if "modelscope" in config_global:
         config_modelscope = config_global["modelscope"]
         if "USE_MODELSCOPE" in config_modelscope:
-            if config_modelscope["USE_MODELSCOPE"]:
-                config.use_modelscope = True
+            config.use_modelscope = config_modelscope["USE_MODELSCOPE"]
 
         if "MODELSCOPE_CACHE" in config_modelscope:
             os.environ["MODELSCOPE_CACHE"] = config_modelscope["MODELSCOPE_CACHE"]
 
     config.modelscope = {}
     config.modelscope.cache_dir = Path(get_modelscope_cache_dir())
+
+    if config.use_modelscope:
+        os.environ["VLLM_USE_MODELSCOPE"] = "True"
 
     rag_path = Path.home() / ".zerollama/rag/documents"
     config.rag = edict({"path": rag_path})

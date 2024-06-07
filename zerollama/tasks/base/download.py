@@ -43,6 +43,31 @@ def get_pretrained_model_name_or_path(model_name, local_files_only, get_model_by
     return pretrained_model_name_or_path
 
 
+def get_pretrained_model_name(model_name, local_files_only, get_model_by_name):
+    config = config_setup()
+
+    model = get_model_by_name(model_name)
+    model_config = model.get_model_config(model_name)
+    model_info = model_config.info
+
+    if local_files_only:
+        import huggingface_hub
+        huggingface_hub.snapshot_download = partial(huggingface_hub.snapshot_download,
+                                                    local_files_only=True)
+    else:
+        download(model_name, get_model_by_name)
+
+    pretrained_model_name_or_path = model_name
+    if config.use_modelscope:
+        if "modelscope_name" in model_info:
+            pretrained_model_name_or_path = model_info["modelscope_name"]
+    else:
+        if "hf_name" in model_info:
+            pretrained_model_name_or_path = model_info["hf_name"]
+
+    return pretrained_model_name_or_path
+
+
 if __name__ == '__main__':
     for size in ["0.5B"]:
         for k in ["q8_0"]:

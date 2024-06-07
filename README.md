@@ -26,7 +26,7 @@
 ## Chat 模型
 - [deepseek-llm](https://github.com/noooop/zerollama/tree/main/zerollama/models/deepseek)
 - [MiniCPM](https://github.com/noooop/zerollama/tree/main/zerollama/models/openbmb)
-- [Qwen1.5](https://github.com/noooop/zerollama/tree/main/zerollama/models/qwen)
+- [Qwen1.5](https://github.com/noooop/zerollama/tree/main/zerollama/models/qwen) [Qwen2](https://github.com/noooop/zerollama/tree/main/zerollama/models/qwen)
 - [Yi](https://github.com/noooop/zerollama/tree/main/zerollama/models/yi)
 - [llama3](https://github.com/noooop/zerollama/tree/main/zerollama/models/llama) [llama3zh](https://github.com/noooop/zerollama/tree/main/zerollama/models/llama)
 - [XVERSE](https://github.com/noooop/zerollama/tree/main/zerollama/models/xverse)
