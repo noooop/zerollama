@@ -56,7 +56,7 @@ def sample(model, sample_idx):
     return token
 
 
-def prefill_first_token_latency(model_name):
+def prefill_first_token_latency(model_name, seq_len):
     print(model_name)
 
     repo_id, filename = model_name.split("+")
@@ -75,7 +75,7 @@ def prefill_first_token_latency(model_name):
                      109432, 101951, 102064, 104949, 1773, 151645, 198, 151644, 77091, 198]
 
     time_list = []
-    for m in range(1, 501):
+    for m in range(1, seq_len):
         if m < len(prompt_tokens):
             tokens = prompt_tokens[-m:]
         else:
@@ -161,10 +161,10 @@ if __name__ == '__main__':
         "Qwen/Qwen1.5-1.8B-Chat-GGUF",
         "Qwen/Qwen1.5-4B-Chat-GGUF",
         "Qwen/Qwen1.5-7B-Chat-GGUF",
-         "Qwen/Qwen1.5-14B-Chat-GGUF",
+        "Qwen/Qwen1.5-14B-Chat-GGUF",
         "Qwen/Qwen1.5-32B-Chat-GGUF",
-        "Qwen/Qwen1.5-72B-Chat-GGUF",
-        "Qwen/Qwen1.5-110B-Chat-GGUF",
+    #    "Qwen/Qwen1.5-72B-Chat-GGUF",
+    #    "Qwen/Qwen1.5-110B-Chat-GGUF",
     ]
     filename = [
         "*q8_0.gguf",
@@ -183,7 +183,7 @@ if __name__ == '__main__':
         for f in filename:
             try:
                 model_name = f"{r}+{f}"
-                prefill_first_token_latency(model_name)
+                prefill_first_token_latency(model_name, 501)
                 decoding_latency(model_name)
             except Exception:
                 traceback.print_exc()

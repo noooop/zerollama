@@ -248,43 +248,36 @@ def gpu_memory_usage(model_name, idx, **kwargs):
 
 
 @torch.no_grad()
-def prefill_first_token_latency(model_name):
+def prefill_first_token_latency(model_name, seq_len, index, **kwargs):
     print(model_name)
     print(torch.cuda.memory_allocated() / B)
 
     tokenizer = AutoTokenizer.from_pretrained(model_name)
 
     if "GPTQ" in model_name:
-        #kwargs = {"use_marlin": True}
-        kwargs = {}
         model = AutoGPTQForCausalLM.from_quantized(
             model_name,
             device=device,
             **kwargs
         )
-
     elif "AWQ" in model_name:
-        kwargs = {"max_seq_len": 501,
-                  "batch_size": 1,
-                  "fuse_layers": True,
-                  "use_exllama": False,
-                  "use_exllama_v2": True}
         model = AutoAWQForCausalLM.from_quantized(
             model_name,
+            device=device,
             **kwargs
         )
         print(model.quant_config)
     else:
-        kwargs = {}
-        torch_dtype = "auto"
-
+        if "quantization_config" in kwargs:
+            torch_dtype = torch.float16
+        else:
+            torch_dtype = "auto"
         model = AutoModelForCausalLM.from_pretrained(
             model_name,
             torch_dtype=torch_dtype,
-            device_map="auto",
+            device_map=device,
             **kwargs
         )
-        model = model.to(device)
 
     total_params = sum(p.numel() for p in model.parameters())
     print("Total Parameters:", total_params)
@@ -318,45 +311,55 @@ def prefill_first_token_latency(model_name):
     attention_mask = model_inputs.attention_mask
 
     time_list = []
-    for m in range(input_ids.shape[-1], 501):
+    for m in range(1, seq_len+1):
+
+        if m < input_ids.shape[1]:
+            _input_ids = input_ids[:, -m:]
+            _attention_mask = attention_mask[:, -m:]
+        else:
+            _input_ids = input_ids
+            _attention_mask = attention_mask
+
         try:
             tt = []
-            for i in range(10):
+            for i in range(5):
                 t = time.time()
                 if "GPTQ" in model_name:
                     generated_ids = model.generate(
                         max_length=m + 1,
                         pad_token_id=200000,
                         eos_token_id=200000,
-                        input_ids=input_ids,
-                        attention_mask=attention_mask,
+                        input_ids=_input_ids,
+                        attention_mask=_attention_mask,
                     )
                 else:
                     generated_ids = model.generate(
-                        input_ids,
-                        max_length=m+1,
+                        _input_ids,
+                        max_length=m + 1,
                         pad_token_id=200000,
                         eos_token_id=200000,
                     )
-                tt.append(time.time()-t)
+                tt.append(time.time() - t)
+        except Exception as e:
+            raise e
+            # traceback.print_exc()
 
+        if m >= input_ids.shape[1]:
             input_ids = torch.tensor([input_ids[0, :20].tolist() +
                                       [random.randint(10000, 140000)] +
                                       input_ids[0, 20:].tolist()],
                                      dtype=input_ids.dtype, device=device)
             attention_mask = torch.ones(input_ids.shape, dtype=attention_mask.dtype, device=device)
-            print(m, f"{np.median(tt)*1000:0.2f}")
-            time_list.append((m, tt))
-        except Exception as e:
-            raise e
-            #traceback.print_exc()
+
+        #print(m, _input_ids.shape, generated_ids.shape, f"{np.median(tt) * 1000:0.2f}")
+        time_list.append((m, tt))
 
     tokenizer = None
     model = None
 
     gc.collect()
     torch.cuda.empty_cache()
-    return time_list
+    pickle.dump(time_list, open(f"./hf/{model_name.replace('/', '_')}-{index}.pkl", "wb"))
 
 
 if __name__ == '__main__':
@@ -456,7 +459,8 @@ if __name__ == '__main__':
     ]
 
     test_gpu_memory_usage = False
-    test_decoding_latency = True
+    test_decoding_latency = False
+    test_refill_first_token_latency = True
 
     if test_gpu_memory_usage:
         print("gpu memory usage")
@@ -526,7 +530,69 @@ if __name__ == '__main__':
                     traceback.print_exc()
                     print(model_name, kwargs, "Exception")
 
+    if test_refill_first_token_latency:
+        for model_name, *_ in bf16_info:
+            for index, kwargs in enumerate([{},
+                                            {"quantization_config": BitsAndBytesConfig(load_in_8bit=True,
+                                                                                       bnb_4bit_compute_dtype=torch.bfloat16)},
+                                            {"quantization_config": BitsAndBytesConfig(load_in_4bit=True,
+                                                                                       bnb_4bit_compute_dtype=torch.bfloat16)}
+                                            ]):
+                try:
+                    prefill_first_token_latency(model_name, 500, index, **kwargs)
+                except Exception as e:
+                    traceback.print_exc()
+                    print(model_name, "Exception")
 
+        for model_name, *_ in gptq_info:
+            for index, kwargs in enumerate([{}, {"use_marlin": True}]):
+                try:
+                    prefill_first_token_latency(model_name, 500, index, **kwargs)
+                except Exception as e:
+                    print(model_name, kwargs, "Exception")
+
+        awq_kwargs3 = [
+            {"max_seq_len": 512,
+             "batch_size": 1,
+             "fuse_layers": False,
+             "use_exllama": False,
+             "use_exllama_v2": False},
+            {"max_seq_len": 512,
+             "batch_size": 1,
+             "fuse_layers": True,
+             "use_exllama": False,
+             "use_exllama_v2": False},
+
+            {"max_seq_len": 512,
+             "batch_size": 1,
+             "fuse_layers": False,
+             "use_exllama": True,
+             "use_exllama_v2": False},
+            {"max_seq_len": 512,
+             "batch_size": 1,
+             "fuse_layers": True,
+             "use_exllama": True,
+             "use_exllama_v2": False},
+
+            {"max_seq_len": 512,
+             "batch_size": 1,
+             "fuse_layers": False,
+             "use_exllama": False,
+             "use_exllama_v2": True},
+            {"max_seq_len": 512,
+             "batch_size": 1,
+             "fuse_layers": True,
+             "use_exllama": False,
+             "use_exllama_v2": True},
+        ]
+
+        for model_name, *_ in awq_info:
+            for index, kwargs in enumerate(awq_kwargs3):
+                try:
+                    prefill_first_token_latency(model_name, 500, index, **kwargs)
+                except Exception as e:
+                    traceback.print_exc()
+                    print(model_name, kwargs, "Exception")
 
 
 

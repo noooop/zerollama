@@ -737,10 +737,13 @@ GPTQ 的事实标准是 [AutoGPTQ](https://github.com/AutoGPTQ/AutoGPTQ) 库。�
 >     
 >     更大的模型 报错 ValueError: The loading of sharded checkpoints with Marlin is currently not supported. Please raise an issue in AutoGPTQ repository.
 >
->     所以只有 0.5B 的模型能跑起来。初步测试 Marlin 预填充 (Prefill) 阶段，序列长度小于50时差不多跟 bfloat16 一样，速度很快。后面会有更细致的实测对照分析。
+>     所以只有 0.5B 的模型能跑起来。
 > 
 
-<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/static/marlin.png?raw=true" width="600">
+<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/prefill/prefill-0.5B-4.png?raw=true" width="800">
+
+- 至少是唯一能跑起来的 Qwen1.5 0.5B GPTQ int4模型，并不突出
+
 
 ### 6.1.4 AWQ
 AWQ 的事实标准是 [AutoAWQ](https://github.com/casper-hansen/AutoAWQ)。原理可以参考 [原始论文](https://arxiv.org/abs/2306.00978), 也可以看看 [AutoAWQ Roadmap](https://github.com/casper-hansen/AutoAWQ/issues/32)
@@ -1325,7 +1328,7 @@ llama.cpp库默认使用静态分配。AWQ fuse_layers 使用静态分配。
 - W 理论实际比，GGUF 模型 38% 左右，对比 14B 模型 79% 左右，llama.cpp 对 GQA 支持还有加强的空间
 - B 理论实际比，q5_0 模型，14B 48.7%，32B 61.27%，随着模型增大，效率提升明显
 
-### 6.4.7 小结
+### 6.4.7 解码 (Decoding) 阶段 小结
 
 - llama.cpp 使用了 kv cache静态，使得推理非常稳定，丝滑，极限推理长度也更长一些。再考虑到它依赖少，使用方便，个人使用第一推荐
 - bnb int8 不可用，int4速度也比较慢，所以只适合尝鲜使用，不建议线上部署。也为QLora捏把汗
@@ -1345,13 +1348,7 @@ llama.cpp库默认使用静态分配。AWQ fuse_layers 使用静态分配。
 - 读取延迟 所有 token 只需要读取一次模型，（还要读取 kv cache
 - 计算延迟 对每个 token 模型每参数两次浮点运算，（还要加上 kv cache 的计算量
 - 随着提示词长度增加，就有可能从带宽瓶颈转到计算瓶颈
-
-> 1. 加载模型瓶颈 切换到 算力瓶颈 之前，增加提示词长度，延迟基本不变，瓶颈在加载模型上；将一次 Prefill 完成的工作分成两次，相当于模型加载了两次，延迟也变成两倍。所以这个序列长度不要切分，一次性完成。
-> 
-> 2. 拐点之后，只要切分的小工作大于拐点，没有增加计算和kv cache读取，Prefill 延迟不变。所以可以将 Prefill 工作切分成第一个拐点大小的多份，总Prefill延迟不变。**这个结论非常重要**
-> 
-
-理论分析 BPW 16 的模型，在拐点在100左右，BPW 8 的模型 50 左右，BPW 4 的模型 20 左右。实际测试的就是看能不能看到拐点，大概是多少。
+- 所以不同提示词长度延迟最小的实现方式不一样，需要多个实现方式接力
 
 ### 6.5.1 llama.cpp 实际测试
 
@@ -1512,6 +1509,11 @@ llama.cpp库默认使用静态分配。AWQ fuse_layers 使用静态分配。
 - 大于8的序列，先做 gemm_half_q_half_gptq_kernel 8，余下的再用1-7 补一刀
 - 为1-8小尺寸优化的，肯定不可能兼顾大尺寸。但 1-8 是用的最广的长度，对这个区间优化肯定非常重要
 
+<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/prefill/prefill-0.5B-nsys-Marlin.png?raw=true" width="800">
+
+- 0.5B Marlin kernel，每16个尺寸单独做实现
+- 因为只有 0.5B 模型能跑起来，不好评价效果
+
 其他尺寸模型速度曲线，主要内容跟上面一样，看点就剩 bnb int8 的表演了
 
 <img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/prefill/prefill-0.5B-1.png?raw=true" width="800">
@@ -1540,8 +1542,56 @@ llama.cpp库默认使用静态分配。AWQ fuse_layers 使用静态分配。
 
 <img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/prefill/prefill-32B-1.png?raw=true" width="800">
 
+### 6.5.5 HuggingFace Transformers AWQ 实际测试
 
-# 7. 总结
+- AWQ 量化方法有6名选手的
+- 分使用fuse_layers和不使用fuse_layers两组
+- 每组各有 AWQ GEMM、 AWQ exllama、 AWQ exllamav2 三名选手 
+
+先以 7B 模型为例
+
+<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/prefill/prefill-7B-2.png?raw=true" width="800">
+
+- AWQ exllamav2 曲线跟 GPTQ-Int4 默认使用 exllamav2 一模一样，毕竟实现方式一样。
+- AWQ exllama 速度只有长度等于1的时候比较合理
+- fuse_layers 只在长度等于1的时候有效，长度大于50之后开始起反作用
+
+<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/prefill/prefill-7B-nsys-5.png?raw=true" width="800">
+
+- AWQ GEMM 只使用 gemm_forward_4bit_cuda_m16n128k32, 1-8 速度不如 exllamav2
+- 但比GGUF快， 在8-100内表现的都不错，有点东西啊
+
+<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/prefill/prefill-7B-nsys-6.png?raw=true" width="800">
+
+- AWQ exllama 只有 q4_matmul_kernel<(bool)1, (bool)1, (bool)0>，长度为 1 的 kernel
+- 所以速度只有长度等于1的时候比较合理
+
+<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/prefill/prefill-7B-nsys-7.png?raw=true" width="800">
+
+- AWQ exllamav2 标志性的先用 长度为8算，余下的1-7补刀，跟 GPTQ-Int4 默认使用 exllamav2 一模一样
+
+其他尺寸模型速度曲线，（32B AWQ 模型会oom
+
+<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/prefill/prefill-0.5B-3.png?raw=true" width="800">
+
+<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/prefill/prefill-1.8B-3.png?raw=true" width="800">
+
+<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/prefill/prefill-4B-3.png?raw=true" width="800">
+
+<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/prefill/prefill-7B-2.png?raw=true" width="800">
+
+<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/prefill/prefill-14B-3.png?raw=true" width="800">
+
+### 6.5.6. 预填充 (Prefill) 阶段 小结
+- fuse_layers 最优区间在序列长度等于1，长度超过50后开始拖后腿
+- exllamav2 最优区间在1-8，长度50以内，甚至全部长度(500)速度都很优秀
+- AWQ GEMM 最优区间在8-100，超过150后开始拖后腿
+- bf16 小于长度小于8，甚至长度小于32都不太行，之后速度还不错
+- GGUF 全部区间都中规中矩
+
+## 7. 解码 (Decoding) 阶段是一种 长度为 1的 预填充 (Prefill) 阶段
+
+## 总结
 
 # Reference
 [LLM inference speed of light](https://zeux.io/2024/03/15/llm-inference-sol/), [中文翻译](http://arthurchiao.art/blog/llm-inference-speed-zh/)
