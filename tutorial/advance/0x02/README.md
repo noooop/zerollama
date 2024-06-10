@@ -24,7 +24,7 @@ ZeRO Redundancy Optimizer、PEFT等，都是训练专用的，推理时用不着
 需要平衡吞吐量（Throughput）和延迟（Latency）。
 一般是设定服务级别协议 (Service-level agreement)， 比如首字延迟（First Token Latency）小于 2~3 秒， 
 生成延迟（Latency）小于 50 毫秒，也就是一秒钟生成 20 个字符，就能达到用户感觉流畅。在sla规定的延迟下，尽可能多的服务用户。
-**[下一篇文章]()(还没有写)关注这个这个场景。**
+**[下一篇文章](https://github.com/noooop/zerollama/tree/main/tutorial/advance/0x03)关注这个这个场景。**
 
 - 离线批处理。因为不需要实时交互，所以不用考虑延迟（Latency），只需要优化吞吐量（Throughput）以及用最经济的方式（甚至要考虑性价比最高的硬件）完成任务。
 
@@ -75,7 +75,7 @@ def chat(messages, tokenizer, model):
 ```
 
 ## 2.2 整体流程
-分词器(步骤1, 2, 7)和采样(步骤4)，有复杂的分支，速度也很快，一般在CPU上完成，具体原理请参考：
+- 分词器(步骤1, 2, 7)和采样(步骤4)，有复杂的分支，速度也很快，一般在CPU上完成，具体原理请参考：
 
 [tokenization_qwen2](https://github.com/huggingface/transformers/blob/main/src/transformers/models/qwen2/tokenization_qwen2.py)
 
@@ -87,10 +87,9 @@ def chat(messages, tokenizer, model):
 
 [采样 sample](https://zhuanlan.zhihu.com/p/664293575)
 
-模型推理(步骤3)过程请参考:
+- 模型推理(步骤3)过程请参考:
 
 [modeling_qwen2](https://github.com/huggingface/transformers/blob/main/src/transformers/models/qwen2/modeling_qwen2.py)
-
 
 伪代码
 ```
@@ -118,7 +117,6 @@ def decoder_layer(hidden_states):
     
     return hidden_states
 ```
-
 
 # 3. 参数量计算
 > 1. BPW (bits per weight)：模型参数使用浮点数表示，BPW指单位浮点数占用空间，例如:
@@ -692,6 +690,30 @@ def kv_cache_parameters(num_hidden_layers, hidden_size, n_groups):
 - GQA 让 4090 用上 32B 的模型，使得 Qwen1.5 32B 是家族里面性价比最高的模型。
 
 ## 5.3 投机采样 (Speculative Decoding)
+投机采样 (Speculative Decoding)，通过让小LLM自回归生成，猜大模型的输出，而大LLM来负责评估小模型生成的结果验算。批次执行速度比单次执行快，加速模型输出。
+
+比如我们可以猜到大模型的之后的8个输出token。将这8个猜的token与提示词一起输入到模型。执行预填充 (Prefill)，做验算
+> Transformer 这种只需要对每个元素执行两次操作的场景，必定受到访存带宽的限制，ALU 都非常充足.
+> 
+读一遍模型，算8个词花的时间可能跟算一个词差不多。
+
+然后对这8个token的中间结果执行 lm_head，执行采样，得到模型输出。
+- 如果，猜的8个 token 全部正确，跟模型输出一致。跟模型输出一致意味着kv cache也是一致的。这次“投机”执行一次模型推理，输出8个词。
+- 如果，猜的8个 token 全部错误，跟模型输出全不一致，跟模型输出不一致意味着kv cache也不一致，结果和kv cache都不能用。“投机”失败，执行一次模型推理，输出1个词.
+- 如果，比如猜的前5个token 正确，第6个token错误。
+- > LLM 使用了 Masked Self-Attention，上下文，llm只能“看到上文”，“看不到下文“。 更具体的，LLM 每个词只依赖之前的词，不依赖之后的词，也就是中间状态也只依赖之前的词，不依赖之后的词。
+- 前5个token 的 kv cache可以保留，之后的kv cache都不能用，这次“投机”，执行一次模型推理，输出5个词。
+
+投机采样 (Speculative Decoding)执行验算，所以结果肯定正确。
+- 猜大模型输出耗时越低，成本（显存占用等）越低，投机收益越高
+- 猜大模型输出越准确，投机收益越高
+- 猜大模型输出正确长度越长，投机收益越高
+
+更多信息请参考 
+
+[LLM推理加速新范式！推测解码（Speculative Decoding）最新综述](https://www.bilibili.com/video/BV1Tm411Z78w/) 
+
+[Unlocking Efficiency in Large Language Model Inference: A Comprehensive Survey of Speculative Decoding](https://arxiv.org/abs/2401.07851)
 
 # 6. 实际推理速度测试
 
@@ -737,12 +759,12 @@ GPTQ 的事实标准是 [AutoGPTQ](https://github.com/AutoGPTQ/AutoGPTQ) 库。�
 >     
 >     更大的模型 报错 ValueError: The loading of sharded checkpoints with Marlin is currently not supported. Please raise an issue in AutoGPTQ repository.
 >
->     所以只有 0.5B 的模型能跑起来。
+>     所以只有 0.5B 的模型能跑起来。非常遗憾。
 > 
 
 <img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/prefill/prefill-0.5B-4.png?raw=true" width="800">
 
-- 至少是唯一能跑起来的 Qwen1.5 0.5B GPTQ int4模型，并不突出
+- 唯一能跑起来的 Qwen1.5 0.5B GPTQ int4模型，速度并不突出
 
 
 ### 6.1.4 AWQ
@@ -878,7 +900,7 @@ llama.cpp使用库的好处是依赖少，不必像Transformers 库一样先装 
 | 110B | 207.14GB         | 61.49 GB     | oom        |
 
 - AWQ 默认会做 Fused modules，需要占用额外显存，32B 4bit模型本身就要占 21G 显存，华容道不开
-- 后续会有关闭 Fused modules 的速度对比实验
+- 后续关闭 Fused modules 也不行，AWQ 没法加载 32B 模型到显存非常遗憾。
 
 ### 6.3.5. llama.cpp GGUF 实际模型文件大小
 
@@ -1558,7 +1580,7 @@ llama.cpp库默认使用静态分配。AWQ fuse_layers 使用静态分配。
 
 <img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/prefill/prefill-7B-nsys-5.png?raw=true" width="800">
 
-- AWQ GEMM 只使用 gemm_forward_4bit_cuda_m16n128k32, 1-8 速度不如 exllamav2
+- AWQ GEMM 只使用 gemm_forward_4bit_cuda_m16n128k32, 所以 1-8 速度不如 exllamav2
 - 但比GGUF快， 在8-100内表现的都不错，有点东西啊
 
 <img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/prefill/prefill-7B-nsys-6.png?raw=true" width="800">
@@ -1583,15 +1605,44 @@ llama.cpp库默认使用静态分配。AWQ fuse_layers 使用静态分配。
 <img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/prefill/prefill-14B-3.png?raw=true" width="800">
 
 ### 6.5.6. 预填充 (Prefill) 阶段 小结
+- 预填充 (Prefill) 阶段，随着序列长度增加，从带宽瓶颈转到算力瓶颈
+- 提升速度的核心在于，不同序列长度使用不同的实现，适配的越细致越好
 - fuse_layers 最优区间在序列长度等于1，长度超过50后开始拖后腿
 - exllamav2 最优区间在1-8，长度50以内，甚至全部长度(500)速度都很优秀
 - AWQ GEMM 最优区间在8-100，超过150后开始拖后腿
 - bf16 小于长度小于8，甚至长度小于32都不太行，之后速度还不错
 - GGUF 全部区间都中规中矩
+- bnb int8 只有两个尺寸的 cuda kernel，最优区间非常窄，不太行
+- bnb int4 先解量化，然后用 bf16 计算，速度还算能接受
 
-## 7. 解码 (Decoding) 阶段是一种 长度为 1的 预填充 (Prefill) 阶段
+### 6.6. 遗憾
+- 没有测试 scaled dot product attention (SDPA) 随着序列长度延迟的变化，以及各种实现之间的速度差异
+- 没有测试 FP8。测试的所有实现都使用了fp16或者bf16。Ada has FP8 TensorCore hardware. CUDA 12.0 开始支持 FP8，但没有库默认使用FP8。
 
-## 总结
+## 7. 总结
+解码 (Decoding) 阶段是一种 长度为 1 的预填充 (Prefill) 阶段
+
+大语言模型 LLM (decoder-only transformer)，基本上只有两种操作，线性层（qkvo，mlp）、scaled dot product attention (SDPA)。
+
+scaled dot product attention (SDPA)
+- 对于 预填充 (Prefill) 阶段，对每个 token，读取之前的kv cache，做 SDPA。
+- 对于 解码 (Decoding) 阶段，对当前 1 个 token，读取之前的kv cache，做 SDPA。
+- 解码 (Decoding) 阶段是一种 长度为 1 的预填充 (Prefill) 阶段
+
+线性层
+- 对于 预填充 (Prefill) 阶段，对每个 token，应用线性层，也是做矩阵乘法。
+- 对于 解码 (Decoding) 阶段，对当前 1 个 token，应用线性层，也是做矩阵乘法
+- 解码 (Decoding) 阶段是一种 长度为 1 的预填充 (Prefill) 阶段
+
+预填充 (Prefill) 阶段的的 速度测试 和 NVIDIA nsight systems profiling 测试 可以全面分析推理系统的特性。
+解码 (Decoding) 阶段 就是 预填充 (Prefill) 阶段的，长度为 1 的特例。
+预填充 (Prefill) 阶段序列长度增加，可以做更多 SIMD (Single Instruction/Multiple Data) 的优化。
+随着序列长度增加，从带宽瓶颈转到算力瓶颈，提升速度的核心在于，不同序列长度使用不同的实现，适配的越细致越好。
+
+对于单用户独占实时交互场景，使用了量化、fuse_layers、exllamav2、静态kv cache 的 AWQ exllamav2 速度最快， llama.cpp 也是不错的选择。
+
+对于多用户实时交互。也就是服务器部署，云服务提供商的典型场景。[下一篇文章](https://github.com/noooop/zerollama/tree/main/tutorial/advance/0x03)
+
 
 # Reference
 [LLM inference speed of light](https://zeux.io/2024/03/15/llm-inference-sol/), [中文翻译](http://arthurchiao.art/blog/llm-inference-speed-zh/)
