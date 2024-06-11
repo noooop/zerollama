@@ -1,0 +1,13 @@
+chat:
+  models:
+    -
+      name: "Qwen/Qwen1.5-0.5B-Chat-AWQ"
+      engine_kwargs:
+        gpu_memory_utilization: 0.4
+        use_vllm: True
+
+retriever:
+  models: ["BAAI/bge-m3"]
+
+
+entrypoints: ["ollama_compatible", "openai_compatible"]

@@ -16,7 +16,7 @@ from zerollama.tasks.base.download import get_pretrained_model_name
 class VLLMChat(ChatInterface):
     get_model_by_name = staticmethod(get_model_by_name)
 
-    def __init__(self, model_name, local_files_only=True, device="cuda"):
+    def __init__(self, model_name, local_files_only=True, device="cuda", **engine_args):
         model = self.get_model_by_name(model_name)
         model_config = model.get_model_config(model_name)
 
@@ -32,7 +32,7 @@ class VLLMChat(ChatInterface):
         self.pretrained_model_name = get_pretrained_model_name(model_name=model_name,
                                                                local_files_only=local_files_only,
                                                                get_model_by_name=get_model_by_name)
-
+        self.engine_args = engine_args
         self.engine = None
         self.SamplingParams = None
         self.TextTokensPrompt = None
@@ -45,7 +45,8 @@ class VLLMChat(ChatInterface):
 
         engine_args = GeventEngineArgs(model=self.pretrained_model_name,
                                        trust_remote_code=self.trust_remote_code,
-                                       device="cuda")
+                                       device="cuda",
+                                       **self.engine_args)
 
         try:
             engine = GeventLLMEngine.from_engine_args(engine_args)
