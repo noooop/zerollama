@@ -51,10 +51,6 @@ def run(model_name):
                 print(f"({model_name}:)\n", flush=True)
                 content = ""
                 for rep in chat_client.stream_chat(model_name, messages):
-                    if rep.state != "ok":
-                        return
-                    rep = rep.msg
-
                     if isinstance(rep, ChatCompletionStreamResponseDone):
                         print("\n", flush=True)
                         break

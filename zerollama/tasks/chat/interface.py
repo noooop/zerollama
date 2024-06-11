@@ -1,7 +1,7 @@
 
 from zerollama.tasks.base.interface import ModelBase
 from zerollama.tasks.chat.protocol import PROTOCOL
-from zerollama.tasks.chat.protocol import ChatModelConfig, ChatCompletionResponse, ChatCompletionStreamResponse
+from zerollama.tasks.chat.protocol import ChatModelConfig
 
 
 class ChatModel(ModelBase):
@@ -82,20 +82,16 @@ class ChatInterface(object):
         """
         raise NotImplementedError
 
-    def chat(self, messages, options=None) -> ChatCompletionResponse:
+    def chat(self, messages, stream=False, options=None):
         """
 
         :param messages:
+        :param stream:
         :param options:
         :return:
         """
         raise NotImplementedError
 
-    def stream_chat(self, messages, options=None) -> ChatCompletionStreamResponse:
-        """
-
-        :param messages:
-        :param options:
-        :return:
-        """
-        raise NotImplementedError
+    def stream_chat(self, messages, options=None):
+        for item in self.chat(messages, stream=True, options=options):
+            yield item

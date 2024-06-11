@@ -5,6 +5,7 @@ import traceback
 import torch
 import requests
 from threading import Thread
+from functools import partial
 from zerollama.core.config.main import config_setup
 from zerollama.tasks.chat.interface import ChatInterface
 from zerollama.tasks.chat.protocol import ChatCompletionResponse
@@ -45,6 +46,11 @@ class HuggingFaceTransformers(object):
 
     def load(self):
         config = config_setup()
+
+        if self.local_files_only:
+            import modelscope
+            modelscope.snapshot_download = partial(modelscope.snapshot_download,
+                                                   local_files_only=True)
 
         if config.use_modelscope:
             from modelscope import AutoModelForCausalLM, AutoTokenizer
@@ -115,7 +121,7 @@ class HuggingFaceTransformers(object):
 
 class HuggingFaceTransformersChat(HuggingFaceTransformers, ChatInterface):
     @torch.no_grad()
-    def chat(self, messages, options=None):
+    def chat(self, messages, stream=False, options=None):
         options = options or dict()
         max_new_tokens = options.get("max_new_tokens", 512)
 
@@ -125,68 +131,56 @@ class HuggingFaceTransformersChat(HuggingFaceTransformers, ChatInterface):
             add_generation_prompt=True
         )
         model_inputs = self.tokenizer([text], return_tensors="pt").to(self.device)
-        generated_ids = self.model.generate(
-            model_inputs.input_ids,
-            max_new_tokens=max_new_tokens
-        )
-        generated_ids = [
-            output_ids[len(input_ids):] for input_ids, output_ids in zip(model_inputs.input_ids, generated_ids)
-        ]
-
         prompt_tokens = len(model_inputs.input_ids[0])
 
-        content = self.tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]
+        if not stream:
+            generated_ids = self.model.generate(
+                model_inputs.input_ids,
+                max_new_tokens=max_new_tokens
+            )
+            generated_ids = [
+                output_ids[len(input_ids):] for input_ids, output_ids in zip(model_inputs.input_ids, generated_ids)
+            ]
 
-        completion_tokens = len(generated_ids[0])
+            content = self.tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]
 
-        return ChatCompletionResponse(**{"model": self.model_name,
-                                         "content": content,
-                                         "finish_reason": "stop" if completion_tokens < max_new_tokens else "length",
+            completion_tokens = len(generated_ids[0])
 
-                                         "completion_tokens": completion_tokens,
-                                         "prompt_tokens": prompt_tokens,
-                                         "total_tokens": prompt_tokens+completion_tokens})
+            return ChatCompletionResponse(**{"model": self.model_name,
+                                             "content": content,
+                                             "finish_reason": "stop" if completion_tokens < max_new_tokens else "length",
 
-    @torch.no_grad()
-    def stream_chat(self, messages, options=None):
-        options = options or dict()
-        max_new_tokens = options.get("max_new_tokens", 512)
+                                             "completion_tokens": completion_tokens,
+                                             "prompt_tokens": prompt_tokens,
+                                             "total_tokens": prompt_tokens+completion_tokens})
+        else:
+            def generator():
+                generation_kwargs = dict(model_inputs, streamer=self.streamer, max_new_tokens=max_new_tokens)
+                thread = Thread(target=self.model.generate, kwargs=generation_kwargs)
+                thread.start()
 
-        text = self.tokenizer.apply_chat_template(
-            messages,
-            tokenize=False,
-            add_generation_prompt=True
-        )
-        model_inputs = self.tokenizer([text], return_tensors="pt").to(self.device)
+                completion_tokens = 0
+                for content in self.streamer:
+                    completion_tokens += 1
 
-        prompt_tokens = len(model_inputs.input_ids[0])
+                    if not content:
+                        continue
 
-        generation_kwargs = dict(model_inputs, streamer=self.streamer, max_new_tokens=max_new_tokens)
+                    yield ChatCompletionStreamResponse(**{"model": self.model_name,
+                                                          "delta_content": content})
 
-        thread = Thread(target=self.model.generate, kwargs=generation_kwargs)
-        thread.start()
+                yield ChatCompletionStreamResponseDone(**{"model": self.model_name,
+                                                          "finish_reason": "stop" if completion_tokens < max_new_tokens else "length",
 
-        completion_tokens = 0
-
-        for content in self.streamer:
-            completion_tokens += 1
-
-            if not content:
-                continue
-
-            yield ChatCompletionStreamResponse(**{"model": self.model_name,
-                                                  "delta_content": content})
-
-        yield ChatCompletionStreamResponseDone(**{"model": self.model_name,
-                                                  "finish_reason": "stop" if completion_tokens < max_new_tokens else "length",
-
-                                                  "prompt_tokens": prompt_tokens,
-                                                  "completion_tokens": completion_tokens,
-                                                  "total_tokens": prompt_tokens+completion_tokens})
-        thread.join()
+                                                          "prompt_tokens": prompt_tokens,
+                                                          "completion_tokens": completion_tokens,
+                                                          "total_tokens": prompt_tokens + completion_tokens})
+                thread.join()
+            return generator()
 
 
 def run_test(model_name, stream=False, **kwargs):
+    import inspect
     print("=" * 80)
 
     model = HuggingFaceTransformersChat(model_name, local_files_only=False, **kwargs)
@@ -199,15 +193,22 @@ def run_test(model_name, stream=False, **kwargs):
         {"role": "user", "content": prompt}
     ]
 
-    if stream:
-        for response in model.stream_chat(messages):
-            if isinstance(response, ChatCompletionStreamResponseDone):
-                print()
-                print("completion_tokens:", response.completion_tokens)
-            else:
-                print(response.delta_content, end="", flush=True)
+    response = model.chat(messages, options={"max_tokens": 512}, stream=stream)
 
+    if inspect.isgenerator(response):
+        for part in response:
+            if isinstance(part, ChatCompletionStreamResponseDone):
+                print()
+                print("completion_tokens:", part.completion_tokens)
+            else:
+                print(part.delta_content, end="", flush=True)
     else:
-        response = model.chat(messages)
         print(response.content)
         print("completion_tokens:", response.completion_tokens)
+
+
+if __name__ == '__main__':
+    model_name = "Qwen/Qwen2-0.5B-Instruct"
+
+    run_test(model_name, stream=False)
+    run_test(model_name, stream=True)

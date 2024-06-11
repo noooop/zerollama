@@ -76,7 +76,7 @@ class VLLMChat(ChatInterface):
     def info(self):
         return self.model_info
 
-    def chat(self, messages, options=None, stream=False):
+    def chat(self, messages, stream=False, options=None):
         options = options or {}
         request_id = f"{shortuuid.random(length=22)}"
         sampling_params = self.SamplingParams(**options)
@@ -147,10 +147,6 @@ class VLLMChat(ChatInterface):
                                                           "completion_tokens": completion_tokens,
                                                           "total_tokens": prompt_tokens + completion_tokens})
             return generator()
-
-    def stream_chat(self, messages, options=None):
-        for item in self.chat(messages, options, stream=True):
-            yield item
 
 
 def run_test(model_name, stream=False, **kwargs):

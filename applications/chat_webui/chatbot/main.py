@@ -20,9 +20,9 @@ def predict(message, history):
 
     partial_message = ""
     for rep in chat_client.stream_chat(model, messages):
-        if not isinstance(rep.msg, ChatCompletionStreamResponseDone):
-            partial_message += rep.msg.delta_content
+        if not isinstance(rep, ChatCompletionStreamResponseDone):
+            partial_message += rep.delta_content
             yield partial_message
 
 
-gr.ChatInterface(predict).launch()
+gr.ChatInterface(predict).launch(server_name="0.0.0.0")

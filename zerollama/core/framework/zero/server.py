@@ -215,7 +215,7 @@ class ZeroServerProcess(Process):
     prepare -> started -> initial -> running -> error or stopped
     """
 
-    def __init__(self, server_class, server_kwargs=None, event=None, ignore_warnings=False):
+    def __init__(self, server_class, server_kwargs=None, event=None, ignore_warnings=False, debug=False):
         Process.__init__(self)
 
         if event is None:
@@ -223,6 +223,7 @@ class ZeroServerProcess(Process):
         else:
             self.event = event
 
+        self.debug = debug
         self.server_class = server_class
         self.server_kwargs = server_kwargs or dict()
         self.server = None
@@ -326,7 +327,9 @@ class ZeroServerProcess(Process):
 
         self._set_status("running")
 
-        greenlet.settrace(self._slow_log)
+        if self.debug:
+            greenlet.settrace(self._slow_log)
+
         gevent.signal_handler(signal.SIGTERM, self.close)
         gevent.signal_handler(signal.SIGINT, self.close)
 

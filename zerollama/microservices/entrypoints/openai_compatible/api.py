@@ -1,4 +1,5 @@
 
+import inspect
 from fastapi import FastAPI
 from fastapi.responses import StreamingResponse, JSONResponse
 
@@ -52,11 +53,6 @@ def models():
 @app.get("/v1/models/{model_id:path}", name="path-convertor")
 def model(model_id: str):
     rep = chat_client.info(model_id)
-
-    if rep is None:
-        return JSONResponse(status_code=404,
-                            content={"error": f"model '{model_id}' not found"})
-
     return ModelCard(id=model_id)
 
 
@@ -64,17 +60,26 @@ def model(model_id: str):
 def chat(req: ChatCompletionRequest):
     options = {}
 
-    if req.stream:
+    response = chat_client.chat(name=req.model, messages=req.messages, stream=req.stream, options=options)
+
+    if not inspect.isgenerator(response):
+        data = ChatCompletionResponse(**{
+            "model": response.model,
+            "choices": [ChatCompletionResponseChoice(**{
+                "index": 0,
+                "message": ChatMessage(role="assistant", content=response.content),
+                "finish_reason": response.finish_reason
+            })],
+            "usage": UsageInfo(prompt_tokens=response.prompt_tokens,
+                               total_tokens=response.total_tokens,
+                               completion_tokens=response.completion_tokens)
+        })
+        return data
+    else:
         def generate():
-            for rep in chat_client.stream_chat(req.model, req.messages, options):
-                if rep is None:
-                    return JSONResponse(status_code=404,
-                                        content={"error": f"model '{req.model}' not found"})
-
-                rep = rep.msg
-
+            for rep in response:
                 if isinstance(rep, ChatCompletionStreamResponseDone):
-                    response = ChatCompletionStreamResponse(**{
+                    data = ChatCompletionStreamResponse(**{
                         "model": rep.model,
                         "choices": [ChatCompletionResponseStreamChoice(**{
                             "index": 0,
@@ -82,38 +87,19 @@ def chat(req: ChatCompletionRequest):
                             "finish_reason": rep.finish_reason
                         })]
                     })
-                    yield response.model_dump_json()
+                    yield data.model_dump_json()
                     break
                 else:
-                    response = ChatCompletionStreamResponse(**{
+                    data = ChatCompletionStreamResponse(**{
                         "model": rep.model,
                         "choices": [ChatCompletionResponseStreamChoice(**{
                             "index": 0,
                             "delta": DeltaMessage(role="assistant", content=rep.delta_content)
                         })]
                     })
-                    yield response.model_dump_json()
+                    yield data.model_dump_json()
                     yield "\n"
-
         return StreamingResponse(generate(), media_type="application/x-ndjson")
-    else:
-        rep = chat_client.chat(req.model, req.messages, options)
-        if rep is None:
-            return JSONResponse(status_code=404,
-                                content={"error": f"model '{req.model}' not found"})
-        rep = rep.msg
-        response = ChatCompletionResponse(**{
-            "model": rep.model,
-            "choices": [ChatCompletionResponseChoice(**{
-                "index": 0,
-                "message": ChatMessage(role="assistant", content=rep.content),
-                "finish_reason": rep.finish_reason
-            })],
-            "usage": UsageInfo(prompt_tokens=rep.prompt_tokens,
-                               total_tokens=rep.total_tokens,
-                               completion_tokens=rep.completion_tokens)
-        })
-        return response
 
 
 @app.post("/v1/embeddings")
@@ -121,12 +107,7 @@ def embeddings(req: EmbeddingsRequest):
     options = {}
     sentences = [req.input] if isinstance(req.input, str) else req.input
 
-    print(req)
-
     rep = retriever_client.encode(req.model, sentences, options)
-    if rep is None:
-        return JSONResponse(status_code=404,
-                            content={"error": f"model '{req.model}' not found"})
 
     vecs = rep.vecs['dense_vecs']
     if isinstance(req.input, str):

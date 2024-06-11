@@ -136,17 +136,6 @@ class ZeroClient(object):
         _data = {"method": method, "data": data}
         return client.query(_data, **kwargs)
 
-    def stream_query(self, name, method, data=None, **kwargs):
-        client = self.get_client(name)
-        if client is None:
-            return None
-        if data is None:
-            data = {}
-
-        _data = {"method": method, "data": data}
-        for part in client.stream_query(_data, **kwargs):
-            yield part
-
 
 if __name__ == '__main__':
     client = NameServerClient()
