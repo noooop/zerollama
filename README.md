@@ -12,6 +12,7 @@
 1. [与大模型对话 客户端](./applications/chat_cli)
 2. [与大模型对话 webui](./applications/chat_webui)
 3. [检索增强生成 (RAG)](./applications/rag)
+4. [使用 vllm](./applications/chat_with_vllm)
 
 # 支持的推理框架
 ## Chat 模型
