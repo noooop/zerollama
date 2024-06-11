@@ -1,4 +1,3 @@
-
 from zerollama.tasks.chat.collection import get_model_by_name
 from zerollama.tasks.chat.protocol import ChatCompletionRequest, ChatCompletionStreamResponseDone
 from zerollama.tasks.chat.protocol import ZeroServerResponseOk, ZeroServerStreamResponseOk
@@ -29,7 +28,8 @@ if __name__ == '__main__':
     engine = ZeroServerProcess("zerollama.tasks.chat.engine.server:ZeroChatInferenceEngine",
                                server_kwargs={
                                    "name": "Qwen/Qwen1.5-0.5B-Chat",
-                                   "engine_kwargs": {}
+                                   "engine_kwargs": {
+                                       "inference_backend": "zerollama.microservices.inference.vllm_green.chat:VLLMChat"}
                                })
 
     nameserver.start()
@@ -37,6 +37,3 @@ if __name__ == '__main__':
 
     engine.wait()
     nameserver.wait()
-
-
-
