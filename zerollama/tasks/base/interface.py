@@ -40,3 +40,16 @@ class ModelBase(object):
             "model_kwargs": cls.model_kwargs}
 
         return model_config
+
+    @classmethod
+    def get_model(cls, model_name):
+        import importlib
+        model_class = cls.inference_backend
+        module_name, class_name = model_class.split(":")
+
+        module = importlib.import_module(module_name)
+
+        model_class = getattr(module, class_name)
+
+        model = model_class(model_name=model_name)
+        return model
