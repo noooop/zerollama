@@ -53,7 +53,7 @@ if __name__ == '__main__':
     print(client.support_methods(model_name))
     print(client.info(model_name))
 
-    vlm_test_path = Path(os.path.dirname(__file__)).parent.parent.parent.parent / "static/vlm_test"
+    vlm_test_path = Path(os.path.dirname(__file__)).parent.parent.parent.parent / "static/test_sample/vlm"
     input_path = vlm_test_path / "monday.jpg"
     img_lr = cv2.imread(str(input_path))
     img_lr = cv2.cvtColor(img_lr, cv2.COLOR_BGR2RGB)

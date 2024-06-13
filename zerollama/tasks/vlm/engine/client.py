@@ -39,7 +39,7 @@ if __name__ == '__main__':
     import os
     from pathlib import Path
 
-    vlm_test_path = Path(os.path.dirname(__file__)).parent.parent.parent.parent / "static/vlm_test"
+    vlm_test_path = Path(os.path.dirname(__file__)).parent.parent.parent.parent / "static/test_sample/vlm"
 
     model_name = "openbmb/MiniCPM-V"
 
