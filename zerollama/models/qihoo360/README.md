@@ -4,7 +4,7 @@
 
 1. 安装 依赖 
 ```
-$ pip install -r zerollama\models\moured\requirements.txt  
+$ pip install -r zerollama\models\qihoo360\requirements.txt  
 ```
 
 4. 下载 模型
