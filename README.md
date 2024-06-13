@@ -53,6 +53,12 @@
 ## Super Resolution 模型 
 - [APISR](https://github.com/noooop/zerollama/tree/main/zerollama/models/apisr)
 
+## Optical character recognition & document layout analysis模型
+### document layout analysis
+[moured/YOLOv10-Document-Layout-Analysis](https://github.com/noooop/zerollama/tree/main/zerollama/models/moured)
+[360LayoutAnalysis](https://github.com/noooop/zerollama/tree/main/zerollama/models/qihoo360)
+
+
 ## Contribute
 贡献代码请交逻辑清晰思路、简单直接的代码、不要有魔法，甚至可以牺牲一部分性能换取可读性
 
