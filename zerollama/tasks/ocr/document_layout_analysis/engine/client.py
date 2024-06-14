@@ -1,7 +1,7 @@
 
 from zerollama.core.framework.nameserver.client import ZeroClient
-from zerollama.tasks.dla.protocol import PROTOCOL
-from zerollama.tasks.dla.protocol import DLARequest
+from zerollama.tasks.ocr.document_layout_analysis.protocol import PROTOCOL
+from zerollama.tasks.ocr.document_layout_analysis.protocol import DocumentLayoutAnalysisRequest, DocumentLayoutAnalysisResult
 
 CLIENT_VALIDATION = True
 
@@ -16,10 +16,9 @@ class DLAClient(ZeroClient):
         method = "inference"
         data = {"model": name,
                 "image": image,
-                "options": options or dict(),
-                "stream": False}
+                "options": options or dict()}
         if CLIENT_VALIDATION:
-            data = DLARequest(**data).dict()
+            data = DocumentLayoutAnalysisRequest(**data).dict()
 
         rep = self.query(name, method, data)
         if rep is None:
@@ -28,22 +27,21 @@ class DLAClient(ZeroClient):
         if rep.state != "ok":
             raise RuntimeError(f"DLA [{name}] error, with error msg [{rep.msg}]")
 
-        return rep.msg
+        return DocumentLayoutAnalysisResult(**rep.msg)
 
 
 if __name__ == '__main__':
     import os
-    import cv2
+    from PIL import Image
     from pathlib import Path
-    from zerollama.tasks.dla.utils import get_annotated_image
+    from zerollama.tasks.ocr.document_layout_analysis.utils import get_annotated_image
 
-    dla_test_path = Path(os.path.dirname(__file__)).parent.parent.parent.parent / "static/test_sample/dla"
+    dla_test_path = Path(os.path.dirname(__file__)).parent.parent.parent.parent.parent / "static/test_sample/dla"
 
     input_path = dla_test_path / "input_sample.png"
-    img_BGR = cv2.imread(str(input_path))
-    img_RGB = cv2.cvtColor(img_BGR, cv2.COLOR_BGR2RGB)
+    image = Image.open(input_path)
 
-    model_name = "YOLOv10-Document-Layout-Analysis/yolov10x_best.pt"
+    model_name = "surya_dla"
 
     client = DLAClient()
     print("=" * 80)
@@ -56,6 +54,6 @@ if __name__ == '__main__':
     print(client.support_methods(model_name))
     print(client.info(model_name))
 
-    results = client.detection(model_name, img_RGB, options={"conf": 0.2, "iou": 0.8})
-    annotated_image = get_annotated_image(img_RGB, results)
-    cv2.imwrite(f'result-{model_name.replace("/", "-")}.jpg', annotated_image)
+    results = client.detection(model_name, image, options={"conf": 0.2, "iou": 0.8})
+    annotated_image = get_annotated_image(image, results)
+    annotated_image.save(f'result-{model_name.replace("/", "-")}.jpg')

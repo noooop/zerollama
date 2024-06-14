@@ -1,8 +1,8 @@
 
-from zerollama.tasks.dla.interface import DLAModel
+from zerollama.tasks.ocr.document_layout_analysis.interface import DocumentLayoutAnalysisModel
 
 
-class YOLOv10DocumentLayoutAnalysis(DLAModel):
+class YOLOv10DocumentLayoutAnalysis(DocumentLayoutAnalysisModel):
     family = "YOLOv10-Document-Layout-Analysis"
     header = ["name", "weight_path"]
     info = [
@@ -14,14 +14,14 @@ class YOLOv10DocumentLayoutAnalysis(DLAModel):
         ["YOLOv10-Document-Layout-Analysis/yolov10s_best.pt", "yolov10s_best.pt"],
         ["YOLOv10-Document-Layout-Analysis/yolov10x_best.pt", "yolov10x_best.pt"],
     ]
-    inference_backend = "zerollama.models.moured.backend.dla:YOLOv10DocumentLayoutAnalysis"
+    inference_backend = "zerollama.models.moured.backend.document_layout_analysis:YOLOv10DocumentLayoutAnalysis"
 
 
 if __name__ == '__main__':
     import os
     import cv2
     from pathlib import Path
-    from zerollama.tasks.dla.utils import get_annotated_image
+    from zerollama.tasks.ocr.document_layout_analysis.utils import get_annotated_image
 
     dla_test_path = Path(os.path.dirname(__file__)).parent.parent.parent / "static/test_sample/dla"
 

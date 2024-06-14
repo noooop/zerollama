@@ -1,7 +1,7 @@
 
-from zerollama.tasks.dla.collection import get_model_by_name
-from zerollama.tasks.dla.protocol import DLARequest
-from zerollama.tasks.dla.protocol import ZeroServerResponseOk
+from zerollama.tasks.ocr.document_layout_analysis.collection import get_model_by_name
+from zerollama.tasks.ocr.document_layout_analysis.protocol import DocumentLayoutAnalysisRequest
+from zerollama.tasks.ocr.document_layout_analysis.protocol import ZeroServerResponseOk
 from zerollama.tasks.base.engine.server import ZeroInferenceEngine
 
 
@@ -9,7 +9,7 @@ class ZeroDLAInferenceEngine(ZeroInferenceEngine):
     get_model_by_name = staticmethod(get_model_by_name)
 
     def inference_worker(self, req):
-        data = DLARequest(**req.data)
+        data = DocumentLayoutAnalysisRequest(**req.data)
 
         response = self.inference.detection(data.image, data.options)
         rep = ZeroServerResponseOk(msg=response)
@@ -18,12 +18,12 @@ class ZeroDLAInferenceEngine(ZeroInferenceEngine):
 
 if __name__ == '__main__':
     from zerollama.core.framework.zero.server import ZeroServerProcess
-    from zerollama.tasks.dla.protocol import ENGINE_CLASS
+    from zerollama.tasks.ocr.document_layout_analysis.protocol import ENGINE_CLASS
 
     nameserver = ZeroServerProcess("zerollama.core.framework.nameserver.server:ZeroNameServer")
     engine = ZeroServerProcess(ENGINE_CLASS,
                                server_kwargs={
-                                   "name": "YOLOv10-Document-Layout-Analysis/yolov10x_best.pt",
+                                   "name": "surya_dla",
                                    "engine_kwargs": {}
                                })
 

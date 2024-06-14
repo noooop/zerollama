@@ -1,9 +1,9 @@
 
+from zerollama.models.qihoo360.document_layout_analysis import LayoutAnalysis360
+from zerollama.models.moured.document_layout_analysis import YOLOv10DocumentLayoutAnalysis
+from zerollama.models.surya.document_layout_analysis import SuryaDocumentLayoutAnalysis
 
-from zerollama.models.qihoo360.dla import LayoutAnalysis360
-from zerollama.models.moured.dla import YOLOv10DocumentLayoutAnalysis
-
-MODELS = [LayoutAnalysis360, YOLOv10DocumentLayoutAnalysis]
+MODELS = [LayoutAnalysis360, YOLOv10DocumentLayoutAnalysis, SuryaDocumentLayoutAnalysis]
 MODELS_NAME_MAP = dict()
 MODELS_FAMILY_MAP = {m.family: m for m in MODELS}
 

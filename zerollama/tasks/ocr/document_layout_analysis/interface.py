@@ -1,10 +1,10 @@
 
 from zerollama.tasks.base.interface import ModelBase
-from zerollama.tasks.dla.protocol import PROTOCOL
-from zerollama.tasks.dla.protocol import DLAModelConfig
+from zerollama.tasks.ocr.document_layout_analysis.protocol import PROTOCOL
+from zerollama.tasks.ocr.document_layout_analysis.protocol import DocumentLayoutAnalysisModelConfig
 
 
-class DLAModel(ModelBase):
+class DocumentLayoutAnalysisModel(ModelBase):
     protocol = PROTOCOL
     inference_backend = ""
     download_backend = ""
@@ -15,18 +15,14 @@ class DLAModel(ModelBase):
         if model_config is None:
             return
 
-        return DLAModelConfig(**model_config)
+        return DocumentLayoutAnalysisModelConfig(**model_config)
 
 
-class DLAInterface(object):
+class DocumentLayoutAnalysisInterface(object):
     protocol = PROTOCOL
 
     def load(self):
-        """
-        Load everything in memory.
-        :return: None
-        """
         raise NotImplementedError
 
-    def chat(self, messages, images, options=None):
+    def chat(self, image, options=None):
         raise NotImplementedError

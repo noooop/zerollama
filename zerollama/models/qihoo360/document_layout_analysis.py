@@ -1,8 +1,8 @@
 
-from zerollama.tasks.dla.interface import DLAModel
+from zerollama.tasks.ocr.document_layout_analysis.interface import DocumentLayoutAnalysisModel
 
 
-class LayoutAnalysis360(DLAModel):
+class LayoutAnalysis360(DocumentLayoutAnalysisModel):
     family = "360LayoutAnalysis"
     header = ["name", "weight_path"]
     info = [
@@ -10,14 +10,14 @@ class LayoutAnalysis360(DLAModel):
         ["360LayoutAnalysis/paper-8n.pt",  "paper-8n.pt"],
         ["360LayoutAnalysis/report-8n.pt", "report-8n.pt"],
     ]
-    inference_backend = "zerollama.models.qihoo360.backend.dla:LayoutAnalysis360"
+    inference_backend = "zerollama.models.qihoo360.backend.document_layout_analysis:LayoutAnalysis360"
 
 
 if __name__ == '__main__':
     import os
     import cv2
     from pathlib import Path
-    from zerollama.tasks.dla.utils import get_annotated_image
+    from zerollama.tasks.ocr.document_layout_analysis.utils import get_annotated_image
 
     dla_test_path = Path(os.path.dirname(__file__)).parent.parent.parent / "static/test_sample/dla"
 

@@ -4,10 +4,10 @@ import supervision as sv
 
 
 def get_annotated_image(image, results):
-    class_id = np.array([x['class'] for x in results])
-    class_names = np.array([x['name'] for x in results])
-    confidence = np.array([x['confidence'] for x in results])
-    xyxy = np.array([[x["box"]["x1"], x["box"]["y1"], x["box"]["x2"], x["box"]["y2"]] for x in results])
+    class_names = np.array([x.label for x in results.bboxes])
+    confidence = np.array([x.confidence for x in results.bboxes])
+    xyxy = np.array([x.bbox for x in results.bboxes])
+    class_id = np.array([x.id for x in results.bboxes])
 
     detections = sv.Detections(
         xyxy=xyxy,

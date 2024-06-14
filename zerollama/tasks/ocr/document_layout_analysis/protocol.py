@@ -1,5 +1,6 @@
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 from typing import Literal, Optional, List, Dict, Any, Union, Tuple
+from zerollama.tasks.ocr.text_line_detection.protocol import Bbox
 
 from zerollama.core.framework.zero.protocol import (
     ZeroServerRequest,
@@ -9,9 +10,9 @@ from zerollama.core.framework.zero.protocol import (
     ZeroServerResponseError
 )
 
-ENGINE_CLASS = "zerollama.tasks.dla.engine.server:ZeroDLAInferenceEngine"
+ENGINE_CLASS = "zerollama.tasks.ocr.document_layout_analysis.engine.server:ZeroDLAInferenceEngine"
 MANAGER_NAME = "ZeroDLAInferenceManager"
-PROTOCOL = "dla"
+PROTOCOL = "document_layout_analysis"
 
 
 DLA_ENGINE_CLASS = ENGINE_CLASS
@@ -19,7 +20,7 @@ DLA_MANAGER_NAME = MANAGER_NAME
 DLA_PROTOCOL = PROTOCOL
 
 
-class DLAModelConfig(BaseModel):
+class DocumentLayoutAnalysisModelConfig(BaseModel):
     name: str
     info: dict
     family: str
@@ -31,6 +32,15 @@ class DLAModelConfig(BaseModel):
     )
 
 
-class DLARequest(BaseModel):
+class DocumentLayoutAnalysisRequest(BaseModel):
     image: Any
     options: Optional[Dict] = None
+
+
+class LayoutBox(Bbox):
+    label: str
+    id: int
+
+
+class DocumentLayoutAnalysisResult(BaseModel):
+    bboxes: List[LayoutBox]
