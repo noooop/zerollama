@@ -53,11 +53,20 @@
 ## Super Resolution 模型 
 - [APISR](https://github.com/noooop/zerollama/tree/main/zerollama/models/apisr)
 
-## Optical character recognition & document layout analysis模型
-### document layout analysis
-[moured/YOLOv10-Document-Layout-Analysis](https://github.com/noooop/zerollama/tree/main/zerollama/models/moured)
-[360LayoutAnalysis](https://github.com/noooop/zerollama/tree/main/zerollama/models/qihoo360)
+## Optical Character Recognition 全家桶
+### Text Line Detection
+- [surya_tld](https://github.com/noooop/zerollama/tree/main/zerollama/models/surya)
 
+### Text Recognition
+- [surya_tr](https://github.com/noooop/zerollama/tree/main/zerollama/models/surya)
+
+### Document Layout Analysis
+- [moured/YOLOv10-Document-Layout-Analysis](https://github.com/noooop/zerollama/tree/main/zerollama/models/moured)
+- [360LayoutAnalysis](https://github.com/noooop/zerollama/tree/main/zerollama/models/qihoo360)
+- [surya_dla](https://github.com/noooop/zerollama/tree/main/zerollama/models/surya)
+
+### Reading Order Detection
+- [surya_rod](https://github.com/noooop/zerollama/tree/main/zerollama/models/surya)
 
 ## Contribute
 贡献代码请交逻辑清晰思路、简单直接的代码、不要有魔法，甚至可以牺牲一部分性能换取可读性

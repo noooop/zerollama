@@ -1,6 +1,7 @@
 from PIL import Image
 from zerollama.tasks.ocr.text_recognition.interface import TextRecognitionInterface
 from zerollama.tasks.ocr.text_recognition.protocol import TextLine, TextRecognitionResult
+from zerollama.tasks.ocr.text_line_detection.protocol import TextDetectionResult
 from zerollama.tasks.ocr.text_recognition.collection import get_model_by_name
 
 
@@ -37,10 +38,15 @@ class SuryaTextRecognition(TextRecognitionInterface):
         self.slice_bboxes_from_image = slice_bboxes_from_image
         self.batch_recognition = batch_recognition
 
-    def recognition(self, image, lang, bboxes, options=None):
+    def recognition(self, image, lang, lines, options=None):
         options = options or {}
         if not isinstance(image, Image.Image):
             image = Image.fromarray(image)
+
+        if isinstance(lines, dict):
+            lines = TextDetectionResult(**lines)
+
+        bboxes = [x.bbox for x in lines.bboxes]
 
         slices = self.slice_bboxes_from_image(image, bboxes)
         langs = [lang] * len(slices)

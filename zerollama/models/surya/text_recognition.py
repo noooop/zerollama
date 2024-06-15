@@ -1,8 +1,8 @@
 
-from zerollama.tasks.ocr.text_recognition.interface import TextRecognition
+from zerollama.tasks.ocr.text_recognition.interface import TextRecognitionModel
 
 
-class SuryaTextRecognition(TextRecognition):
+class SuryaTextRecognition(TextRecognitionModel):
     family = "surya_tr"
     header = ["name"]
     info = [
@@ -24,11 +24,11 @@ if __name__ == '__main__':
 
     tld = SuryaTextLineDetection.get_model("surya_tld")
     tld.load()
-    results = tld.detection(image)
+    lines = tld.detection(image)
 
     for model_name in [x[0] for x in SuryaTextRecognition.info]:
         model = SuryaTextRecognition.get_model(model_name)
         model.load()
-        results = model.recognition(image, ["zh", "en"], [x.bbox for x in results.bboxes])
+        results = model.recognition(image, ["zh", "en"], lines)
         print(results)
 

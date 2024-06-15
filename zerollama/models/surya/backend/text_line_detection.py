@@ -48,12 +48,12 @@ class SuryaTextLineDetection(TextLineDetectionInterface):
                  "confidence": x.confidence}
             bboxes.append(t)
 
-        return TextDetectionResult(bboxes=bboxes)
+        vertical_lines = []
+        for x in predictions[0].vertical_lines:
+            vertical_lines.append(x.dict())
 
-    def detection_raw(self, image, options=None):
-        options = options or {}
-        if not isinstance(image, Image.Image):
-            image = Image.fromarray(image)
+        horizontal_lines = []
+        for x in predictions[0].horizontal_lines:
+            horizontal_lines.append(x.dict())
 
-        predictions = self.batch_text_detection([image], self.model, self.processor, **options)
-        return predictions
+        return TextDetectionResult(bboxes=bboxes, vertical_lines=vertical_lines, horizontal_lines=horizontal_lines)
