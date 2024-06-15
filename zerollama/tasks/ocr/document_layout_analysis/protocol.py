@@ -1,6 +1,6 @@
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 from typing import Literal, Optional, List, Dict, Any, Union, Tuple
-from zerollama.tasks.ocr.text_line_detection.protocol import Bbox
+from zerollama.tasks.ocr.text_line_detection.protocol import BboxC, TextDetectionResult
 
 from zerollama.core.framework.zero.protocol import (
     ZeroServerRequest,
@@ -34,10 +34,11 @@ class DocumentLayoutAnalysisModelConfig(BaseModel):
 
 class DocumentLayoutAnalysisRequest(BaseModel):
     image: Any
+    lines: Optional[TextDetectionResult] = None
     options: Optional[Dict] = None
 
 
-class LayoutBox(Bbox):
+class LayoutBox(BboxC):
     label: str
     id: int
 

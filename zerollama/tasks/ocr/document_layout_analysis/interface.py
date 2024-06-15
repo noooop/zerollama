@@ -24,5 +24,5 @@ class DocumentLayoutAnalysisInterface(object):
     def load(self):
         raise NotImplementedError
 
-    def chat(self, image, options=None):
+    def detection(self, image, lines=None, options=None):
         raise NotImplementedError
