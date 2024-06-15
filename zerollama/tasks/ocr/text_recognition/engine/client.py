@@ -12,13 +12,13 @@ class TRClient(ZeroClient):
     def __init__(self, nameserver_port=None):
         ZeroClient.__init__(self, self.protocol, nameserver_port)
 
-    def recognition(self, name, image, lang, bboxes, options=None):
+    def recognition(self, name, image, lang, lines, options=None):
         method = "inference"
         data = {"model": name,
                 "image": image,
                 "lang": lang,
-                "bboxes": bboxes,
-                "options": options or dict()}
+                "lines": lines,
+                "options": options}
         if CLIENT_VALIDATION:
             data = TextRecognitionRequest(**data).dict()
 
@@ -47,7 +47,7 @@ if __name__ == '__main__':
 
     tld_client = TLDClient()
     tld_client.wait_service_available(tld_model_name)
-    results = tld_client.detection(tld_model_name, image)
+    lines = tld_client.detection(tld_model_name, image)
 
     model_name = "surya_tr"
     client = TRClient()
@@ -61,7 +61,7 @@ if __name__ == '__main__':
     print(client.support_methods(model_name))
     print(client.info(model_name))
 
-    results = client.recognition(model_name, image, ["zh", "en"], [{"bbox": x.bbox} for x in results.bboxes])
+    results = client.recognition(model_name, image, ["zh", "en"], lines)
 
     for line in results.text_lines:
         print(line)

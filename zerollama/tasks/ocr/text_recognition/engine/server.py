@@ -9,8 +9,7 @@ class ZeroTRInferenceEngine(ZeroInferenceEngine):
 
     def inference_worker(self, req):
         data = TextRecognitionRequest(**req.data)
-        bboxes = [b.bbox for b in data.bboxes]
-        response = self.inference.recognition(data.image, data.lang, bboxes, data.options)
+        response = self.inference.recognition(data.image, data.lang, data.lines, data.options)
         rep = ZeroServerResponseOk(msg=response)
         self.zero_send(req, rep)
 

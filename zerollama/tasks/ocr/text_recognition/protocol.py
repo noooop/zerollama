@@ -2,7 +2,7 @@ import copy
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 from pydantic import field_validator, computed_field
 from typing import Literal, Optional, List, Dict, Any, Union, Tuple
-from zerollama.tasks.ocr.text_line_detection.protocol import Bbox
+from zerollama.tasks.ocr.text_line_detection.protocol import Bbox, TextDetectionResult
 
 from zerollama.core.framework.zero.protocol import (
     ZeroServerRequest,
@@ -36,7 +36,7 @@ class TextRecognitionModelConfig(BaseModel):
 class TextRecognitionRequest(BaseModel):
     image: Any
     lang: List[str]
-    bboxes: List[Bbox]
+    lines: TextDetectionResult
     options: Optional[Dict] = None
 
 
@@ -46,5 +46,3 @@ class TextLine(Bbox):
 
 class TextRecognitionResult(BaseModel):
     text_lines: List[TextLine]
-    languages: List[str]
-    image_bbox: Bbox

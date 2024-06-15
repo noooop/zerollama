@@ -4,7 +4,7 @@ from zerollama.tasks.ocr.text_recognition.protocol import PROTOCOL
 from zerollama.tasks.ocr.text_recognition.protocol import TextRecognitionModelConfig
 
 
-class TextRecognition(ModelBase):
+class TextRecognitionModel(ModelBase):
     protocol = PROTOCOL
     inference_backend = ""
     download_backend = ""
@@ -24,5 +24,5 @@ class TextRecognitionInterface(object):
     def load(self):
         raise NotImplementedError
 
-    def detection(self, image, options=None):
+    def recognition(self, image, lang, lines, options=None):
         raise NotImplementedError
