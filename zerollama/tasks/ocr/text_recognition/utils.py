@@ -2,7 +2,7 @@
 from surya.postprocessing.text import draw_text_on_image
 
 
-font_path = "arial.ttf"
+font_path = "msyh.ttc"
 
 
 def get_annotated_image(image, prediction, langs):
