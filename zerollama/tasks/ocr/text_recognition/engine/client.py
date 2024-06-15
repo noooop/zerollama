@@ -37,6 +37,7 @@ if __name__ == '__main__':
     from PIL import Image
     from pathlib import Path
     from zerollama.tasks.ocr.text_line_detection.engine.client import TLDClient
+    from zerollama.tasks.ocr.text_recognition.utils import get_annotated_image
 
     dla_test_path = Path(os.path.dirname(__file__)).parent.parent.parent.parent.parent / "static/test_sample/dla"
 
@@ -61,7 +62,9 @@ if __name__ == '__main__':
     print(client.support_methods(model_name))
     print(client.info(model_name))
 
-    results = client.recognition(model_name, image, ["zh", "en"], lines)
+    langs = ["zh", "en"]
 
-    for line in results.text_lines:
-        print(line)
+    results = client.recognition(model_name, image, langs, lines)
+
+    annotated_image = get_annotated_image(image, results, langs)
+    annotated_image.save(f'result-{model_name.replace("/", "-")}.jpg')
