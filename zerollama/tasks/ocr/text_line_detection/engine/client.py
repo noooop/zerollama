@@ -1,4 +1,3 @@
-import numpy as np
 
 from zerollama.core.framework.nameserver.client import ZeroClient
 from zerollama.tasks.ocr.text_line_detection.protocol import PROTOCOL
@@ -23,10 +22,10 @@ class TLDClient(ZeroClient):
 
         rep = self.query(name, method, data)
         if rep is None:
-            raise RuntimeError(f"DLA [{name}] server not found.")
+            raise RuntimeError(f"{self.__class__.__name__} [{name}] server not found.")
 
         if rep.state != "ok":
-            raise RuntimeError(f"DLA [{name}] error, with error msg [{rep.msg}]")
+            raise RuntimeError(f"{self.__class__.__name__} [{name}] error, with error msg [{rep.msg}]")
 
         return TextDetectionResult(**rep.msg)
 
@@ -51,7 +50,7 @@ if __name__ == '__main__':
     print(client.get_services(model_name))
 
     print("=" * 80)
-    print('ZeroDLAInferenceEngine support_methods')
+    print('ZeroTLDInferenceEngine support_methods')
     print(client.support_methods(model_name))
     print(client.info(model_name))
 

@@ -39,7 +39,6 @@ class TextLineDetectionRequest(BaseModel):
 
 class Bbox(BaseModel):
     bbox: List[float]
-    confidence: Optional[float] = None
 
     @field_validator('bbox')
     @classmethod
@@ -49,5 +48,16 @@ class Bbox(BaseModel):
         return v
 
 
+class ColumnLine(Bbox):
+    vertical: bool
+    horizontal: bool
+
+
+class BboxC(Bbox):
+    confidence: Optional[float] = None
+
+
 class TextDetectionResult(BaseModel):
-    bboxes: List[Bbox]
+    bboxes: List[BboxC]
+    vertical_lines: List[ColumnLine]
+    horizontal_lines: List[ColumnLine]
