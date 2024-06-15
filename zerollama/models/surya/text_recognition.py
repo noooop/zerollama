@@ -16,6 +16,7 @@ if __name__ == '__main__':
     from PIL import Image
     from pathlib import Path
     from zerollama.models.surya.text_line_detection import SuryaTextLineDetection
+    from zerollama.tasks.ocr.text_recognition.utils import get_annotated_image
 
     dla_test_path = Path(os.path.dirname(__file__)).parent.parent.parent / "static/test_sample/dla"
 
@@ -26,9 +27,13 @@ if __name__ == '__main__':
     tld.load()
     lines = tld.detection(image)
 
+    langs = ["zh", "en"]
+
     for model_name in [x[0] for x in SuryaTextRecognition.info]:
         model = SuryaTextRecognition.get_model(model_name)
         model.load()
-        results = model.recognition(image, ["zh", "en"], lines)
-        print(results)
+        results = model.recognition(image, langs, lines)
+
+        annotated_image = get_annotated_image(image, results, langs)
+        annotated_image.save(f'result-{model_name.replace("/", "-")}.jpg')
 
