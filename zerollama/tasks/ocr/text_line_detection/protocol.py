@@ -47,6 +47,13 @@ class Bbox(BaseModel):
             raise ValueError('bbox must have 4 elements')
         return v
 
+    @property
+    def polygon(self):
+        return [[self.bbox[0], self.bbox[1]],
+                [self.bbox[2], self.bbox[1]],
+                [self.bbox[2], self.bbox[3]],
+                [self.bbox[0], self.bbox[3]]]
+
 
 class ColumnLine(Bbox):
     vertical: bool
