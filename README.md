@@ -34,6 +34,7 @@
 - [Yuan](https://github.com/noooop/zerollama/tree/main/zerollama/models/yuan)
 - [Mistral](https://github.com/noooop/zerollama/tree/main/zerollama/models/mistral)
 - [GLM-4](https://github.com/noooop/zerollama/tree/main/zerollama/models/thudm)
+- [bilibili Index](https://github.com/noooop/zerollama/tree/main/zerollama/models/bilibili)
 
 ## Retriever(Embeddings) 模型
 - [bge-retrieval](https://github.com/noooop/zerollama/tree/main/zerollama/models/baai)
