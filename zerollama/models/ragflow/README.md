@@ -8,6 +8,7 @@
 
 ## setup
 
+**ragflow不支持windows，请使用ubuntu或wsl2**
 
 1. 安装 ragflow
 
