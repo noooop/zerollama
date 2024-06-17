@@ -47,12 +47,7 @@ class HuggingFaceTransformers(object):
     def load(self):
         config = config_setup()
 
-        if self.local_files_only:
-            import modelscope
-            modelscope.snapshot_download = partial(modelscope.snapshot_download,
-                                                   local_files_only=True)
-
-        if config.use_modelscope:
+        if config.use_modelscope and not self.model_info.get("use_hf_only", False):
             from modelscope import AutoModelForCausalLM, AutoTokenizer
             from transformers import TextIteratorStreamer, BitsAndBytesConfig
         else:
