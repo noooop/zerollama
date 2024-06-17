@@ -9,8 +9,8 @@ dependencies:
   - anaconda
   - pip
   - pip:
-      - torch==2.3.0
-      - torchvision==0.18.0
+      - torch==2.3.1
+      - torchvision
       - huggingface_hub==0.22.2
       - transformers==4.40.2
       - accelerate==0.30.1
