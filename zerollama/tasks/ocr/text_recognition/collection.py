@@ -1,8 +1,9 @@
 
 
 from zerollama.models.surya.text_recognition import SuryaTextRecognition
+from zerollama.models.ragflow.text_recognition import DeepDocTextRecognition
 
-MODELS = [SuryaTextRecognition]
+MODELS = [SuryaTextRecognition, DeepDocTextRecognition]
 MODELS_NAME_MAP = dict()
 MODELS_FAMILY_MAP = {m.family: m for m in MODELS}
 

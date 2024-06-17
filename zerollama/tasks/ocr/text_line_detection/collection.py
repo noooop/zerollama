@@ -1,8 +1,9 @@
 
 
 from zerollama.models.surya.text_line_detection import SuryaTextLineDetection
+from zerollama.models.ragflow.text_line_detection import DeepDocTextLineDetection
 
-MODELS = [SuryaTextLineDetection]
+MODELS = [SuryaTextLineDetection, DeepDocTextLineDetection]
 MODELS_NAME_MAP = dict()
 MODELS_FAMILY_MAP = {m.family: m for m in MODELS}
 
