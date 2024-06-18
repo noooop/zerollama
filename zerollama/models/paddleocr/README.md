@@ -17,15 +17,32 @@ $ pip install -r zerollama\zerollama\models\paddleocr\requirements.txt
 
 2. 安装 cudnn8 
 
-下载 cudnn-windows-x86_64-8.9.7.29_cuda12-archive.zip
+下载地址
+
+https://developer.download.nvidia.cn/compute/cudnn/redist/cudnn/
+
+windows
+
+下载 windows-x86_64/cudnn-windows-x86_64-8.9.7.29_cuda12-archive.zip
 
 解压到 某个地方 比如 E:\cudnn-windows-x86_64-8.9.7.29_cuda12-archive\bin
 
-~./.zerollama/config/global.yml 加入 cudnn_path
+用户文件夹/.zerollama/config/global.yml 加入 cudnn_path
 
 ```
 cuda:
   cudnn_path: E:\cudnn-windows-x86_64-8.9.7.29_cuda12-archive\bin
+```
+
+ubuntu 或 wsl2
+下载 linux-x86_64/cudnn-linux-x86_64-8.9.7.29_cuda12-archive.tar.xz
+
+```
+$ tar -xvf cudnn-linux-x86_64-8.9.7.29_cuda12-archive.tar.xz
+$ sudo cp cudnn-*-archive/include/cudnn*.h /usr/local/cuda/include 
+$ sudo cp -P cudnn-*-archive/lib/libcudnn* /usr/local/cuda/lib64 
+$ sudo chmod a+r /usr/local/cuda/include/cudnn*.h /usr/local/cuda/lib64/libcudnn*
+$ cp /usr/local/cuda-12.1/targets/x86_64-linux/lib/stubs/libcuda.so /usr/local/cuda-12.1/targets/x86_64-linux/lib/
 ```
 
 
