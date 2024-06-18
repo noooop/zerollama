@@ -66,6 +66,11 @@ def config_setup():
 
         if "VLLM_NO_USAGE_STATS" in config_vllm:
             os.environ["VLLM_NO_USAGE_STATS"] = str(config_vllm["VLLM_NO_USAGE_STATS"])
+
+    if "cuda" in config_global:
+        config_cuda = config_global["cuda"]
+        if "cudnn_path" in config_cuda:
+            os.environ["PATH"] = os.environ["PATH"] + ";" + config_cuda["cudnn_path"]
     return config
 
 
