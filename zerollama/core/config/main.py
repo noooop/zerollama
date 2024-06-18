@@ -70,7 +70,10 @@ def config_setup():
     if "cuda" in config_global:
         config_cuda = config_global["cuda"]
         if "cudnn_path" in config_cuda:
-            os.environ["PATH"] = os.environ["PATH"] + ";" + config_cuda["cudnn_path"]
+            import platform
+            plat = platform.system().lower()
+            if plat == 'windows':
+                os.environ["PATH"] = os.environ["PATH"] + ";" + config_cuda["cudnn_path"]
     return config
 
 
