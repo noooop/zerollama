@@ -1,7 +1,8 @@
 
 from zerollama.models.ragflow.table_structure_recognition import DeepDocTableStructureRecognition
+from zerollama.models.paddleocr.table_structure_recognition import PaddleOCRTableStructureRecognition
 
-MODELS = [DeepDocTableStructureRecognition]
+MODELS = [DeepDocTableStructureRecognition, PaddleOCRTableStructureRecognition]
 MODELS_NAME_MAP = dict()
 MODELS_FAMILY_MAP = {m.family: m for m in MODELS}
 
