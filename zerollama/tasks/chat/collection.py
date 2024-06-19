@@ -10,11 +10,11 @@ from zerollama.models.xverse.chat import XVERSE, XVERSE_GGUF
 from zerollama.models.yuan.chat import Yuan, Yuan_GGUF
 from zerollama.models.mistral.chat import Mistral
 from zerollama.models.thudm.chat import GLM4
-from zerollama.models.bilibili.chat import Index
+from zerollama.models.bilibili.chat import Index, IndexGGUF
 
 MODELS = [DeepSeekLLM, MiniCPM, Qwen1_5, Qwen1_5_GGUF, Qwen2,
           Yi, Yi_1_5, Llama3, Llama3ZH, XVERSE, XVERSE_GGUF,
-          Yuan, Yuan_GGUF, Mistral, GLM4, Index]
+          Yuan, Yuan_GGUF, Mistral, GLM4, Index, IndexGGUF]
 
 MODELS_NAME_MAP = dict()
 MODELS_FAMILY_MAP = {m.family: m for m in MODELS}
