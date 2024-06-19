@@ -4,13 +4,14 @@ from zerollama.tasks.chat.interface import ChatModel, ChatGGUFModel
 
 class Index(ChatModel):
     family = "index"
-    model_kwargs = {}
+    model_kwargs = {"trust_remote_code": True}
     header = ["name"]
     info = [
         # name
         ["IndexTeam/Index-1.9B-Chat"],
         ["IndexTeam/Index-1.9B-Character"],
     ]
+
 
 class IndexGGUF(ChatGGUFModel):
     family = "index_gguf"
@@ -31,6 +32,7 @@ class IndexGGUF(ChatGGUFModel):
 
 if __name__ == '__main__':
     from concurrent.futures import ProcessPoolExecutor
+
     def transformers_test():
         import torch
         from zerollama.microservices.inference.transformers_green.chat import run_test
