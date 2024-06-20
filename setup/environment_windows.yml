@@ -8,7 +8,7 @@ dependencies:
   - python=3.11
   - anaconda
   - pytorch-cuda=12.1
-  - pytorch==2.3.1
+  - pytorch==2.3.0
   - pip
   - pip:
       - torchvision
