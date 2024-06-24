@@ -10,10 +10,20 @@ from vllm import EngineArgs, LLMEngine, RequestOutput, SamplingParams
 import numpy as np
 import gc
 
+max_num_batched_tokens = 64
+max_num_seqs = 32
+
 
 def prefill_first_token_latency(model_name, seq_len, index, **kwargs):
     print(model_name)
-    engine_args = EngineArgs(model=model_name, disable_log_stats=True, device="cuda", max_model_len=1024, **kwargs)
+    engine_args = EngineArgs(model=model_name,
+                             disable_log_stats=True,
+                             device="cuda",
+                             max_model_len=1024,
+                             enable_chunked_prefill=True,
+                             max_num_batched_tokens=max_num_batched_tokens,
+                             max_num_seqs=max_num_seqs,
+                             **kwargs)
     engine = LLMEngine.from_engine_args(engine_args)
 
     prompt = "给我介绍一下大型语言模型。"
@@ -78,6 +88,9 @@ def decoding_latency(model_name, idx, n, **kwargs):
                              disable_log_stats=True,
                              device="cuda",
                              max_model_len=1024,
+                             enable_chunked_prefill=True,
+                             max_num_batched_tokens=max_num_batched_tokens,
+                             max_num_seqs=max_num_seqs,
                              **kwargs)
     engine = LLMEngine.from_engine_args(engine_args)
 
@@ -110,15 +123,19 @@ def decoding_latency(model_name, idx, n, **kwargs):
         for i in range(n):
             engine.add_request(str(request_id), inputs, sampling_params)
             request_id += 1
+
         try:
             n_step = 0
             while engine.has_unfinished_requests():
-                n_step += 1
-                request_outputs = engine.step()
+                try:
+                    request_outputs = engine.step()
+                    n_step += 1
 
-                time_list.append((time.time(), len(request_outputs)))
+                    time_list.append((time.time(), len(request_outputs)))
+                except Exception:
+                    traceback.print_exc()
         except Exception:
-            traceback.print_exc()
+            pass
 
         y = [(time_list[i + 1][0] - time_list[i][0]) * 1000 for i in range(len(time_list) - 1)]
         x = list(range(n_prompt, len(y) + n_prompt))
@@ -156,12 +173,12 @@ if __name__ == '__main__':
 
     gptq_info = [
         # GPTQ-Int4
-        ["Qwen/Qwen1.5-0.5B-Chat-GPTQ-Int4",     "0.5B",   "GPTQ",                        "4bits"],
-        ["Qwen/Qwen1.5-1.8B-Chat-GPTQ-Int4",     "1.8B",   "GPTQ",                        "4bits"],
-        ["Qwen/Qwen1.5-4B-Chat-GPTQ-Int4",       "4B",     "GPTQ",                        "4bits"],
+    #    ["Qwen/Qwen1.5-0.5B-Chat-GPTQ-Int4",     "0.5B",   "GPTQ",                        "4bits"],
+    #    ["Qwen/Qwen1.5-1.8B-Chat-GPTQ-Int4",     "1.8B",   "GPTQ",                        "4bits"],
+    #    ["Qwen/Qwen1.5-4B-Chat-GPTQ-Int4",       "4B",     "GPTQ",                        "4bits"],
         ["Qwen/Qwen1.5-7B-Chat-GPTQ-Int4",       "7B",     "GPTQ",                        "4bits"],
-        ["Qwen/Qwen1.5-14B-Chat-GPTQ-Int4",      "14B",    "GPTQ",                        "4bits"],
-        ["Qwen/Qwen1.5-32B-Chat-GPTQ-Int4",      "32B",    "GPTQ",                        "4bits"],
+    #    ["Qwen/Qwen1.5-14B-Chat-GPTQ-Int4",      "14B",    "GPTQ",                        "4bits"],
+    #    ["Qwen/Qwen1.5-32B-Chat-GPTQ-Int4",      "32B",    "GPTQ",                        "4bits"],
     ]
 
     awq_info = [
@@ -176,7 +193,7 @@ if __name__ == '__main__':
 
     sys_logging(Path("./vllm/"))
 
-    test_prefill_first_token_latency = False
+    test_prefill_first_token_latency = True
     test_decoding_latency = True
 
     if test_prefill_first_token_latency:
