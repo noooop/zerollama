@@ -17,10 +17,10 @@
 - 文章最后，解码 (Decoding) 阶段是一种 长度为 1 的预填充 (Prefill) 阶段，将解码和预填充统一起来，在分析 CUDA kernels 的最优运行区间的时候非常有效。
 - 这篇文章，讨论多用户实时交互，也就是：m个用户解码 (Decoding) 阶段就相当于长度为m的预填充 (Prefill) 阶段。就要求 CUDA kernels 在典型用户数区间里面最优。（这句油门踩的是不是太快了，狗头
 
-# 2. 24G 的 4090 能服务多少用户
+# 2. 24G 的 4090 能同时服务多少用户
 llm模型推理的时候，每个 token 的中间结果，都要占用一小块显存空间，称为 kv cache。上篇文章 从理论分析到实际测试，24G 显存服务单用户都不太富裕。 
 
-现在要服务多用户，本不富裕的显存又雪上加霜。所以先要搞清楚卡显存的边界在哪里。（llm 跟现在主流的硬件真不太匹配，卡带宽、卡显存、算力却相当丰富。
+现在要服务多用户，本不富裕的显存又雪上加霜。所以先要搞清楚卡显存的边界在哪里。
 
 且听我从盘古开天地开始慢慢道来：
 
@@ -28,9 +28,10 @@ llm模型推理的时候，每个 token 的中间结果，都要占用一小块�
 2. 随着扩展上下文研究的不断发展，支持的长上下文模型越来越长，例如qwen1.5 32K, qwen2 128K、gpt-4/gpt-4o 128k、Claude 3 200k、[Llama-3 8B Gradient Instruct 1048k](https://huggingface.co/gradientai/Llama-3-8B-Instruct-Gradient-1048k)。
 3. 长上下文意味着：
    - 能处理更长的文本内容，比如摘要一整本书、一个长播客
-   - 能输出更长的文本内容，比如输出一整个markdown文档
-   - 做更细致的提示词工程，描述更细节的要求、放多个示例
-   - 给大模型更多Chain-of-Thought空间
+   - 能输出更长的文本内容，比如输出一整个文档
+   - Prompt Engineering，为了让大语言模型理解和解决复杂问题，需要用更多篇幅细致描述具体需求，在网上一千多字的Prompt并不少见
+   - In Context Learning (ICL) 建议提示中包括多个相关示例，可以提高模型能力
+   - Chain-of-Thought(CoT) 建议提示中包括一系列中间推理步骤，帮助大语言模型进行复杂推理
    - .....
 4. 所以当下（2024年6月），自己用1K上下文略显寒酸，8K主流；商用起步32K，要有竞争力至少要跟gpt-4/gpt-4o 128k对齐。
 
@@ -56,9 +57,12 @@ llm模型推理的时候，每个 token 的中间结果，都要占用一小块�
 - 比如标称支持8k上下文，90%请求上下文长度4K，两倍超卖也可以让90%的请求满意。（如何制定 service-level agreement (SLA) 不在本文讨论范围内
 - 如果不够幸运，推理写满了 kv cache。 肯定要有倒霉蛋请求释放 kv cache，让其他请求继续执行。这个过程称之为 抢占 (Preemption)。只要超卖就会出现抢占。
 - 只要显存分配的 kv cache 大于最长请求上下文长度，通过不断地抢占和华容道，一定能把所有请求都顺利回复，就是可能延迟有点高，让用户不太满意。
-- 以 vllm 为例，有两种抢占方式，recompute 重算倒霉蛋请求、swap 将倒霉蛋请求 暂时交换到cpu内存。暂时交换到cpu内存肯定比重算恢复快，cpu内存也比较便宜，有条件尽量用swap
+- 以 vllm 为例，有两种抢占方式，recompute 重算倒霉蛋请求、swap 将倒霉蛋请求 暂时交换到cpu内存。
+- ~~暂时交换到cpu内存肯定比重算恢复快，cpu内存也比较便宜，有条件尽量用swap~~
+- 后续测试发现，交换到cpu内存是pcie带宽瓶颈。相比之下算力非常充足，recompute 可能更快。默认 recompute 还是有道理的。
 - （实际上还有一种方式，只要抢占就立马回复用户，finish_reason写length肯定会被认为有bug，那就finish_reason写preemption，侮辱性极强，用户看到应该再也不会用你们的产品了
-- 所以，超卖能提高提高资源利用率，代价是抢占导致部分用户延迟变高。
+- 如果抢占比例高，会产生系统颠簸。颠簸（Thrashing）：在分页系统中，如果进程频繁地在内存和外存之间移动，导致大量的缺页中断，这称为颠簸，降低了系统性能。 
+- 所以，超卖能提高提高资源利用率，代价是抢占导致部分用户延迟变高，甚至引起系统颠簸。
 
 7. 预测请求输出长度
 - 如果能预测请求输出长度，系统就能玩出更多花样
@@ -72,6 +76,36 @@ llm模型推理的时候，每个 token 的中间结果，都要占用一小块�
 
 9. 虽然A100、H100显存80G，下一代的 B100 听说显存192GB，还可以多卡部署、集群部署，但超大模型排着队发布，显存依然不富裕，上述理论分析和实际计算方式还有效。
 
+10. 最后，感叹一下 llm 跟现在主流的硬件真不太匹配，卡带宽、卡显存、相反算力却相当丰富，最先进的 HBM3E 才是这场大语言模型硬件核心。
+
+# 3. 显存管理
+LLM 输出总长度事先未知，kv cache 需要按需不断增加，为 llm 推理框架增加了不少麻烦。
+- （最主要动机，通过一次性批次执行多个请求，可以大幅提高吞吐、提高GPU利用率。如果性批次执行和顺序执行没有区别，就不用折腾了
+- naive 的实现方式，为 kv cache 预先申请最大上下文长度的连续内存。
+  - 早期的 orca 和 FasterTransformer 使用这种方式
+  - 因为大多数的请求输出比最大上下文小的多，这种方法非常低效
+  - 比如 24G 的 4090 加载4bit 7B模型模型后，还有差不多3万 kv cache，分配 4个8K 连续内存，只能同时服务四个用户显然非常低效
+- 简单的显存管理会产生显存碎片（fragmentation）
+  - 比如 24G 的 4090 加载4bit 7B模型模型后，还有差不多3万 kv cache，分配 32个1k 的连续内存，当服务8K请求时，只需要将8个连续内存拼起来。
+  - 但多数时候时候空闲的内存不是连续的，拼不起来
+- 受到操作系统的虚拟内存分页的启发，vLLM 引入了 PagedAttention 减轻 kv cache 的显存碎片。
+  - 如今，PagedAttention 已成为事实上的标准，用于 LLM 服务系统中的动态分配显存。
+  - vLLM 使用 Block-Table(s) 实现显存分页，block_size 默认 16， 可选8、16、32。更多细节请参考原始论文 [Efficient Memory Management for Large Language Model Serving with PagedAttention](https://arxiv.org/pdf/2309.06180)
+  - LightLLM 使用极限的 block_size 等于 1 分配显存。更多细节请参考 [github](https://github.com/ModelTC/lightllm)
+  - FlashInfer 使用 Compressed Block-Table(s) 实现显存分页。 更多细节请参考[官方文档](https://flashinfer.ai/2024/02/02/introduce-flashinfer.html)
+- 显存管理的未来，以上几种分页方式都在用户态管理显存，根据 [vAttention论文](https://arxiv.org/abs/2405.04437) 有以下缺点：
+  - 不同的分页方式不通用，不能轻易移植。需要重新写 attention kernel cuda代码，适应PagedAttention。比如适配 FlashInfer decode kernels，vllm需要修改15个文件，600行代码。FlashAttention 要修改 280行代码
+  - 增加推理框架的复杂性，显存管理本来是操作系统的工作，现在要在推理框架里完成
+  - 引入性能开销，经过测试，会导致attention计算在很多场景下超过10%的速度下降
+  - vAttention 通过修改 NVIDIA drivers unified memory management 开源部分代码，添加适合的 CUDA virtual memory APIs。实现系统态显存管理，
+  - 围观 [issues](https://github.com/vllm-project/vllm/issues/4675) 期待 vllm 加入 vAttention。
+
+- 总之，显存管理是单用户系统和多用户系统的最大区别。之前测试的 llama.cpp 和 HuggingFace Transformers 至少目前没有加入显存管理功能，不能高效支持多用户推理场景。 
+
+
+# 4.
+
+# 5. 
 
 # 6. 实际推理速度测试
 
@@ -83,7 +117,6 @@ vLLM 是一个快速且易于使用的 LLM 推理和服务库。
 [Documentation](https://docs.vllm.ai/en/stable/)
 
 vLLM 使用了 PagedAttention、Continuous batching、Quantization、Optimized CUDA kernels 加速buff叠满
-
 
 ## 6.2 预填充 (Prefill) 阶段
 ### 6.2.1 参赛队员
@@ -109,6 +142,12 @@ vllm 4名选手
 
 > [vllm v0.5.0](https://github.com/vllm-project/vllm/releases/tag/v0.5.0) 终于支持了我心心念念的 [FP8](https://docs.vllm.ai/en/stable/quantization/fp8.html) 赶快测一下
 
+> 遗憾
+> - vllm 还支持不少 runtime quantization, 比如 deepspeedfp 和 bitsandbytes
+> - 但是使用时需要传一个json文件作为quantization_config，非常麻烦
+> - 为什么不能像 HuggingFace Transformers 那样给一个 quantization_config 的参数
+> - [参考 RFC Support specifying quant_config details in the LLM or Server entrypoints](https://github.com/vllm-project/vllm/issues/4743)
+
 ### 6.2.2 7B 模型 nsight systems profiling 分析
 
 <img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/vllm/prefill-7B.png?raw=true" width="800">
@@ -121,14 +160,14 @@ vllm 4名选手
 | hf bf16            | 18.77   |
 | vllm bf16          | 16.59   |
 | w16kv16 理论         | 13.12   |
-| q8_0               | 9.87    |
 | vllm fp8           | 13.29   |
+| q8_0               | 9.87    |
 | w8kv16 理论          | 6.56    |
 | q4_k_m             | 12.18   |
 | AWQ gemm           | 12.00   |
 | AWQ use_exllama_v2 | 8.2     |
-| vllm GPTQ          | 6.99    |
 | vllm AWQ           | 7.88    |
+| vllm GPTQ          | 6.99    |
 | w4kv16  理论         | 3.28    |
 
 - bf16 对比量化模型天然就慢一截。BPW 的影响不能忽略
@@ -227,4 +266,190 @@ else:
   - 重负载，量化模型有反量化开销，反而速度不如 bfloat16
   - vllm bfloat16 1-8 使用 gemv 优化一下， 现在的 18ms 优化到理论的 13ms 提高也不是很明显
 - vllm FP8 刚发布，对模型能力影响程度还需要观望
+
+## 6.3. 解码 （Decoding） 阶段
+### 6.3.1. 单用户场景
+
+- 解码 （Decoding） 阶段 延迟有两部分组成
+  - 固定的读取模型时间，在延迟曲线里就表现为 截距 B
+  - 随着序列长度增加，读取 kv cache 线性增加，在延迟曲线里就表现为斜率 W
+
+- 用户数为 1 的 解码 （Decoding） 阶段 相当于 长度为 1 预填充 (Prefill) 阶段 
+  - 把 “对比 4090 推理理论极限 和 预填充 (Prefill) 长度等于 1 实际速度”图 再拿过来，把卫冕冠军 AWQ use_exllama_v2 fuse_layers 也加上
+  - （下表就相当于 固定的读取模型时间， 参考着看一下
+
+| 名称                             | 速度 (ms) |
+|--------------------------------|---------|
+| hf bf16                        | 18.77   |
+| vllm bf16                      | 16.59   |
+| w16kv16 理论                     | 13.12   |
+| vllm fp8                       | 13.29   |
+| q8_0                           | 9.87    |
+| w8kv16 理论                      | 6.56    |
+| q4_k_m                         | 12.18   |
+| AWQ gemm                       | 12.00   |
+| AWQ use_exllama_v2             | 8.2     |
+| vllm AWQ                       | 7.88    |
+| vllm GPTQ                      | 6.99    |
+| AWQ use_exllama_v2 fuse_layers | 6.37    |
+| w4kv16  理论                     | 3.28    |
+
+
+<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/vllm/decoding-0.5B-1.png?raw=true" width="800">
+
+- 0.5B 
+
+<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/vllm/decoding-1.8B-1.png?raw=true" width="800">
+
+- 1.8B
+
+<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/vllm/decoding-4B-1.png?raw=true" width="800">
+
+- 4B 
+
+<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/vllm/decoding-7B-1.png?raw=true" width="800">
+
+- 7B 
+
+<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/vllm/decoding-14B-1.png?raw=true" width="800">
+
+- 14B 
+
+<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/vllm/decoding-32B-1.png?raw=true" width="800">
+
+- 32B 
+
+总结：
+- vllm 稳定丝滑，llama.cpp 也甘拜下风
+- bf16，vllm bf16 模型比 hf bf16 快
+- fp8，vllm fp8 比 gguf q8_0 快 （这两个模型姑且有可比性吧
+- ~int4，vllm GPTQ 比 gguf q4_k_m，AWQ gemm，AWQ use_exllama_v2 都快
+- 卫冕冠军 AWQ use_exllama_v2 fuse_layers， 因为叠了 fuse_layers buff，开始速度比 vllm GPTQ 快一点点
+- 可能是 vllm self attention 速度比较快，可能是 vllm kv cache 比较快，vllm GPTQ 速度曲线增速缓，AWQ use_exllama_v2 fuse_layers 增速快，长度500后开始反超
+- 所以 vllm 哪怕在用户为 1 的场景下，比 llama.cpp 和 HuggingFace Transformers 都快
+- 用 vllm 
+
+### 6.3.2. 多用户场景
+
+<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/vllm/latency-throughput/latency-throughput-32.png?raw=true" width="800">
+
+1. 上图采样了并发用户量为1、2、4、8、16、32、64、128，vllm GPTQ 模型解码 （Decoding） 输出长度为 32 时，延迟和吞吐关系。
+- 并发用户数越多，延迟越大，吞吐越大。 延迟和吞吐存在制约关系
+- 模型越小，延迟和吞吐曲线越靠左上，越好。当然模型越小能力也越差，也存在制约关系
+- 研究曲线走势
+  - 0.5B、1.8B、4B 并发 128 往上提高应该还挺大，毕竟小模型比较小
+  - 14B，32B 从 64 并发到 128 并发 提升已经不大。肘点，或者叫平衡延迟和吞吐的最优并发用户数应该在 64 左右
+  - 问题就来了，24G 显存撑不起 64 用户并发，kv cache 很快会被写满
+- 实际上，输出长度为 32 算出来的峰值吞吐不可持续
+  - 随着长度增加，kv cache 读取量增加
+  - 高并发进一步放大了读取量，延迟增长非常快
+  - 延迟曲线上表现为截距随并发变大，斜率也随并发变大
+
+<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/vllm/latency-throughput/decoding-7B-latency.png?raw=true" width="800">
+
+2. 上图是并发用户量为1、2、4、8、16、32、64、128，vllm GPTQ 7B模型解码 （Decoding） 输出长度到 1000 的延迟
+- 验证上面提到的“延迟曲线上表现为截距随并发变大，斜率也随并发变大”
+- 验证高并发导致“kv cache 很快会被写满”，出现抢占
+  - 并发1-16可以平稳顺利的结束
+  - 并发32 总体还比较顺利, 速度没有模型衰减
+  - 并发数继续增加到64、128，会发生多次抢占，基本不可用
+- 曲线开始的尖峰是全力prefill导致的，所有请求都同时进来，同时做 prefill。
+
+<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/vllm/latency-throughput/decoding-7B-throughput.png?raw=true" width="800">
+
+3. 上图是并发用户量为1、2、4、8、16、32、64、128，vllm GPTQ 7B模型解码 （Decoding） 输出长度到 1000 的吞吐
+- 验证上面提到的“随着长度增加，kv cache 读取量增加，输出长度为 32 算出来的峰值吞吐不可持续”
+
+<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/vllm/latency-throughput-200.png?raw=true" width="800">
+
+4. 上图采样了并发用户量为1、2、4、8、16、32、64、128，vllm GPTQ 模型解码 （Decoding） 输出长度为 200 时，延迟和吞吐关系。
+- 研究曲线走势
+  - 14B和32B模型，并发数继续增加到64、128，kv cache 很快会被写满，会发生多次抢占，延迟-吞吐曲线无法维持
+  - 从曲线前段趋势推断，平衡延迟和吞吐的最优并发用户数从64往32移动
+- 忘掉不切实际的峰值吞吐吧，上下文长度1K时，24G的4090控制并发到32以下，这时延迟非常低，速度也非常稳定，用户会非常满意。
+- 对于一张一万五的游戏卡，要求不要太多
+
+
+5. Preemption 抢占
+使用默认的 recompute 抢占模式，抢占恢复会有一个很高的延迟，带来不好的用户体验，使用swap模型能否改善呢？
+
+<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/vllm/preemption_mode.png?raw=true" width="800">
+
+没啥区别
+- llm 模型推理带宽瓶颈，swap 走pcie总线也带宽瓶颈，显存内部带宽比pcie总线快多了。
+- 相比之下算力非常充足，recompute 可能更快
+
+### 6.4. Chunked Fill
+
+根据之前的理论推导的实验验证，24G 的 4090 服务 32 用户并发时，能很好的平衡延迟、吞吐、kv cache容量。
+
+那就开启 vllm chunked_prefill， max_num_seqs 设为 32，max_num_batched_tokens 设为 64 给 预填充 (Prefill) 阶段 的请求留一些空间
+
+```
+engine_args = EngineArgs(model=model_name,
+                         ....
+                         enable_chunked_prefill=True,
+                         max_num_batched_tokens=64,
+                         max_num_seqs=32)
+```
+
+### 6.4.1. 预填充 (Prefill) 阶段
+
+<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/vllm/prefill-0.5B-chunked_fill.png?raw=true" width="800">
+
+- 0.5B 模型太小，不需要 chunked fill 优化
+
+<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/vllm/prefill-1.8B-chunked_fill.png?raw=true" width="800">
+
+- 1.8B 模型太小，不需要 chunked fill 优化
+
+<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/vllm/prefill-4B-chunked_fill.png?raw=true" width="800">
+
+- 4B 模型太小，不需要 chunked fill 优化
+
+<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/vllm/prefill-7B-chunked_fill.png?raw=true" width="800">
+
+- 7B 就有趣了
+- 黑线的 vllm GPTQ chunked_fill 和 墨绿色的 vllm GPTQ 比较接近
+- 使用 chunked fill 优化，对较长提示词预填充速度损失比较小
+- Marlin kernel 本来就是为 1-32 区间轻负载调教，将长提示词拆分更适合 Marlin kernel 发挥
+
+<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/vllm/prefill-14B-chunked_fill.png?raw=true" width="800">
+
+- 14B，同样 vllm GPTQ chunked_fill 和 vllm GPTQ 比较接近
+- vllm AWQ chunked_fill 和 vllm AWQ 也比较接近， 甚至 256-450 区间 比使用 FP16_MATMUL_HEURISTIC_CONDITION 还要快一点
+
+<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/vllm/prefill-32B-chunked_fill.png?raw=true" width="800">
+
+- 32B，我的天，使用 chunked_fill， 居然能将 32B 的 AWQ 模型跑起来
+- chunked_fill 居然有节省运行时显存的功能
+
+
+总结：
+- 0.5B、1.8B、4B 模型太小，不需要 chunked fill 优化
+- 7B、14B，32B，vllm GPTQ chunked_fill 和 vllm GPTQ 比较接近， 可以开启 chunked fill 优化
+- 开启 chunked fill 优化有节省运行时显存的功能
+
+### 6.4.2. 解码 （Decoding） 阶段
+
+<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/vllm/chunked_fill/decoding-7B-latency.png?raw=true" width="800">
+
+<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/vllm/chunked_fill/decoding-7B-throughput.png?raw=true" width="800">
+
+- 7B 
+
+<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/vllm/chunked_fill/decoding-14B-latency.png?raw=true" width="800">
+
+<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/vllm/chunked_fill/decoding-14B-throughput.png?raw=true" width="800">
+
+- 14B 
+
+<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/vllm/chunked_fill/decoding-32B-latency.png?raw=true" width="800">
+
+<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/vllm/chunked_fill/decoding-32B-throughput.png?raw=true" width="800">
+
+- 32B 
+
+这种强行限制并发数至32，并发64、128的曲线被强行摁到32，减少系统颠簸，个人觉得非常好。
+
 
