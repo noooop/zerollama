@@ -123,7 +123,7 @@ LLM 输出总长度不统一，输出短的请求会提前退出，资源空闲�
 下图来自 [continuous-batching-llm-inference](https://www.anyscale.com/blog/continuous-batching-llm-inference)，
 可以看到使用连续批处理(Continuous batching) 技术，流水线被填充的满满当当，非常好。
 
-<img src="https://images.ctfassets.net/xjan103pcp94/744TAv4dJIQqeHcEaz5lko/b823cc2d92bbb0d82eb252901e1dce6d/cb_03_diagram-continuous-batching.png?raw=true" width="800">
+<img src="https://images.ctfassets.net/xjan103pcp94/744TAv4dJIQqeHcEaz5lko/b823cc2d92bbb0d82eb252901e1dce6d/cb_03_diagram-continuous-batching.png" width="800">
 
 使用连续批处理(Continuous batching)立竿见影，参考 [continuous-batching-llm-inference](https://www.anyscale.com/blog/continuous-batching-llm-inference)
 > - Up to 23x throughput improvement using continuous batching and continuous batching-specific memory optimizations (using vLLM).
