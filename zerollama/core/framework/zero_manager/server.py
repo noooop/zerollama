@@ -13,9 +13,6 @@ class ZeroManager(Z_MethodZeroServer):
         self._engines = None
         self.server_class = server_class
 
-        if isinstance(self.server_class, str):
-            self.module_name, self.class_name = self.server_class.split(":")
-
     def init(self):
         self._engines = {}
         print(f"{self.__class__.__name__} for {self.name} running!", "port:", self.port)
@@ -39,7 +36,9 @@ class ZeroManager(Z_MethodZeroServer):
         if "name" not in kwargs.engine_kwargs:
             kwargs.engine_kwargs["name"] = kwargs.name
 
-        engine = ZeroServerProcess(self.server_class, kwargs.engine_kwargs)
+        server_class = kwargs.engine_kwargs.pop("server_class", self.server_class)
+
+        engine = ZeroServerProcess(server_class, kwargs.engine_kwargs)
         self._engines[kwargs.name] = engine
 
         with ThreadPoolExecutor(1) as executor:
@@ -62,7 +61,7 @@ class ZeroManager(Z_MethodZeroServer):
 
         exception = engine.exception
         if exception is not None:
-            exception = f"{self.class_name}: {str(exception[0])}"
+            exception = f"ZeroManager exception \n {str(exception[0])}"
         msg = {"founded": True, "last_status": engine.status, "last_exception": exception}
 
         engine.terminate()
@@ -90,7 +89,7 @@ class ZeroManager(Z_MethodZeroServer):
         exception = engine.exception
 
         if exception is not None:
-            exception = f"{self.class_name}: {str(exception[0])}"
+            exception = f"ZeroManager exception \n {str(exception[0])}"
 
         msg = {"status": engine.status, "exception": exception}
         rep = ZeroServerResponseOk(msg=msg)
