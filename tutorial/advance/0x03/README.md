@@ -125,7 +125,7 @@ LLM 输出总长度不统一，输出短的请求会提前退出，资源空闲�
 
 <img src="https://images.ctfassets.net/xjan103pcp94/744TAv4dJIQqeHcEaz5lko/b823cc2d92bbb0d82eb252901e1dce6d/cb_03_diagram-continuous-batching.png" width="800">
 
-使用连续批处理(Continuous batching)立竿见影，参考 [continuous-batching-llm-inference](https://www.anyscale.com/blog/continuous-batching-llm-inference)
+使用连续批处理(Continuous batching)效果立竿见影，参考 [continuous-batching-llm-inference](https://www.anyscale.com/blog/continuous-batching-llm-inference)
 > - Up to 23x throughput improvement using continuous batching and continuous batching-specific memory optimizations (using vLLM).
 > - 8x throughput over naive batching by using continuous batching (both on Ray Serve and Hugging Face’s text-generation-inference).
 > - 4x throughput over naive batching by using an optimized model implementation (NVIDIA’s FasterTransformer).
@@ -134,9 +134,9 @@ LLM 输出总长度不统一，输出短的请求会提前退出，资源空闲�
 
 # 5. 
 
-# 6. 实际推理速度测试
+# 6.
 
-## 6.1. VLLM 库
+# 7. VLLM 实际推理速度测试
 vLLM 是一个快速且易于使用的 LLM 推理和服务库。
 
 [GITHUB](https://github.com/vllm-project/vllm)
@@ -145,8 +145,8 @@ vLLM 是一个快速且易于使用的 LLM 推理和服务库。
 
 vLLM 使用了 PagedAttention、Continuous batching、Quantization、Optimized CUDA kernels 加速buff叠满
 
-## 6.2 预填充 (Prefill) 阶段
-### 6.2.1 参赛队员
+## 7.1. 预填充 (Prefill) 阶段
+### 7.1.1. 参赛队员
 [上篇文章](https://github.com/noooop/zerollama/tree/main/tutorial/advance/0x02) 5 名种子选手
 - llama.cpp GGUF q8_0 和 q4_k_m；使用预分配 kv cache 速度稳定丝滑
 - HuggingFace Transformers bfloat16；“无损” 模型
@@ -175,7 +175,7 @@ vllm 4名选手
 > - 为什么不能像 HuggingFace Transformers 那样给一个 quantization_config 的参数
 > - [参考 RFC Support specifying quant_config details in the LLM or Server entrypoints](https://github.com/vllm-project/vllm/issues/4743)
 
-### 6.2.2 7B 模型 nsight systems profiling 分析
+### 7.1.2. 7B 模型 nsight systems profiling 分析
 
 <img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/vllm/prefill-7B.png?raw=true" width="800">
 
@@ -253,7 +253,7 @@ else:
 ```
 可能其他实现也有类似的代码，反正 vllm 长度 256 都会有速度突变
 
-### 6.2.4 其他尺寸模型预填充 (Prefill) 阶段速度曲线
+### 7.1.3 其他尺寸模型预填充 (Prefill) 阶段速度曲线
 
 <img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/vllm/prefill-0.5B.png?raw=true" width="800">
 
@@ -281,7 +281,7 @@ else:
 
 - 32B，vllm AWQ 同 HF AWQ 一样，加载 32B 模型 oom，真遗憾
 
-### 6.2.5 小结
+### 7.1.4 小结
 - vllm 启动开销比较低，相同模型都比 HF 快一些
 - 轻负载 (1-8) 建议使用量化模型
   - 4bit 7B模型理论速度 3ms，天然比 bf16 快；bf16 理论速度 13ms 对比量化模型天然就慢一截
@@ -294,8 +294,8 @@ else:
   - vllm bfloat16 1-8 使用 gemv 优化一下， 现在的 18ms 优化到理论的 13ms 提高也不是很明显
 - vllm FP8 刚发布，对模型能力影响程度还需要观望
 
-## 6.3. 解码 （Decoding） 阶段
-### 6.3.1. 单用户场景
+## 7.2. 解码 （Decoding） 阶段
+### 7.2.1. 单用户场景
 
 - 解码 （Decoding） 阶段 延迟有两部分组成
   - 固定的读取模型时间，在延迟曲线里就表现为 截距 B
@@ -356,7 +356,7 @@ else:
 - 所以 vllm 哪怕在用户为 1 的场景下，比 llama.cpp 和 HuggingFace Transformers 都快
 - 用 vllm 就对了
 
-### 6.3.2. 多用户场景
+### 7.2.2. 多用户场景
 
 <img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/vllm/latency-throughput/latency-throughput-32.png?raw=true" width="800">
 
@@ -405,7 +405,7 @@ else:
 - llm 模型推理带宽瓶颈，swap 走pcie总线也带宽瓶颈，显存内部带宽比pcie总线快多了。
 - 相比之下算力非常充足，recompute 可能更快
 
-### 6.4. Chunked Fill
+### 7.3. Chunked Fill
 
 根据之前的理论推导的实验验证，24G 的 4090 服务 32 用户并发时，能很好的平衡延迟、吞吐、kv cache容量。
 
@@ -421,7 +421,7 @@ engine_args = EngineArgs(model=model_name,
                          max_num_seqs=32)
 ```
 
-### 6.4.1. 预填充 (Prefill) 阶段
+### 7.3.1. 预填充 (Prefill) 阶段
 
 <img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/vllm/chunked_fill/prefill-0.5B-chunked_fill.png?raw=true" width="800">
 
@@ -457,7 +457,7 @@ engine_args = EngineArgs(model=model_name,
 - 7B、14B，32B，vllm GPTQ chunked_fill 和 vllm GPTQ 比较接近， 可以开启 chunked fill 优化
 - 开启 chunked fill 优化有节省运行时显存的功能
 
-### 6.4.2. 解码 （Decoding） 阶段
+### 7.3.2. 解码 （Decoding） 阶段
 
 <img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/vllm/chunked_fill/decoding-7B-latency.png?raw=true" width="800">
 
@@ -480,3 +480,64 @@ engine_args = EngineArgs(model=model_name,
 这种强行限制并发数至32，并发64、128的曲线被强行摁到32，减少系统颠簸，个人觉得非常好。
 
 
+
+
+# 8. VLLM Gevent 实际推理速度测试
+VLLM 异步使用 asyncio，而我个人喜欢用 gevent，所以移植了一个gevent版本，下面也测一下
+
+| 并发数              | 1     | 2     | 4     | 8     | 16    | 32    | 64    |
+|------------------|-------|-------|-------|-------|-------|-------|-------|
+| vllm 0.5B        | 2.08  | 2.22  | 2.43  | 2.85  | 3.55  | 5.70  | 9.46  |
+| vllm 1.8B        | 2.90  | 3.11  | 3.42  | 4.04  | 5.23  | 8.32  | 14.00 |
+| vllm 4B          | 4.81  | 5.17  | 5.74  | 6.85  | 8.98  | 14.18 | 22.57 |
+| vllm 7B          | 6.92  | 7.31  | 8.03  | 9.38  | 12.13 | 18.05 | 23.62 |
+| vllm 14B         | 11.31 | 11.94 | 13.00 | 14.97 | 18.78 | 22.34 | 24.87 |
+| vllm 32B         | 21.97 | 22.30 | 22.85 | 23.67 | 24.31 | 25.22 | 26.32 |
+| vllm gevent 0.5B | 3.33  | 3.48  | 3.73  | 4.24  | 5.19  | 7.78  | 12.50 |
+| vllm gevent 1.8B | 4.18  | 4.41  | 4.75  | 5.48  | 6.90  | 10.43 | 17.13 |
+| vllm gevent 4B   | 6.23  | 6.58  | 7.17  | 8.36  | 10.71 | 16.49 | 26.21 |
+| vllm gevent 7B   | 8.36  | 8.77  | 9.43  | 10.91 | 13.88 | 20.79 | 27.07 |
+| vllm gevent 14B  | 12.77 | 13.41 | 14.52 | 16.60 | 21.30 | 26.22 | 27.55 |
+| vllm gevent 32B  | 23.45 | 23.80 | 24.42 | 26.31 | 31.23 | 31.23 | 58.75 |
+| 0.5B overhead    | 1.24  | 1.26  | 1.30  | 1.39  | 1.64  | 2.09  | 3.04  |
+| 1.8B overhead    | 1.28  | 1.29  | 1.33  | 1.44  | 1.67  | 2.11  | 3.14  |
+| 4B overhead      | 1.42  | 1.41  | 1.43  | 1.51  | 1.73  | 2.31  | 3.64  |
+| 7B overhead      | 1.43  | 1.46  | 1.40  | 1.53  | 1.75  | 2.74  | 3.45  |
+| 14B overhead     | 1.46  | 1.47  | 1.52  | 1.63  | 2.52  | 3.88  | 2.68  |
+| 32B overhead     | 1.49  | 1.50  | 1.57  | 2.64  | 6.93  | 6.02  | 32.43 |
+
+- 从服务器到客户端，还有gevent线程池等所有加起来开销1~3ms，看起来还不错
+- 4090 部署 32B模型，16并发各种开销已经来到6ms，很明显撑不起来
+
+再来看看延迟曲线
+
+<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/vllm-gevent/concurrent-1.png?raw=true" width="800">
+
+- 并发数为 1
+
+<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/vllm-gevent/concurrent-2.png?raw=true" width="800">
+
+- 并发数为 2
+
+<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/vllm-gevent/concurrent-4.png?raw=true" width="800">
+
+- 并发数为 4
+
+<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/vllm-gevent/concurrent-8.png?raw=true" width="800">
+
+- 并发数为 8
+
+<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/vllm-gevent/concurrent-16.png?raw=true" width="800">
+
+- 并发数为 16
+
+<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/vllm-gevent/concurrent-32.png?raw=true" width="800">
+
+- 并发数为 32
+- 明显14B、32B模型撑不住。
+- 不是很清楚，为什么 vllm 推理 0.5B 模型 也会有30ms的峰，按需分配显存？ （上面只展示 7B 的延迟曲线，图太多根本展示不完
+
+<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/vllm-gevent/concurrent-64.png?raw=true" width="800">
+
+- 并发数为 64
+- vllm 推理 0.5B 模型 也会有30ms的峰 更明显
