@@ -25,13 +25,6 @@ def get_pretrained_model_name_or_path(model_name, local_files_only, get_model_by
     model_config = model.get_model_config(model_name)
     model_info = model_config.info
 
-    if local_files_only:
-        import huggingface_hub
-        huggingface_hub.snapshot_download = partial(huggingface_hub.snapshot_download,
-                                                    local_files_only=True)
-    else:
-        download(model_name, get_model_by_name)
-
     pretrained_model_name_or_path = model_name
     if config.use_modelscope and not model_info.get("use_hf_only", False):
         if "modelscope_name" in model_info:
@@ -41,15 +34,23 @@ def get_pretrained_model_name_or_path(model_name, local_files_only, get_model_by
         if local_files_only:
             modelscope.snapshot_download = partial(modelscope.snapshot_download,
                                                    local_files_only=True)
+            import transformers
+            transformers.utils.hub.cached_file = partial(transformers.utils.hub.cached_file,
+                                                         local_files_only=True)
         else:
             modelscope.snapshot_download(model_name)
     else:
         if "hf_name" in model_info:
             pretrained_model_name_or_path = model_info["hf_name"]
         import huggingface_hub
+
         if local_files_only:
             huggingface_hub.snapshot_download = partial(huggingface_hub.snapshot_download,
                                                         local_files_only=True)
+
+            import transformers
+            transformers.utils.hub.cached_file = partial(transformers.utils.hub.cached_file,
+                                                         local_files_only=True)
         else:
             huggingface_hub.snapshot_download(model_name)
 
@@ -72,15 +73,22 @@ def get_pretrained_model_name(model_name, local_files_only, get_model_by_name):
         if local_files_only:
             modelscope.snapshot_download = partial(modelscope.snapshot_download,
                                                    local_files_only=True)
+            import transformers
+            transformers.utils.hub.cached_file = partial(transformers.utils.hub.cached_file,
+                                                         local_files_only=True)
         else:
             modelscope.snapshot_download(model_name)
     else:
         if "hf_name" in model_info:
             pretrained_model_name_or_path = model_info["hf_name"]
+
         import huggingface_hub
         if local_files_only:
             huggingface_hub.snapshot_download = partial(huggingface_hub.snapshot_download,
                                                         local_files_only=True)
+            import transformers
+            transformers.utils.hub.cached_file = partial(transformers.utils.hub.cached_file,
+                                                         local_files_only=True)
         else:
             huggingface_hub.snapshot_download(model_name)
 
@@ -97,6 +105,5 @@ if __name__ == '__main__':
             download(model_name=f"{repo_id}+{filename}")
 
     from zerollama.tasks.chat.collection import get_model_by_name
+
     download("Qwen/Qwen1.5-1.8B-Chat", get_model_by_name)
-
-
