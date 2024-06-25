@@ -79,6 +79,7 @@ class VLLMChat(ChatInterface):
 
     def chat(self, messages, stream=False, options=None):
         options = options or {}
+        skip_empty_delta_text = options.pop("skip_empty_delta_text", True)
         request_id = f"{shortuuid.random(length=22)}"
         sampling_params = self.SamplingParams(**options)
 
@@ -135,7 +136,7 @@ class VLLMChat(ChatInterface):
                     prompt_tokens = len(res.prompt_token_ids)
                     completion_tokens = len(output.token_ids)
 
-                    if not delta_text:
+                    if not delta_text and skip_empty_delta_text:
                         continue
 
                     yield ChatCompletionStreamResponse(**{"model": self.model_name,
