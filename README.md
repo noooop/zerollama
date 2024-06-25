@@ -50,6 +50,7 @@
 - [CogVLM2](https://github.com/noooop/zerollama/tree/main/zerollama/models/thudm)
 - [MiniCPM-V](https://github.com/noooop/zerollama/tree/main/zerollama/models/openbmb)
 - [DeepSeek-VL](https://github.com/noooop/zerollama/tree/main/zerollama/models/deepseek)
+- [Florence-2](https://github.com/noooop/zerollama/tree/main/zerollama/models/florence)
 
 ## Super Resolution 模型 
 - [APISR](https://github.com/noooop/zerollama/tree/main/zerollama/models/apisr)

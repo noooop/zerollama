@@ -42,7 +42,7 @@ class ModelBase(object):
         return model_config
 
     @classmethod
-    def get_model(cls, model_name):
+    def get_model(cls, model_name, **kwargs):
         import importlib
         model_class = cls.inference_backend
         module_name, class_name = model_class.split(":")
@@ -51,5 +51,5 @@ class ModelBase(object):
 
         model_class = getattr(module, class_name)
 
-        model = model_class(model_name=model_name)
+        model = model_class(model_name=model_name, **kwargs)
         return model
