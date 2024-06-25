@@ -10,17 +10,17 @@
 这个阶段是对 kv cache 进行预填充。
 - 解码 （Decoding） 阶段对应于输出之后的 token 的输出。 kv cache 已经填入之前 token。 推理过程就是从下往上过一遍模型，最后从 lm_head 输出 logits 采样。
 - 现代 CPU/GPU 的 ALU 操作（乘法、加法）内存 IO 速度要快得多，transformer 这种只需要对每个元素执行两次操作的场景，必定受到访存带宽的限制。
-- NVIDIA GeForce RTX 4090：1008 GB/s 显存带宽和 83 TFLOPS，Flop:byte = 82:1
+- 以 NVIDIA GeForce RTX 4090 为例，1008 GB/s 显存带宽和 83 TFLOPS，Flop:byte = 82:1，算力非常充足。
 - 对于解码 （Decoding） 阶段，每输出一个词需要读一遍模型，读取模型的极限就是速度的极限
-- 对于预填充 (Prefill) 阶段，读一遍模型计算提示词中的多个词，无论从 SIMD （Single Instruction Multiple Data） 的角度还是从带宽瓶颈vs算力瓶颈的角度都很划算
+- 对于预填充 (Prefill) 阶段，读一遍模型计算提示词中的多个词，无论从 SIMD （Single Instruction Multiple Data） 的角度还是从带宽瓶颈 vs 算力瓶颈的角度都很划算
 - 投机采样 (Speculative Decoding) 利用了 llm 批次执行速度比单次执行效率高，加速模型输出
 - 文章最后，解码 (Decoding) 阶段是一种 长度为 1 的预填充 (Prefill) 阶段，将解码和预填充统一起来，在分析 CUDA kernels 的最优运行区间的时候非常有效。
-- 这篇文章，讨论多用户实时交互，也就是：m个用户解码 (Decoding) 阶段就相当于长度为m的预填充 (Prefill) 阶段。就要求 CUDA kernels 在典型用户数区间里面最优。（这句油门踩的是不是太快了，狗头
+- 这篇文章，讨论多用户实时交互，也就是：m 个用户解码 (Decoding) 阶段就相当于长度为 m 的预填充 (Prefill) 阶段。就要求 CUDA kernels 在典型用户数区间里面最优。（这句油门踩的是不是太快了，狗头
 
 # 2. 24G 的 4090 能同时服务多少用户
 llm模型推理的时候，每个 token 的中间结果，都要占用一小块显存空间，称为 kv cache。上篇文章 从理论分析到实际测试，24G 显存服务单用户都不太富裕。 
 
-现在要服务多用户，本不富裕的显存又雪上加霜。所以先要搞清楚卡显存的边界在哪里。
+现在要服务多用户，本不富裕的显存又雪上加霜。所以先要搞清楚显存能服务用户的边界在哪里。
 
 且听我从盘古开天地开始慢慢道来：
 
@@ -56,7 +56,7 @@ llm模型推理的时候，每个 token 的中间结果，都要占用一小块�
 - 用户不可能每时每刻都打满最长的上下文，统计请求上下文长度，适当的超卖，可以提高资源利用率
 - 比如标称支持8k上下文，90%请求上下文长度4K，两倍超卖也可以让90%的请求满意。（如何制定 service-level agreement (SLA) 不在本文讨论范围内
 - 如果不够幸运，推理写满了 kv cache。 肯定要有倒霉蛋请求释放 kv cache，让其他请求继续执行。这个过程称之为 抢占 (Preemption)。只要超卖就会出现抢占。
-- 只要显存分配的 kv cache 大于最长请求上下文长度，通过不断地抢占和华容道，一定能把所有请求都顺利回复，就是可能延迟有点高，让用户不太满意。
+- 只要显存分配的总 kv cache 大于最长请求上下文长度，通过不断地抢占和华容道，一定能把所有请求都顺利回复，就是可能延迟有点高，让用户不太满意。
 - 以 vllm 为例，有两种抢占方式，recompute 重算倒霉蛋请求、swap 将倒霉蛋请求 暂时交换到cpu内存。
 - ~~暂时交换到cpu内存肯定比重算恢复快，cpu内存也比较便宜，有条件尽量用swap~~
 - 后续测试发现，交换到cpu内存是pcie带宽瓶颈。相比之下算力非常充足，recompute 可能更快。默认 recompute 还是有道理的。
@@ -80,7 +80,7 @@ llm模型推理的时候，每个 token 的中间结果，都要占用一小块�
 
 # 3. 显存管理
 LLM 输出总长度事先未知，kv cache 需要按需不断增加，为 llm 推理框架增加了不少麻烦。
-- （最主要动机，通过一次性批次执行多个请求，可以大幅提高吞吐、提高GPU利用率。如果性批次执行和顺序执行没有区别，就不用折腾了
+- （最主要动机，通过一次性批次执行多个请求，可以大幅提高吞吐、提高GPU利用率。如果批次执行和顺序执行吞吐没有区别，就不用折腾了
 - naive 的实现方式，为 kv cache 预先申请最大上下文长度的连续内存。
   - 早期的 orca 和 FasterTransformer 使用这种方式
   - 因为大多数的请求输出比最大上下文小的多，这种方法非常低效
@@ -88,7 +88,7 @@ LLM 输出总长度事先未知，kv cache 需要按需不断增加，为 llm �
 - 简单的显存管理会产生显存碎片（fragmentation）
   - 比如 24G 的 4090 加载4bit 7B模型模型后，还有差不多3万 kv cache，分配 32个1k 的连续内存，当服务8K请求时，只需要将8个连续内存拼起来。
   - 但多数时候时候空闲的内存不是连续的，拼不起来
-- 受到操作系统的虚拟内存分页的启发，vLLM 引入了 PagedAttention 减轻 kv cache 的显存碎片。
+- 受到操作系统的虚拟内存分页启发，vLLM 引入了 PagedAttention 减轻 kv cache 的显存碎片。
   - 如今，PagedAttention 已成为事实上的标准，用于 LLM 服务系统中的动态分配显存。
   - vLLM 使用 Block-Table(s) 实现显存分页，block_size 默认 16， 可选8、16、32。更多细节请参考原始论文 [Efficient Memory Management for Large Language Model Serving with PagedAttention](https://arxiv.org/pdf/2309.06180)
   - LightLLM 使用极限的 block_size 等于 1 分配显存。更多细节请参考 [github](https://github.com/ModelTC/lightllm)
@@ -102,8 +102,35 @@ LLM 输出总长度事先未知，kv cache 需要按需不断增加，为 llm �
 
 - 总之，显存管理是单用户系统和多用户系统的最大区别。之前测试的 llama.cpp 和 HuggingFace Transformers 至少目前没有加入显存管理功能，不能高效支持多用户推理场景。 
 
+# 4. 连续批处理(Continuous batching)
+LLM 输出总长度不统一，输出短的请求会提前退出，资源空闲，影响整体吞吐率。
 
-# 4.
+连续批处理(Continuous batching)，当有请求退出，资源空闲时，不等所有请求都完成，中途及时将等待队列中的请求加入到批次中，减少流水线气泡，提高资源利用率，提高整体吞吐率。
+
+连续批处理(Continuous batching)的关键是一次模型推理，同时进行解码 (Decoding) 阶段和预填充 (Prefill) 阶段。
+（铺垫已久的 m 个用户解码阶段就相当于长度为 m 的预填充阶段。试图将解码阶段和预填充阶段统一起来的线索终于可以回收了
+
+大语言模型 LLM (decoder-only transformer)，基本上只有两种操作，线性层（qkvo，mlp）、scaled dot product attention (SDPA)。
+
+对于线性层
+- 每个 token 的输入输出相互独立，互相不影响，读一次模型算完所有 token，绝佳的 SIMD 优化
+- 线性层支持同时进行进行解码阶段和预填充阶段
+
+对于scaled dot product attention (SDPA)
+- 每个 token 的 kv cache 内容、长度、显存位置都不同，自己抱着自己的 kv cache 算，不要互相影响
+- SDPA 反正都是自己算自己的，同时进行进行解码阶段和预填充阶段也不是问题
+
+下图来自 [continuous-batching-llm-inference](https://www.anyscale.com/blog/continuous-batching-llm-inference)，
+可以看到使用连续批处理(Continuous batching) 技术，流水线被填充的满满当当，非常好。
+
+<img src="https://images.ctfassets.net/xjan103pcp94/744TAv4dJIQqeHcEaz5lko/b823cc2d92bbb0d82eb252901e1dce6d/cb_03_diagram-continuous-batching.png?raw=true" width="800">
+
+使用连续批处理(Continuous batching)立竿见影，参考 [continuous-batching-llm-inference](https://www.anyscale.com/blog/continuous-batching-llm-inference)
+> - Up to 23x throughput improvement using continuous batching and continuous batching-specific memory optimizations (using vLLM).
+> - 8x throughput over naive batching by using continuous batching (both on Ray Serve and Hugging Face’s text-generation-inference).
+> - 4x throughput over naive batching by using an optimized model implementation (NVIDIA’s FasterTransformer).
+
+更多细节请参考 [Orca: A Distributed Serving System for Transformer-Based Generative Models](https://www.usenix.org/system/files/osdi22-yu.pdf)
 
 # 5. 
 
@@ -257,7 +284,7 @@ else:
 ### 6.2.5 小结
 - vllm 启动开销比较低，相同模型都比 HF 快一些
 - 轻负载 (1-8) 建议使用量化模型
-  - 4bit 7B模型理论速度 3ms，天然比 bf16 快；bf16 理论速度 13ms 对比量化模型天然就慢一截，
+  - 4bit 7B模型理论速度 3ms，天然比 bf16 快；bf16 理论速度 13ms 对比量化模型天然就慢一截
   - vllm GPTQ 使用 Marlin kernel 速度是最快的，Marlin kernel 调教也偏轻负载
   - vllm 不支持 exllama_v2，没有看到 exllama_v2 和 Marlin 正面对决比较遗憾 
   - vllm AWQ 使用 gemm 效果就不太行，官方也有 WARNING 暂时不建议使用
@@ -327,7 +354,7 @@ else:
 - 卫冕冠军 AWQ use_exllama_v2 fuse_layers， 因为叠了 fuse_layers buff，开始速度比 vllm GPTQ 快一点点
 - 可能是 vllm self attention 速度比较快，可能是 vllm kv cache 比较快，vllm GPTQ 速度曲线增速缓，AWQ use_exllama_v2 fuse_layers 增速快，长度500后开始反超
 - 所以 vllm 哪怕在用户为 1 的场景下，比 llama.cpp 和 HuggingFace Transformers 都快
-- 用 vllm 
+- 用 vllm 就对了
 
 ### 6.3.2. 多用户场景
 
@@ -360,22 +387,21 @@ else:
 3. 上图是并发用户量为1、2、4、8、16、32、64、128，vllm GPTQ 7B模型解码 （Decoding） 输出长度到 1000 的吞吐
 - 验证上面提到的“随着长度增加，kv cache 读取量增加，输出长度为 32 算出来的峰值吞吐不可持续”
 
-<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/vllm/latency-throughput-200.png?raw=true" width="800">
+<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/vllm/latency-throughput/latency-throughput-512.png?raw=true" width="800">
 
-4. 上图采样了并发用户量为1、2、4、8、16、32、64、128，vllm GPTQ 模型解码 （Decoding） 输出长度为 200 时，延迟和吞吐关系。
+4. 上图采样了并发用户量为1、2、4、8、16、32、64、128，vllm GPTQ 模型解码 （Decoding） 输出长度为 512 时，延迟和吞吐关系。
 - 研究曲线走势
-  - 14B和32B模型，并发数继续增加到64、128，kv cache 很快会被写满，会发生多次抢占，延迟-吞吐曲线无法维持
+  - 14B和32B模型，并发数继续增加到64、128，kv cache 很快会被写满，抢占，实际并发为32
   - 从曲线前段趋势推断，平衡延迟和吞吐的最优并发用户数从64往32移动
 - 忘掉不切实际的峰值吞吐吧，上下文长度1K时，24G的4090控制并发到32以下，这时延迟非常低，速度也非常稳定，用户会非常满意。
-- 对于一张一万五的游戏卡，要求不要太多
-
+- 对于一张一万五的游戏卡，不要要求太多
 
 5. Preemption 抢占
 使用默认的 recompute 抢占模式，抢占恢复会有一个很高的延迟，带来不好的用户体验，使用swap模型能否改善呢？
 
-<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/vllm/preemption_mode.png?raw=true" width="800">
+<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/vllm/latency-throughput/preemption_mode.png?raw=true" width="800">
 
-没啥区别
+没啥区别，甚至更糟糕
 - llm 模型推理带宽瓶颈，swap 走pcie总线也带宽瓶颈，显存内部带宽比pcie总线快多了。
 - 相比之下算力非常充足，recompute 可能更快
 
@@ -384,6 +410,8 @@ else:
 根据之前的理论推导的实验验证，24G 的 4090 服务 32 用户并发时，能很好的平衡延迟、吞吐、kv cache容量。
 
 那就开启 vllm chunked_prefill， max_num_seqs 设为 32，max_num_batched_tokens 设为 64 给 预填充 (Prefill) 阶段 的请求留一些空间
+
+> WARNING vllm 开启 chunked_prefill 会随机出现 RuntimeError: CUDA error: an illegal memory access was encountered。[复现代码](https://github.com/noooop/zerollama/blob/v0.4/test/debug/vllm_chunked_fill.py)
 
 ```
 engine_args = EngineArgs(model=model_name,
@@ -395,35 +423,34 @@ engine_args = EngineArgs(model=model_name,
 
 ### 6.4.1. 预填充 (Prefill) 阶段
 
-<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/vllm/prefill-0.5B-chunked_fill.png?raw=true" width="800">
+<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/vllm/chunked_fill/prefill-0.5B-chunked_fill.png?raw=true" width="800">
 
 - 0.5B 模型太小，不需要 chunked fill 优化
 
-<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/vllm/prefill-1.8B-chunked_fill.png?raw=true" width="800">
+<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/vllm/chunked_fill/prefill-1.8B-chunked_fill.png?raw=true" width="800">
 
 - 1.8B 模型太小，不需要 chunked fill 优化
 
-<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/vllm/prefill-4B-chunked_fill.png?raw=true" width="800">
+<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/vllm/chunked_fill/prefill-4B-chunked_fill.png?raw=true" width="800">
 
 - 4B 模型太小，不需要 chunked fill 优化
 
-<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/vllm/prefill-7B-chunked_fill.png?raw=true" width="800">
+<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/vllm/chunked_fill/prefill-7B-chunked_fill.png?raw=true" width="800">
 
 - 7B 就有趣了
 - 黑线的 vllm GPTQ chunked_fill 和 墨绿色的 vllm GPTQ 比较接近
 - 使用 chunked fill 优化，对较长提示词预填充速度损失比较小
 - Marlin kernel 本来就是为 1-32 区间轻负载调教，将长提示词拆分更适合 Marlin kernel 发挥
 
-<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/vllm/prefill-14B-chunked_fill.png?raw=true" width="800">
+<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/vllm/chunked_fill/prefill-14B-chunked_fill.png?raw=true" width="800">
 
 - 14B，同样 vllm GPTQ chunked_fill 和 vllm GPTQ 比较接近
 - vllm AWQ chunked_fill 和 vllm AWQ 也比较接近， 甚至 256-450 区间 比使用 FP16_MATMUL_HEURISTIC_CONDITION 还要快一点
 
-<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/vllm/prefill-32B-chunked_fill.png?raw=true" width="800">
+<img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/vllm/chunked_fill/prefill-32B-chunked_fill.png?raw=true" width="800">
 
 - 32B，我的天，使用 chunked_fill， 居然能将 32B 的 AWQ 模型跑起来
 - chunked_fill 居然有节省运行时显存的功能
-
 
 总结：
 - 0.5B、1.8B、4B 模型太小，不需要 chunked fill 优化
