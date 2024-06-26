@@ -132,9 +132,114 @@ LLM 输出总长度不统一，输出短的请求会提前退出，资源空闲�
 
 更多细节请参考 [Orca: A Distributed Serving System for Transformer-Based Generative Models](https://www.usenix.org/system/files/osdi22-yu.pdf)
 
-# 5. 
+紧跟 Orca 的步伐，NVIDIA TRT-LLM、HuggingFace TGI、vLLM 等也陆续支持连续批处理。
+连续批处理也成为又一大语言模型支持多用户的标配。
 
-# 6.
+# 5. Dynamic SplitFuse / Chunked Fill
+vllm 默认情况下请求的 预填充 (Prefill) 阶段在一次模型中完成。
+
+- 假设有一个请求正在解码 （Decoding） 阶段，7B GPTQ-Int4 模型大概是6-7ms出一个词。
+- 这时候来一个新请求，提示词 256 个 token，调度器发现有足够的资源，执行连续批处理(Continuous batching)，让新来的请求预填充阶段和和之前解码阶段一起执行
+- 预填充 256 个 token 大概花 24ms，正在解码的请求也需要卡24ms
+- 如果来的请求是一万个 token，十万个token，解码阶段的用户也要跟着等非常长时间，显然很不合理
+
+下图来自 [DeepSpeed-FastGen](https://github.com/microsoft/DeepSpeed/tree/master/blogs/deepspeed-fastgen/chinese)
+<img src="https://github.com/microsoft/DeepSpeed/raw/master/blogs/deepspeed-fastgen/assets/images/fastgen-overview-light.png" width="800">
+
+[DeepSpeed-FastGen](https://arxiv.org/abs/2401.08671) 发现了这个问题并提出了解决方案：
+> 1. 模型的吞吐量随着一次前向传递中 token 数量增加，逐渐饱和。（从带宽瓶颈逐渐转入算力瓶颈
+> 2. 参考吞吐饱和（或者延迟吞吐平衡），设定一个固定的前向传递大小（forward size），或者叫 token 预算。（vllm 中为 max_num_batched_tokens
+> 3. 动态分割融合执行两个关键行为：
+>    - Split 将长提示分解成更小的块，并在多个前向传递中进行调度，只有在最后一个传递中才执行生成。
+>    - Fuse 短提示将被组合以精确填满目标 token 预算。即使是短提示也可能被分解，以确保预算被精确满足，前向大小（forward sizes）保持良好对齐。
+> 4. 动态分割融合（Dynamic SplitFuse）提升了以下性能指标：
+>    - 更好的响应性： 由于长提示不再需要极长的前向传递来处理，模型将提供更低的客户端延迟。在同一时间窗口内执行的前向传递更多。
+>    - 更高的效率： 短提示的融合到更大的 token 预算使模型能够持续运行在高吞吐量状态。
+>    - 更低的波动和更好的一致性： 由于前向传递的大小一致，且前向传递大小是性能的主要决定因素，每个前向传递的延迟比其他系统更加一致。生成频率也是如此，因为DeepSpeed-FastGen不需要像其他先前的系统那样抢占或长时间运行提示，因此延迟会更低。
+> 5. 因此，与现有最先进的服务系统相比，使用 Dynamic SplitFuse 将以允许快速、持续生成的速率消耗来自提示的 token ，同时向系统添加 token，提高系统利用率，提供更低的延迟和更高的吞吐量流式生成给所有客户端。
+
+为什么 llm 支持动态分割融合（Dynamic SplitFuse）？
+- 对于 Fuse 操作，类似于连续批处理(Continuous batching)，线性层输入输出相互独立，互相不影响；SDPA 自己算自己的互不影响
+- 对于 Split 操作，LLM 每个词只依赖之前的词，不依赖之后的词，也就是中间状态也只依赖之前的词，不依赖之后的词。将预填充阶段Split后，必须按先后顺序计算才能确保结果正确
+
+再看看 [vllm](https://docs.vllm.ai/en/latest/models/performance.html#chunked-prefill) 是怎么描述 Chunked Prefill 的：
+> By default, vLLM scheduler prioritizes prefills and doesn’t batch prefill and decode to the same batch. This policy optimizes the TTFT (time to the first token), but incurs slower ITL (inter token latency) and inefficient GPU utilization.
+>
+> Once chunked prefill is enabled, the policy is changed to prioritize decode requests. It batches all pending decode requests to the batch before scheduling any prefill. When there are available token_budget (max_num_batched_tokens), it schedules pending prefills. If a last pending prefill request cannot fit into max_num_batched_tokens, it chunks it.
+>
+> This policy has two benefits:
+>
+> - It improves ITL and generation decode because decode requests are prioritized.
+>
+> - It helps achieve better GPU utilization by locating compute-bound (prefill) and memory-bound (decode) requests to the same batch.
+
+更多细节请参考：
+- [DeepSpeed-FastGen: High-throughput Text Generation for LLMs via MII and DeepSpeed-Inference](https://arxiv.org/abs/2401.08671)
+- [SARATHI: Efficient LLM Inference by Piggybacking Decodes with Chunked Prefills](https://arxiv.org/abs/2308.16369)
+- [Taming Throughput-Latency Tradeoff in LLM Inference with Sarathi-Serve](https://arxiv.org/abs/2403.02310)
+- [vllm Chunked Prefill](https://docs.vllm.ai/en/latest/models/performance.html#chunked-prefill)
+
+# 6. 还有那些推理优化技术没有提到
+## 6.0 综述
+- [A Survey on Efficient Inference for Large Language Models](https://arxiv.org/abs/2404.14294)
+- [Towards Efficient Generative Large Language Model Serving: A Survey from Algorithms to Systems](https://arxiv.org/abs/2312.15234)
+
+## 6.1 Disaggregating Prefill and Decoding
+预填充 (Prefill) 阶段决定了首字延迟 time to first token (TTFT)。解码 （Decoding） 阶段决定了解码延迟 time per output token (TPOT)。
+大批次执行吞吐（Throughput）高延迟（Latency）高，小批次执行吞吐低延迟低。
+
+之前努力将预填充阶段和解码阶段统一起来，连续批处理(Continuous batching) 将两个阶段放在一个批次执行，Dynamic SplitFuse 通过对预填充序列切割和拼接，精确填满目标 token 预算。
+平衡延迟和吞吐、平衡首字延迟和解码延迟。
+
+为了更进一步提高系统性能，需要充分考虑预填充 (Prefill) 阶段和解码 （Decoding） 阶段的差异。
+
+I’ll teach you differences. - William Shakespeare, King Lear
+
+对于 Scaled dot product attention (SDPA)
+- 解码 （Decoding） 阶段，读取一次 kv cache 算一次，典型的带宽瓶颈。[FlashDecoding](https://crfm.stanford.edu/2023/10/12/flashdecoding.html)、[flashdecoding++](https://arxiv.org/abs/2311.01282) 对这种场景做了专门优化
+- 预填充 (Prefill) 阶段，重复使用相同的kv cache，如果可以只读取一次完成计算，对于现在带宽瓶颈的硬件架构，岂不美哉。[FlashAttention](https://arxiv.org/abs/2205.14135) [FlashAttention2](https://arxiv.org/abs/2307.08691) 对这种场景做了专门优化
+
+> 参考 [FlashDecoding](https://crfm.stanford.edu/2023/10/12/flashdecoding.html) 官方网页，Flash-decoding is available:
+> - In the FlashAttention package, starting at version 2.2.
+> - Through xFormers starting at version 0.0.22 through xformers.ops.memory_efficient_attention. The dispatcher will automatically use either the Flash-Decoding or FlashAttention approaches depending on the problem size. When these approaches are not supported, it can dispatch to an efficient triton kernel that implements the Flash-Decoding algorithm.
+
+对于 线性层
+- 解码 （Decoding） 阶段，一个请求计算一个 token。解码阶段倾向于小批次，低延迟
+- 预填充 (Prefill) 阶段，一般都一个请求计算一个 token 多很多。预填充阶段倾向于大批次，高吞吐
+
+所以：
+- 搞简单一点，使用连续批处理(Continuous batching)时，对SDPA进行分组，解码使用 FlashDecoding，预填充使用 FlashAttention。
+  - vllm 使用 [attn_metadata](https://github.com/vllm-project/vllm/blob/main/vllm/attention/backends/abstract.py#L56) 区分 prefill 和 decode 使用不同 attention 实现， 
+- 搞复杂一点，将预填充和解码安排在不同的显卡上，再也不用为平衡预填充和解码的延迟设计一个批次大小，甚至可以单独控制预填充和解码占的显卡数量。
+  - 更多细节参考 [DistServe: Disaggregating Prefill and Decoding for Goodput-optimized Large Language Model Serving](https://arxiv.org/abs/2401.09670)
+
+## 6.2 Mixture of experts (MoE)
+参考 [qwen1.5-32b blog](https://qwenlm.github.io/zh/blog/qwen1.5-32b/)
+> 模型能力 Mixtral-8x7B < Qwen1.5-32B ≈ Yi-34B << Qwen1.5-72B
+
+- 个人感觉 MoE 模型大概等于一半参数大小的稠密模型。24G 的 4090 显存本就不富裕
+- 使用 MoE 后，模型计算量更小。4090 本来 带宽算力比就很离谱
+- 高并发情况下，虽然每个请求只激活的一小部分专家模型，对于一个批次，基本上要把模型所有参数都读一遍，就需要非常离谱的并发量平衡带宽算力比
+- MoE 是云服务厂商用的，一般人用不起
+
+## 6.3 量化 Quantization / 稀疏 Sparsification
+量化 Quantization / 稀疏 Sparsification 的论文非常多，但不是作者本人的兴趣所在，愿意随大流使用久经验证的、4bit以上的 GPTQ AWQ GGUF 模型，量化 kv cache 和 FP8 推理 持保守观望态度
+
+## 6.4 多卡、分布式系统
+家里没有多卡、分布式系统
+
+## 6.5 算子融合 Cuda Kernel Fusion
+算子融合主要通过以减少以几种开销加速
+- Kernel Launch开销，从需要多次启动Kernel，优化成一次启动
+- 数据内存读取开销，从数据需要多次从显存读取，优化成从缓存读取
+- 融合计算密集型内核和内存密集型 Kernel 提高硬件利用率
+
+虽然不接触，但我们已经获益非常多，比如:
+- flash attention 将整个 scaled dot product attention (SDPA) 融合成一个操作
+- exllama 和 Marlin 将解量化和矩阵乘法融合成一个操作
+- awq 开启 fuse_layers，将多个线性层比如kqv融合成一个操作
+
+对 Cuda 不是很熟，就写这么多吧
 
 # 7. VLLM 实际推理速度测试
 vLLM 是一个快速且易于使用的 LLM 推理和服务库。
@@ -479,8 +584,9 @@ engine_args = EngineArgs(model=model_name,
 
 这种强行限制并发数至32，并发64、128的曲线被强行摁到32，减少系统颠簸，个人觉得非常好。
 
-
-
+## 7.4. 遗憾
+- 因为 4090 24G显存限制，没法验证 bf16 在极限吞吐下优于量化模型。为了达成极限吞吐，延迟估计非常感人
+- 虽然 vllm 支持 deepspeedfp， 但还需要 json 文件的quantization_config，非常麻烦 
 
 # 8. VLLM Gevent 实际推理速度测试
 VLLM 异步使用 asyncio，而我个人喜欢用 gevent，所以移植了一个gevent版本，下面也测一下
@@ -541,3 +647,7 @@ VLLM 异步使用 asyncio，而我个人喜欢用 gevent，所以移植了一个
 
 - 并发数为 64
 - vllm 推理 0.5B 模型 也会有30ms的峰 更明显
+
+
+# 9. 总结
+完
