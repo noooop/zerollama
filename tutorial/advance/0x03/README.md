@@ -198,7 +198,7 @@ I’ll teach you differences. - William Shakespeare, King Lear
 
 对于 Scaled dot product attention (SDPA)
 - 解码 （Decoding） 阶段，读取一次 kv cache， 只计算一次（q的长度为1），带宽瓶颈。[FlashDecoding](https://crfm.stanford.edu/2023/10/12/flashdecoding.html)、[flashdecoding++](https://arxiv.org/abs/2311.01282) 对这种场景做了专门优化
-- 预填充 (Prefill) 阶段，对于每个token的q，重复使用相同的kv cache，q和kv是平方的计算复杂度，计算瓶颈，这时候应该合理安排最大程度避免重复读取。[FlashAttention](https://arxiv.org/abs/2205.14135) [FlashAttention2](https://arxiv.org/abs/2307.08691) 对这种场景做了专门优化
+- 预填充 (Prefill) 阶段，对于每个token的q，重复使用相同的kv cache，这时候应该利用好高速缓存，合理安排避免重复读写全局显存。一波操作后预填充阶段 SDPA 变成计算瓶颈。[FlashAttention](https://arxiv.org/abs/2205.14135) [FlashAttention2](https://arxiv.org/abs/2307.08691) 对这种场景做了专门优化
 
 > 参考 [FlashDecoding](https://crfm.stanford.edu/2023/10/12/flashdecoding.html) 官方网页，Flash-decoding is available:
 > - In the FlashAttention package, starting at version 2.2.
