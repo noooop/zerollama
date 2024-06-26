@@ -10,20 +10,22 @@ from zerollama.core.config.main import config_setup
 
 
 class ZeroRetrieverDatabaseEngine(Z_MethodZeroServer):
-    def __init__(self, class_name, collection, **kwargs):
-        self.class_name = class_name
-        self.module_name = get_backend_by_name(class_name)
+    def __init__(self, retriever_model, collection, **kwargs):
+        self.retriever_model = retriever_model
+        self.module_name = get_backend_by_name(retriever_model)
 
         if self.module_name is None:
-            raise FileNotFoundError(f"RetrieverDatabase [{self.class_name}] not supported.")
+            raise FileNotFoundError(f"RetrieverDatabase [{self.retriever_model}] not supported.")
 
         self.collection = collection
+        module_name, class_name = self.module_name.split(":")
+        self.class_name = class_name
 
         print("Use Retriever Database backend:")
-        print(f"{self.module_name}:{self.class_name}")
+        print(self.module_name)
 
         import importlib
-        module = importlib.import_module(self.module_name)
+        module = importlib.import_module(module_name)
         self.db_class = getattr(module, class_name)
 
         self.db = None
@@ -72,7 +74,7 @@ if __name__ == '__main__':
     nameserver = ZeroServerProcess("zerollama.core.framework.nameserver.server:ZeroNameServer")
     engine = ZeroServerProcess(ENGINE_CLASS,
                                server_kwargs={
-                                   "class_name": "BM25sRetrieverDatabase",
+                                   "retriever_model": "BM25s",
                                    "collection": collection,
                                })
 

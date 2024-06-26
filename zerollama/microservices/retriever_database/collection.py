@@ -3,7 +3,7 @@ base = "zerollama.microservices.retriever_database.backend"
 
 
 BACKEND = [
-    ["BM25sRetrieverDatabase", f"{base}.use_bm25s"],
+    ["BM25s", f"{base}.use_bm25s:BM25sRetrieverDatabase"],
 ]
 
 BACKEND_MAP = {x[0]: x[1] for x in BACKEND}
