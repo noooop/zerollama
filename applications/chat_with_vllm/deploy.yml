@@ -1,7 +1,7 @@
 chat:
   models:
     -
-      name: "Qwen/Qwen1.5-0.5B-Chat-AWQ"
+      name: "Qwen/Qwen2-0.5B-Instruct-AWQ"
       engine_kwargs:
         gpu_memory_utilization: 0.4
         use_vllm: True
