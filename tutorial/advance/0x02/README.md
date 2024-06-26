@@ -751,7 +751,7 @@ GPTQ 的事实标准是 [AutoGPTQ](https://github.com/AutoGPTQ/AutoGPTQ) 库。�
 
 > 1. 8bits 模型无法使用
 > 
->      感觉GPTQ要放弃 8bits 版本支持，8bits 模型会[报错](https://github.com/noooop/zerollama/blob/v0.3/test/debug/gptq_int8.py)，qwen1.5 32B也没有提供 8bits 版本。
+>      感觉GPTQ要放弃 8bits 版本支持，8bits 模型会[报错](https://github.com/noooop/zerollama/blob/main/test/debug/gptq_int8.py)，qwen1.5 32B也没有提供 8bits 版本。
 > 
 > 2. Marlin kernel
 > 
