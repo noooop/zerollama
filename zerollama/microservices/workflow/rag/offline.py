@@ -14,11 +14,17 @@ def batchify(iterable, n=1):
         yield iterable[ndx:min(ndx + n, l)]
 
 
-def text2vec(collection, embedding_model, batchsize=128):
+def chunk(collection):
     config = config_setup()
 
-    pickle_name = md5(f"zerollama:{collection}:{embedding_model}:embeddings".encode("utf-8")).hexdigest()
-    pickle_file = f"{config.rag.path / collection / 'embeddings' / (pickle_name + '.pkl')}"
+    pickle_file = f"{config.rag.path / collection / 'chunk' / 'chunk.pkl'}"
+
+    if Path(pickle_file).exists():
+        data = pickle.load(open(pickle_file, "rb"))
+        return data
+    else:
+        print(Path(pickle_file).parent)
+        Path(pickle_file).parent.mkdir(exist_ok=True)
 
     nodes_list = []
     for file in (config.rag.path / collection / "text").glob("*.txt"):
@@ -31,7 +37,22 @@ def text2vec(collection, embedding_model, batchsize=128):
         print(f"处理完一共有{len(nodes)}个节点")
         nodes_list.extend(nodes)
 
-    sentences = [node["text"] for node in nodes_list]
+    data = {"collection": collection, "nodes": nodes_list}
+
+    pickle.dump(data, open(pickle_file, "wb"))
+    return data
+
+
+def text2vec(collection, embedding_model, batchsize=128):
+    config = config_setup()
+
+    pickle_name = md5(f"zerollama:{collection}:{embedding_model}:embeddings".encode("utf-8")).hexdigest()
+    pickle_file = f"{config.rag.path / collection / 'embeddings' / (pickle_name + '.pkl')}"
+
+    data = chunk(collection)
+    nodes = data["nodes"]
+    sentences = [node["text"] for node in nodes]
+
     hash = md5("\n".join(sentences).encode("utf-8")).hexdigest()
 
     if Path(pickle_file).exists():
@@ -53,12 +74,12 @@ def text2vec(collection, embedding_model, batchsize=128):
     embeddings = np.vstack(embeddings)
 
     pickle.dump(
-        {"nodes": nodes_list, "embeddings": embeddings, "collection": collection, "embedding_model": embedding_model, "hash": hash},
+        {"nodes": nodes, "embeddings": embeddings, "collection": collection, "embedding_model": embedding_model, "hash": hash},
         open(pickle_file, "wb")
     )
     return embeddings
 
 
 if __name__ == '__main__':
-    embeddings = text2vec(collection="test", embedding_model="BAAI/bge-m3")
+    embeddings = text2vec(collection="test_collection", embedding_model="BAAI/bge-m3")
     print(embeddings.shape)
