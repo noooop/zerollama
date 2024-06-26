@@ -1,4 +1,5 @@
 
+import inspect
 import requests
 from functools import partial
 from zerollama.core.config.main import config_setup
@@ -56,42 +57,43 @@ class LLamaCPPChat(ChatInterface):
     def info(self):
         return self.model_info
 
-    def chat(self, messages, options=None):
+    def chat(self, messages, stream=False, options=None):
         options = options or dict()
-        response = self.model.create_chat_completion(messages, stream=False, **options)
+        response = self.model.create_chat_completion(messages, stream=stream, **options)
 
-        return ChatCompletionResponse(**{"model": self.model_name,
-                                         "content": response['choices'][0]['message']['content'],
-                                         "finish_reason": response['choices'][0]['finish_reason'],
+        if not inspect.isgenerator(response):
+            return ChatCompletionResponse(**{"model": self.model_name,
+                                             "content": response['choices'][0]['message']['content'],
+                                             "finish_reason": response['choices'][0]['finish_reason'],
 
-                                         "completion_tokens": response['usage']['completion_tokens'],
-                                         "prompt_tokens": response['usage']['prompt_tokens'],
-                                         "total_tokens": response['usage']['total_tokens']})
+                                             "completion_tokens": response['usage']['completion_tokens'],
+                                             "prompt_tokens": response['usage']['prompt_tokens'],
+                                             "total_tokens": response['usage']['total_tokens']})
+        else:
+            def generator():
+                completion_tokens = 0
+                for rep in response:
+                    completion_tokens += 1
 
-    def stream_chat(self, messages, options=None):
-        options = options or dict()
+                    finish_reason = rep['choices'][0]['finish_reason']
 
-        completion_tokens = 0
-        for response in self.model.create_chat_completion(messages, stream=True, **options):
-            completion_tokens += 1
+                    if finish_reason is None:
+                        content = rep['choices'][0]['delta'].get("content", None)
+                        if content is None:
+                            continue
 
-            finish_reason = response['choices'][0]['finish_reason']
+                        yield ChatCompletionStreamResponse(**{"model": self.model_name,
+                                                              "delta_content": content})
+                    else:
+                        yield ChatCompletionStreamResponseDone(**{"model": self.model_name,
+                                                                  "finish_reason": finish_reason,
 
-            if finish_reason is None:
-                content = response['choices'][0]['delta'].get("content", None)
-                if content is None:
-                    continue
+                                                                  "prompt_tokens": -1,
+                                                                  "completion_tokens": completion_tokens,
+                                                                  "total_tokens": -1})
+                        break
 
-                yield ChatCompletionStreamResponse(**{"model": self.model_name,
-                                                      "delta_content": content})
-            else:
-                yield ChatCompletionStreamResponseDone(**{"model": self.model_name,
-                                                          "finish_reason": finish_reason,
-
-                                                          "prompt_tokens": -1,
-                                                          "completion_tokens": completion_tokens,
-                                                          "total_tokens": -1})
-                break
+            return generator()
 
 
 def run_test(model_name, stream=False):
@@ -109,15 +111,22 @@ def run_test(model_name, stream=False):
         {"role": "user", "content": prompt}
     ]
 
-    if stream:
-        for response in model.stream_chat(messages):
-            if isinstance(response, ChatCompletionStreamResponseDone):
-                print()
-                print("completion_tokens:", response.completion_tokens)
-            else:
-                print(response.delta_content, end="", flush=True)
+    response = model.chat(messages, options={"max_tokens": 512}, stream=stream)
 
+    if inspect.isgenerator(response):
+        for part in response:
+            if isinstance(part, ChatCompletionStreamResponseDone):
+                print()
+                print("completion_tokens:", part.completion_tokens)
+            else:
+                print(part.delta_content, end="", flush=True)
     else:
-        response = model.chat(messages)
         print(response.content)
         print("completion_tokens:", response.completion_tokens)
+
+
+if __name__ == '__main__':
+    model_name = "Qwen/Qwen1.5-0.5B-Chat-GGUF+*q8_0.gguf"
+
+    run_test(model_name, stream=False)
+    run_test(model_name, stream=True)

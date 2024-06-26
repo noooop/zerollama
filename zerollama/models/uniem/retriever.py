@@ -5,12 +5,12 @@ from zerollama.tasks.retriever.interface import Retriever
 class M3ERetriever(Retriever):
     family = "m3e"
     model_kwargs = {}
-    header = ["name", "size", "dimension", "zh", "en", "s2s", "s2p", "s2c", "open source", "compatibility"]
+    header = ["name", "modelscope_name", "size", "dimension", "zh", "en", "s2s", "s2p", "s2c", "open source", "compatibility"]
     info = [
-        # name                参数数量  维度   中文   英文  s2s   s2p  s2c   开源  兼容性
-        ["moka-ai/m3e-small", "24M",  "512", "是", "否", "是", "否", "否", "是", "优"],
-        ["moka-ai/m3e-base",  "110M", "768", "是", "是", "是", "是", "否", "是", "优"],
-        ["moka-ai/m3e-large", "340M", "768", "是", "否", "是", "是", "否", "是", "优"],
+        # name                modelscope_name            参数数量  维度   中文   英文  s2s   s2p  s2c   开源  兼容性
+        ["moka-ai/m3e-small", "AI-ModelScope/m3e-small", "24M",  "512", "是", "否", "是", "否", "否", "是", "优"],
+        ["moka-ai/m3e-base",  "AI-ModelScope/m3e-base",  "110M", "768", "是", "是", "是", "是", "否", "是", "优"],
+        ["moka-ai/m3e-large", "AI-ModelScope/m3e-large", "340M", "768", "是", "否", "是", "是", "否", "是", "优"],
     ]
     inference_backend = "zerollama.microservices.inference.sentence_transformer_green.retriever:SentenceTransformerRetriever"
 

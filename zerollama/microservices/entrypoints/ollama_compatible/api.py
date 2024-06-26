@@ -1,5 +1,6 @@
 
 import json
+import inspect
 import datetime
 from fastapi import FastAPI
 from fastapi.responses import StreamingResponse, JSONResponse
@@ -48,76 +49,69 @@ def tags():
 
 @app.post("/api/show")
 def show(req: ShowRequest):
-    name = req.name
-    rep = chat_client.info(name)
-
-    if rep is None:
+    try:
+        name = req.name
+        rep = chat_client.info(name)
+        details = rep.msg
+        out = {
+            'name': name,
+            'model': name,
+            'modified_at': "",
+            'size': "",
+            'digest': "",
+            "details": details
+        }
+        return out
+    except Exception:
         return JSONResponse(status_code=404,
-                            content={"error": f"model '{name}' not found"})
-
-    details = rep.msg
-    out = {
-        'name': name,
-        'model': name,
-        'modified_at': "",
-        'size': "",
-        'digest': "",
-        "details": details
-    }
-    return out
+                            content={"error": f"model '{req.name}' not found"})
 
 
 @app.post("/api/chat")
-async def chat(req: ChatCompletionRequest):
-    if req.stream:
-        def generate():
-            for rep in chat_client.stream_chat(req.model, req.messages, req.options):
-                if rep is None:
-                    return JSONResponse(status_code=404,
-                                        content={"error": f"model '{req.model}' not found"})
-
-                rep = rep.msg
-                if isinstance(rep, ChatCompletionStreamResponseDone):
-                    response = json.dumps({
-                        "model": req.model,
-                        "created_at": get_timestamp(),
-                        "message": {"role": "assistant", "content": ""},
-                        "done": True
-                    })
-                    yield response
-                    break
-                else:
-                    delta_content = rep.delta_content
-                    response = json.dumps({"model": req.model,
+def chat(req: ChatCompletionRequest):
+    try:
+        response = chat_client.chat(name=req.model, messages=req.messages, stream=req.stream, options=req.options)
+        if not inspect.isgenerator(response):
+            data = {"model": response.model,
+                    "created_at": get_timestamp(),
+                    "message": {"role": "assistant", "content": response.content},
+                    "done": True}
+            return data
+        else:
+            def generate():
+                for rep in response:
+                    if isinstance(rep, ChatCompletionStreamResponseDone):
+                        data = json.dumps({
+                            "model": req.model,
+                            "created_at": get_timestamp(),
+                            "message": {"role": "assistant", "content": ""},
+                            "done": True
+                        })
+                        yield data
+                        yield "\n"
+                        break
+                    else:
+                        delta_content = rep.delta_content
+                        data = json.dumps({"model": req.model,
                                            "created_at": get_timestamp(),
                                            "message": {"role": "assistant", "content": delta_content},
-                                           "done": False
-                                           })
-                    yield response
-                    yield "\n"
-        return StreamingResponse(generate(), media_type="application/x-ndjson")
-    else:
-        rep = chat_client.chat(req.model, req.messages, req.options)
-        if rep is None:
-            return JSONResponse(status_code=404,
-                                content={"error": f"model '{req.model}' not found"})
-        rep = rep.msg
-        content = rep.content
-        response = {"model": req.model,
-                    "created_at": get_timestamp(),
-                    "message": {"role": "assistant", "content": content},
-                    "done": True}
-        return response
+                                           "done": False})
+                        yield data
+                        yield "\n"
+            return StreamingResponse(generate(), media_type="application/x-ndjson")
+    except RuntimeError:
+        return JSONResponse(status_code=404,
+                            content={"error": f"model '{req.name}' not found"})
 
 
 @app.post("/api/embeddings")
 def embeddings(req: EmbeddingsRequest):
-    rep = retriever_client.encode(req.model, [req.prompt], req.options)
-    if rep is None:
+    try:
+        rep = retriever_client.encode(req.model, [req.prompt], req.options)
+        return {"embedding": rep.vecs['dense_vecs'][0].tolist()}
+    except RuntimeError:
         return JSONResponse(status_code=404,
-                            content={"error": f"model '{req.model}' not found"})
-
-    return {"embedding": rep.vecs['dense_vecs'][0].tolist()}
+                            content={"error": f"model '{req.name}' not found"})
 
 
 if __name__ == '__main__':

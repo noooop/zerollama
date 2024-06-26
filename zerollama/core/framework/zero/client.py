@@ -1,8 +1,7 @@
 
-import json
 import gevent
+import inspect
 import shortuuid
-import numpy as np
 from os import getpid
 import zmq.green as zmq
 from queue import Queue
@@ -96,56 +95,47 @@ class Client(object):
             try:
                 with gevent.Timeout(_timeout):
                     socket.send_multipart([req_id, req]+req_payload)
-                    msg = socket.recv_multipart()
-                    socket_pool.put(socket, self.addr)
-                    return msg
-            except gevent.timeout.Timeout:
-                socket_pool.delete(socket)
-
-        raise Timeout(f"{self.addr} timeout")
-
-    def _stream_query(self, req, req_payload, n_try=3, timeout=None):
-        _timeout = timeout or getattr(self, "timeout", None)
-
-        for i in range(n_try):
-            req_id = f"{shortuuid.random(length=22)}".encode("utf-8")
-            socket = socket_pool.get(self.addr)
-            try:
-                with gevent.Timeout(_timeout):
-                    socket.send_multipart([req_id, req]+req_payload)
                     out = socket.recv_multipart()
             except gevent.timeout.Timeout:
                 socket_pool.delete(socket)
                 continue
 
             rep_id, msg, *payload = out
-            req_id, rcv_more, rep_id = rep_id[:22], rep_id[22:23], rep_id[23:]
-            yield out
 
-            while rcv_more == b"M":
-                try:
-                    with gevent.Timeout(_timeout):
-                        out = socket.recv_multipart()
-                        rep_id, msg, *payload = out
-                        req_id, rcv_more, rep_id = rep_id[:22], rep_id[22:23], rep_id[23:]
-                        yield out
-                except gevent.timeout.Timeout:
-                    socket_pool.delete(socket)
-                    raise Timeout(f"{self.addr} timeout")
+            if len(rep_id) == 22:
+                socket_pool.put(socket, self.addr)
+                return out
             else:
-                return
+                def generator(out):
+                    rep_id, msg, *payload = out
+                    req_id, rcv_more, rep_id = rep_id[:22], rep_id[22:23], rep_id[23:]
+                    yield out
 
+                    while rcv_more == b"M":
+                        try:
+                            with gevent.Timeout(_timeout):
+                                out = socket.recv_multipart()
+                                rep_id, msg, *payload = out
+                                req_id, rcv_more, rep_id = rep_id[:22], rep_id[22:23], rep_id[23:]
+                                yield out
+                        except gevent.timeout.Timeout:
+                            socket_pool.delete(socket)
+                            raise Timeout(f"{self.addr} timeout")
+                    socket_pool.put(socket, self.addr)
+                return generator(out)
         raise Timeout(f"{self.addr} timeout")
-
-    def stream_query(self, data, **kwargs):
-        req, req_payload = ZeroMSQ.load(data)
-        for req_id, msg, *payload in self._stream_query(req, req_payload, **kwargs):
-            yield ZeroServerResponse(**ZeroMSQ.unload(msg, payload))
 
     def query(self, data, **kwargs):
         req, req_payload = ZeroMSQ.load(data)
-        req_id, msg, *payload = self._query(req, req_payload, **kwargs)
-        return ZeroServerResponse(**ZeroMSQ.unload(msg, payload))
+        response = self._query(req, req_payload, **kwargs)
+        if not inspect.isgenerator(response):
+            req_id, msg, *payload = response
+            return ZeroServerResponse(**ZeroMSQ.unload(msg, payload))
+        else:
+            def generator():
+                for req_id, msg, *payload in response:
+                    yield ZeroServerResponse(**ZeroMSQ.unload(msg, payload))
+            return generator()
 
 
 class Z_Client(Client):

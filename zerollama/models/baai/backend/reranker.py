@@ -1,11 +1,10 @@
 import torch
 import requests
 import numpy as np
-from functools import partial
-from zerollama.core.config.main import config_setup
 from zerollama.tasks.reranker.interface import RerankerInterface
 from zerollama.tasks.reranker.protocol import RerankerResponse
-from zerollama.tasks.reranker.collection import get_model_config_by_name
+from zerollama.tasks.reranker.collection import get_model_config_by_name, get_model_by_name
+from zerollama.tasks.base.download import get_pretrained_model_name_or_path
 
 
 class BGEReranker(RerankerInterface):
@@ -21,31 +20,28 @@ class BGEReranker(RerankerInterface):
         self.model_info = self.model_config.info
         self.local_files_only = local_files_only
         self.trust_remote_code = self.model_config.model_kwargs.get("trust_remote_code", False)
+        self.pretrained_model_name_or_path = get_pretrained_model_name_or_path(model_name=model_name,
+                                                                               local_files_only=local_files_only,
+                                                                               get_model_by_name=get_model_by_name,
+                                                                               get_model_config_by_name=get_model_config_by_name)
 
         self.model = None
         self.n_concurrent = 1
 
     def load(self):
-        config_setup()
-
-        if self.local_files_only:
-            import huggingface_hub
-            huggingface_hub.snapshot_download = partial(huggingface_hub.snapshot_download,
-                                                        local_files_only=True)
-
         from FlagEmbedding import FlagReranker, FlagLLMReranker, LayerWiseFlagLLMReranker
 
         try:
             if self.model_info["type"] == "normal":
-                self.model = FlagReranker(self.model_name,
+                self.model = FlagReranker(self.pretrained_model_name_or_path,
                                           use_fp16=True,
                                           device=self.device)
             elif self.model_info["type"] == "LLM-based":
-                self.model = FlagLLMReranker(self.model_name,
+                self.model = FlagLLMReranker(self.pretrained_model_name_or_path,
                                              use_fp16=True,
                                              device=self.device)
             elif self.model_info["type"] == "layerwise":
-                self.model = LayerWiseFlagLLMReranker(self.model_name,
+                self.model = LayerWiseFlagLLMReranker(self.pretrained_model_name_or_path,
                                                       use_fp16=True,
                                                       device=self.device)
             else:

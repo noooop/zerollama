@@ -16,7 +16,7 @@ class ZeroInferenceEngine(Z_MethodZeroServer):
         if self.model_class is None:
             raise ValueError(f"[{self.model_name}] not support.")
 
-        self.inference_backend = self.model_class.inference_backend
+        self.inference_backend = engine_kwargs.pop("inference_backend", None) or self.model_class.inference_backend
 
         print("use inference backend:")
         print(self.inference_backend)
@@ -39,10 +39,13 @@ class ZeroInferenceEngine(Z_MethodZeroServer):
         print(f"{self.__class__.__name__}: ", self.name, "is running!", "port:", self.port)
 
     def z_inference(self, req):
-        with self.semaphore:
-            with ThreadPoolExecutor(1) as executor:
-                f = executor.submit(self.inference_worker, req)
-                f.result()
+        if self.semaphore == 1:
+            with self.semaphore:
+                with ThreadPoolExecutor(1) as executor:
+                    f = executor.submit(self.inference_worker, req)
+                    f.result()
+        else:
+            self.inference_worker(req)
 
     def inference_worker(self, req):
         pass

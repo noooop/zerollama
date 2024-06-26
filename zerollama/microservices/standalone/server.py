@@ -11,7 +11,7 @@ def setup():
     return nameserver, manager
 
 
-def run(handle):
+def run(handle, waiting=True):
     nameserver, manager = handle
     nameserver.start()
     nameserver.wait_port_available()
@@ -21,8 +21,9 @@ def run(handle):
 
     manager.start()
 
-    for h in handle:
-        h.wait()
+    if waiting:
+        for h in handle:
+            h.wait()
 
 
 def start():

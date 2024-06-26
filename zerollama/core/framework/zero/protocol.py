@@ -1,6 +1,7 @@
 
 import json
 import numpy as np
+from PIL import Image
 from pydantic import BaseModel, Field, ValidationError
 from typing import Literal, Optional, List, Dict, Any, Union, Tuple
 
@@ -75,9 +76,22 @@ class ZeroMSQ(object):
                 if type(v) is np.ndarray:
                     meta.append(Meta(name=n+[k], dtype=str(v.dtype), shape=v.shape).dict())
                     payload.append(np.ascontiguousarray(v))
+                elif isinstance(v, Image.Image):
+                    v = np.array(v)
+                    meta.append(Meta(name=n+[k], dtype=str(v.dtype), shape=v.shape).dict())
+                    payload.append(np.ascontiguousarray(v))
                 elif isinstance(v, dict):
                     m[k] = {}
                     _load(v, m[k], n+[k])
+                elif isinstance(v, list):
+                    m[k] = []
+                    for i, l in enumerate(v):
+                        if type(l) is np.ndarray:
+                            meta.append(Meta(name=n + [k, i], dtype=str(l.dtype), shape=l.shape).dict())
+                            payload.append(np.ascontiguousarray(l))
+                            m[k].append(None)
+                        else:
+                            m[k].append(l)
                 else:
                     m[k] = v
 
@@ -108,6 +122,7 @@ class ZeroMSQ(object):
                 d = d[m.name[i]]
 
             d[m.name[-1]] = np.frombuffer(p, dtype=m.dtype).reshape(m.shape)
+
         return msg
 
 

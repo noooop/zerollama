@@ -4,47 +4,46 @@ from zerollama.tasks.chat.interface import ChatModel, ChatGGUFModel
 class Qwen1_5(ChatModel):
     family = "Qwen1.5"
     model_kwargs = {}
-    header = ["name", "size", "quantization", "bits"]
+    header = ["name", "size", "quantization", "bits", "subtype"]
     info = [
-        # name                                   size      quantization(_, GPTQ, AWQ)     bits
+        # name                                   size      quantization(_, GPTQ, AWQ)     bits,     subtype
         # original
-        ["Qwen/Qwen1.5-0.5B-Chat",               "0.5B",   "",                            ""],
-        ["Qwen/Qwen1.5-1.8B-Chat",               "1.8B",   "",                            ""],
-        ["Qwen/Qwen1.5-4B-Chat",                 "4B",     "",                            ""],
-        ["Qwen/Qwen1.5-7B-Chat",                 "7B",     "",                            ""],
-        ["Qwen/Qwen1.5-14B-Chat",                "14B",    "",                            ""],
-        ["Qwen/Qwen1.5-32B-Chat",                "32B",    "",                            ""],
-        ["Qwen/Qwen1.5-72B-Chat",                "72B",    "",                            ""],
-        ["Qwen/Qwen1.5-110B-Chat",               "110B",   "",                            ""],
-
-        # GPTQ-Int8
-        # ["Qwen/Qwen1.5-0.5B-Chat-GPTQ-Int8",     "0.5B",   "GPTQ",                        "8bits"],
-        # ["Qwen/Qwen1.5-1.8B-Chat-GPTQ-Int8",     "1.8B",   "GPTQ",                        "8bits"],
-        # ["Qwen/Qwen1.5-4B-Chat-GPTQ-Int8",       "4B",     "GPTQ",                        "8bits"],
-        # ["Qwen/Qwen1.5-7B-Chat-GPTQ-Int8",       "7B",     "GPTQ",                        "8bits"],
-        # ["Qwen/Qwen1.5-14B-Chat-GPTQ-Int8",      "14B",    "GPTQ",                        "8bits"],
-        # ["Qwen/Qwen1.5-32B-Chat-GPTQ-Int8",      "32B",    "GPTQ",                        "8bits"],
-        # ["Qwen/Qwen1.5-72B-Chat-GPTQ-Int8",      "72B",    "GPTQ",                        "8bits"],
+        ["Qwen/Qwen1.5-0.5B-Chat",                "0.5B",   "",                            "",       "chat"],
+        ["Qwen/Qwen1.5-1.8B-Chat",                "1.8B",   "",                            "",       "chat"],
+        ["Qwen/Qwen1.5-4B-Chat",                  "4B",     "",                            "",       "chat"],
+        ["Qwen/Qwen1.5-7B-Chat",                  "7B",     "",                            "",       "chat"],
+        ["Qwen/Qwen1.5-14B-Chat",                 "14B",    "",                            "",       "chat"],
+        ["Qwen/Qwen1.5-32B-Chat",                 "32B",    "",                            "",       "chat"],
+        ["Qwen/Qwen1.5-72B-Chat",                 "72B",    "",                            "",       "chat"],
+        ["Qwen/Qwen1.5-110B-Chat",                "110B",   "",                            "",       "chat"],
 
         # GPTQ-Int4
-        ["Qwen/Qwen1.5-0.5B-Chat-GPTQ-Int4",     "0.5B",   "GPTQ",                        "4bits"],
-        ["Qwen/Qwen1.5-1.8B-Chat-GPTQ-Int4",     "1.8B",   "GPTQ",                        "4bits"],
-        ["Qwen/Qwen1.5-4B-Chat-GPTQ-Int4",       "4B",     "GPTQ",                        "4bits"],
-        ["Qwen/Qwen1.5-7B-Chat-GPTQ-Int4",       "7B",     "GPTQ",                        "4bits"],
-        ["Qwen/Qwen1.5-14B-Chat-GPTQ-Int4",      "14B",    "GPTQ",                        "4bits"],
-        ["Qwen/Qwen1.5-32B-Chat-GPTQ-Int4",      "32B",    "GPTQ",                        "4bits"],
-        ["Qwen/Qwen1.5-72B-Chat-GPTQ-Int4",      "72B",    "GPTQ",                        "4bits"],
-        ["Qwen/Qwen1.5-110B-Chat-GPTQ-Int4",     "110B",   "GPTQ",                        "4bits"],
+        ["Qwen/Qwen1.5-0.5B-Chat-GPTQ-Int4",      "0.5B",   "GPTQ",                        "4bits",  "chat"],
+        ["Qwen/Qwen1.5-1.8B-Chat-GPTQ-Int4",      "1.8B",   "GPTQ",                        "4bits",  "chat"],
+        ["Qwen/Qwen1.5-4B-Chat-GPTQ-Int4",        "4B",     "GPTQ",                        "4bits",  "chat"],
+        ["Qwen/Qwen1.5-7B-Chat-GPTQ-Int4",        "7B",     "GPTQ",                        "4bits",  "chat"],
+        ["Qwen/Qwen1.5-14B-Chat-GPTQ-Int4",       "14B",    "GPTQ",                        "4bits",  "chat"],
+        ["Qwen/Qwen1.5-32B-Chat-GPTQ-Int4",       "32B",    "GPTQ",                        "4bits",  "chat"],
+        ["Qwen/Qwen1.5-72B-Chat-GPTQ-Int4",       "72B",    "GPTQ",                        "4bits",  "chat"],
+        ["Qwen/Qwen1.5-110B-Chat-GPTQ-Int4",      "110B",   "GPTQ",                        "4bits",  "chat"],
 
         # AWQ
-        ["Qwen/Qwen1.5-0.5B-Chat-AWQ",           "0.5B",   "AWQ",                         "4bits"],
-        ["Qwen/Qwen1.5-1.8B-Chat-AWQ",           "1.8B",   "AWQ",                         "4bits"],
-        ["Qwen/Qwen1.5-4B-Chat-AWQ",             "4B",     "AWQ",                         "4bits"],
-        ["Qwen/Qwen1.5-7B-Chat-AWQ",             "7B",     "AWQ",                         "4bits"],
-        ["Qwen/Qwen1.5-14B-Chat-AWQ",            "14B",    "AWQ",                         "4bits"],
-        ["Qwen/Qwen1.5-32B-Chat-AWQ",            "32B",    "AWQ",                         "4bits"],
-        ["Qwen/Qwen1.5-72B-Chat-AWQ",            "72B",    "AWQ",                         "4bits"],
-        ["Qwen/Qwen1.5-110B-Chat-AWQ",           "110B",   "AWQ",                         "4bits"],
+        ["Qwen/Qwen1.5-0.5B-Chat-AWQ",            "0.5B",   "AWQ",                         "4bits",  "chat"],
+        ["Qwen/Qwen1.5-1.8B-Chat-AWQ",            "1.8B",   "AWQ",                         "4bits",  "chat"],
+        ["Qwen/Qwen1.5-4B-Chat-AWQ",              "4B",     "AWQ",                         "4bits",  "chat"],
+        ["Qwen/Qwen1.5-7B-Chat-AWQ",              "7B",     "AWQ",                         "4bits",  "chat"],
+        ["Qwen/Qwen1.5-14B-Chat-AWQ",             "14B",    "AWQ",                         "4bits",  "chat"],
+        ["Qwen/Qwen1.5-32B-Chat-AWQ",             "32B",    "AWQ",                         "4bits",  "chat"],
+        ["Qwen/Qwen1.5-72B-Chat-AWQ",             "72B",    "AWQ",                         "4bits",  "chat"],
+        ["Qwen/Qwen1.5-110B-Chat-AWQ",            "110B",   "AWQ",                         "4bits",  "chat"],
+
+        # MoE
+        ["Qwen/Qwen1.5-MoE-A2.7B-Chat",           "A2.7B",  "",                            "",       "chat"],
+        ["Qwen/Qwen1.5-MoE-A2.7B-Chat-GPTQ-Int4", "A2.7B",  "GPTQ",                        "4bits",  "chat"],
+
+        # CodeQwen1.5
+        ["Qwen/CodeQwen1.5-7B-Chat",              "7B",     "",                            "",       "coder"],
+        ["Qwen/CodeQwen1.5-7B-Chat-AWQ",          "7B",     "AWQ",                         "4bits",  "coder"],
     ]
 
 
@@ -75,37 +74,56 @@ class Qwen1_5_GGUF(ChatGGUFModel):
     }
 
 
+class Qwen2(ChatModel):
+    family = "Qwen1.5"
+    model_kwargs = {}
+    header = ["name", "size", "quantization", "bits", "subtype"]
+    info = [
+        # name                                      size      quantization(_, GPTQ, AWQ)     bits,     subtype
+        # original
+        ["Qwen/Qwen2-0.5B-Instruct",                "0.5B",   "",                            "",       "chat"],
+        ["Qwen/Qwen2-1.5B-Instruct",                "1.5B",   "",                            "",       "chat"],
+        ["Qwen/Qwen2-7B-Instruct",                  "7B",     "",                            "",       "chat"],
+        ["Qwen/Qwen2-57B-A14B-Instruct",            "A14B",   "",                            "",       "chat"],
+        ["Qwen/Qwen2-72B-Instruct",                 "72B",    "",                            "",       "chat"],
+
+        # GPTQ-Int4
+        ["Qwen/Qwen2-0.5B-Instruct-GPTQ-Int4",      "0.5B",   "GPTQ",                        "4bits",   "chat"],
+        ["Qwen/Qwen2-1.5B-Instruct-GPTQ-Int4",      "1.5B",   "GPTQ",                        "4bits",   "chat"],
+        ["Qwen/Qwen2-7B-Instruct-GPTQ-Int4",        "7B",     "GPTQ",                        "4bits",   "chat"],
+        ["Qwen/Qwen2-57B-A14B-Instruct-GPTQ-Int4",  "A14B",   "GPTQ",                        "4bits",   "chat"],
+        ["Qwen/Qwen2-72B-Instruct-GPTQ-Int4",       "72B",    "GPTQ",                        "4bits",   "chat"],
+
+        # AWQ
+        ["Qwen/Qwen2-0.5B-Instruct-AWQ",             "0.5B",   "AWQ",                        "4bits",    "chat"],
+        ["Qwen/Qwen2-1.5B-Instruct-AWQ",             "1.5B",   "AWQ",                        "4bits",    "chat"],
+        ["Qwen/Qwen2-7B-Instruct-AWQ",               "7B",     "AWQ",                        "4bits",    "chat"],
+        ["Qwen/Qwen2-57B-A14B-Instruct-AWQ",         "A14B",   "AWQ",                        "4bits",    "chat"],
+        ["Qwen/Qwen2-72B-Instruct-AWQ",              "72B",    "AWQ",                        "4bits",    "chat"],
+    ]
+
+
 if __name__ == '__main__':
     import torch
 
     def transformers_test():
         from zerollama.microservices.inference.transformers_green.chat import run_test
+        from transformers import BitsAndBytesConfig
 
-        for model_name in ["Qwen/Qwen1.5-0.5B-Chat",
-                           "Qwen/Qwen1.5-0.5B-Chat-GPTQ-Int4",
-                           "Qwen/Qwen1.5-0.5B-Chat-AWQ"]:
-            run_test(model_name, stream=False)
-
-            print("memory_allocated:", torch.cuda.memory_allocated() / 1024 ** 2)
-
-        for model_name in ["Qwen/Qwen1.5-0.5B-Chat",
-                           "Qwen/Qwen1.5-0.5B-Chat-GPTQ-Int4",
-                           "Qwen/Qwen1.5-0.5B-Chat-AWQ"]:
-            run_test(model_name, stream=True)
+        for model_name, kwargs in [("Qwen/Qwen2-0.5B-Instruct", {}),
+                                   ("Qwen/Qwen2-0.5B-Instruct-GPTQ-Int4", {}),
+                                   ("Qwen/Qwen2-0.5B-Instruct-AWQ", {})]:
+            print(model_name)
+            run_test(model_name, stream=False, **kwargs)
 
             print("memory_allocated:", torch.cuda.memory_allocated() / 1024 ** 2)
 
-    def llama_cpp_test():
-        from zerollama.microservices.inference.llama_cpp_green.chat import run_test
-
-        for model_name in ["Qwen/Qwen1.5-0.5B-Chat-GGUF+*q8_0.gguf",
-                           "Qwen/Qwen1.5-0.5B-Chat-GGUF+*q2_k.gguf"]:
-            run_test(model_name, stream=False)
-
-        for model_name in ["Qwen/Qwen1.5-0.5B-Chat-GGUF+*q8_0.gguf",
-                           "Qwen/Qwen1.5-0.5B-Chat-GGUF+*q2_k.gguf"]:
-            run_test(model_name, stream=True)
+        for model_name, kwargs in [("Qwen/Qwen2-0.5B-Instruct", {}),
+                                   ("Qwen/Qwen2-0.5B-Instruct-GPTQ-Int4", {}),
+                                   ("Qwen/Qwen2-0.5B-Instruct-AWQ", {})]:
+            print(model_name)
+            run_test(model_name, stream=True, **kwargs)
+            print("memory_allocated:", torch.cuda.memory_allocated() / 1024 ** 2)
 
 
     transformers_test()
-    llama_cpp_test()

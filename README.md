@@ -4,18 +4,7 @@
 
 ## 使用zmq的大语言应用微服务框架
 
-### 知识点一
-[服务器端和客户端 server & client](https://github.com/noooop/zerollama/tree/main/tutorial/basis/0x01)
-
-### 知识点二
-[序列化和反序列化 serialize & unserialize](https://github.com/noooop/zerollama/tree/main/tutorial/basis/0x02)
-
-### 合起来
-[最小化可行产品 minimum viable product](https://github.com/noooop/zerollama/tree/main/tutorial/basis/0x03)
-
-相当于，扔两块木板到太平洋，看我们能到多远吧
-
-[更多教程](https://github.com/noooop/zerollama/tree/main/tutorial)
+[文档&教程](https://github.com/noooop/zerollama/tree/main/tutorial)
 
 [安装&配环境](./setup)
 
@@ -23,24 +12,73 @@
 1. [与大模型对话 客户端](./applications/chat_cli)
 2. [与大模型对话 webui](./applications/chat_webui)
 3. [检索增强生成 (RAG)](./applications/rag)
+4. [使用 vllm](./applications/chat_with_vllm)
+
+# 支持的推理框架
+## Chat 模型
+- [huggingface transformers](https://github.com/noooop/zerollama/tree/main/zerollama/microservices/inference/transformers_green)
+- [llama.cpp](https://github.com/noooop/zerollama/tree/main/zerollama/microservices/inference/llama_cpp_green)
+- [vllm (gevent)](https://github.com/noooop/zerollama/tree/main/zerollama/microservices/inference/vllm_green)
+
+## Retriever(Embeddings) 模型
+- [sentence transformer](https://github.com/noooop/zerollama/tree/main/zerollama/microservices/inference/sentence_transformer_green)
 
 # 支持的模型
 ## Chat 模型
 - [deepseek-llm](https://github.com/noooop/zerollama/tree/main/zerollama/models/deepseek)
 - [MiniCPM](https://github.com/noooop/zerollama/tree/main/zerollama/models/openbmb)
-- [Qwen1.5](https://github.com/noooop/zerollama/tree/main/zerollama/models/qwen)
+- [Qwen1.5](https://github.com/noooop/zerollama/tree/main/zerollama/models/qwen) [Qwen2](https://github.com/noooop/zerollama/tree/main/zerollama/models/qwen)
 - [Yi](https://github.com/noooop/zerollama/tree/main/zerollama/models/yi)
 - [llama3](https://github.com/noooop/zerollama/tree/main/zerollama/models/llama) [llama3zh](https://github.com/noooop/zerollama/tree/main/zerollama/models/llama)
 - [XVERSE](https://github.com/noooop/zerollama/tree/main/zerollama/models/xverse)
+- [Yuan](https://github.com/noooop/zerollama/tree/main/zerollama/models/yuan)
+- [Mistral](https://github.com/noooop/zerollama/tree/main/zerollama/models/mistral)
+- [GLM-4](https://github.com/noooop/zerollama/tree/main/zerollama/models/thudm)
+- [bilibili Index](https://github.com/noooop/zerollama/tree/main/zerollama/models/bilibili)
 
 ## Retriever(Embeddings) 模型
 - [bge-retrieval](https://github.com/noooop/zerollama/tree/main/zerollama/models/baai)
 - [bce-embedding](https://github.com/noooop/zerollama/tree/main/zerollama/models/bce)
 - [uniem(m3e)](https://github.com/noooop/zerollama/tree/main/zerollama/models/uniem)
+- [acge](https://github.com/noooop/zerollama/tree/main/zerollama/models/aspire)
 
 ## Reranker 模型
 - [bge-reranker](https://github.com/noooop/zerollama/tree/main/zerollama/models/baai)
 - [bce-reranker](https://github.com/noooop/zerollama/tree/main/zerollama/models/bce)
+
+## Vision-Language Multimodal 模型 
+- [CogVLM2](https://github.com/noooop/zerollama/tree/main/zerollama/models/thudm)
+- [MiniCPM-V](https://github.com/noooop/zerollama/tree/main/zerollama/models/openbmb)
+- [DeepSeek-VL](https://github.com/noooop/zerollama/tree/main/zerollama/models/deepseek)
+- [Florence-2](https://github.com/noooop/zerollama/tree/main/zerollama/models/florence)
+
+## Super Resolution 模型 
+- [APISR](https://github.com/noooop/zerollama/tree/main/zerollama/models/apisr)
+
+## Optical Character Recognition 全家桶
+### Text Line Detection
+- [surya_tld](https://github.com/noooop/zerollama/tree/main/zerollama/models/surya)
+- [ragflow/deepdoc_tld](https://github.com/noooop/zerollama/tree/main/zerollama/models/ragflow)
+- [PaddleOCR_tld](https://github.com/noooop/zerollama/tree/main/zerollama/models/paddleocr)
+
+### Text Recognition
+- [surya_tr](https://github.com/noooop/zerollama/tree/main/zerollama/models/surya)
+- [ragflow/deepdoc_tr](https://github.com/noooop/zerollama/tree/main/zerollama/models/ragflow)
+- [PaddleOCR_tr](https://github.com/noooop/zerollama/tree/main/zerollama/models/paddleocr)
+
+### Document Layout Analysis
+- [moured/YOLOv10-Document-Layout-Analysis](https://github.com/noooop/zerollama/tree/main/zerollama/models/moured)
+- [360LayoutAnalysis](https://github.com/noooop/zerollama/tree/main/zerollama/models/qihoo360)
+- [surya_dla](https://github.com/noooop/zerollama/tree/main/zerollama/models/surya)
+- [ragflow/deepdoc_dla](https://github.com/noooop/zerollama/tree/main/zerollama/models/ragflow)
+- [PaddleOCR_dla](https://github.com/noooop/zerollama/tree/main/zerollama/models/paddleocr)
+
+### Reading Order Detection
+- [surya_rod](https://github.com/noooop/zerollama/tree/main/zerollama/models/surya)
+
+### Table Structure Recognition
+- [ragflow/deepdoc_tsr](https://github.com/noooop/zerollama/tree/main/zerollama/models/ragflow)
+- [PaddleOCR_tsr](https://github.com/noooop/zerollama/tree/main/zerollama/models/paddleocr)
 
 ## Contribute
 贡献代码请交逻辑清晰思路、简单直接的代码、不要有魔法，甚至可以牺牲一部分性能换取可读性

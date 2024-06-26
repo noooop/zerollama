@@ -34,7 +34,7 @@ class XVERSE_GGUF(ChatGGUFModel):
             "xverse/XVERSE-65B-Chat-GGUF",
         ],
         "filename": [
-            "*fp16.gguf"
+            "*fp16.gguf",
             "*q8_0.gguf",
             "*q6_k.gguf",
             "*q5_k_m.gguf",

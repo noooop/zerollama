@@ -3,7 +3,7 @@
 from zerollama.core.config.main import config_setup
 
 
-def download(model_name=None, repo_id=None, filename=None):
+def download(model_name=None, repo_id=None, filename=None, model_class=None):
     if model_name is not None:
         repo_id, filename = model_name.split("+")
 

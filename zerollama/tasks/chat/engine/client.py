@@ -1,4 +1,5 @@
 
+import inspect
 from zerollama.core.framework.nameserver.client import ZeroClient
 from zerollama.tasks.chat.protocol import PROTOCOL
 from zerollama.tasks.chat.protocol import ChatCompletionRequest, ChatCompletionResponse
@@ -13,48 +14,51 @@ class ChatClient(ZeroClient):
     def __init__(self, nameserver_port=None):
         ZeroClient.__init__(self, self.protocol, nameserver_port)
 
-    def chat(self, name, messages, options=None):
+    def chat(self, name, messages, stream=False, options=None):
         method = "inference"
         data = {"model": name,
                 "messages": messages,
                 "options": options or dict(),
-                "stream": False}
+                "stream": stream}
         if CLIENT_VALIDATION:
             data = ChatCompletionRequest(**data).dict()
 
-        rep = self.query(name, method, data)
-        if rep is None:
+        response = self.query(name, method, data)
+        if response is None:
+            raise RuntimeError(f"Chat [{name}] server not found.")
+
+        if not inspect.isgenerator(response):
+            if response.state != "ok":
+                raise RuntimeError(f"Chat [{name}] error, with error msg [{response.msg}]")
+
+            rep = ChatCompletionResponse(**response.msg)
             return rep
+        else:
+            def generator():
+                for rep in response:
+                    if rep is None:
+                        raise RuntimeError(f"Chat [{name}] server not found.")
 
-        if rep.state == "ok":
-            rep.msg = ChatCompletionResponse(**rep.msg)
-        return rep
+                    if rep.state != "ok":
+                        raise RuntimeError(f"Chat [{name}] error, with error msg [{rep.msg}]")
 
-    def stream_chat(self, name, messages, options=None, **kwargs):
-        method = "inference"
-        data = {"model": name,
-                "messages": messages,
-                "options": options or dict(),
-                "stream": True}
-        if CLIENT_VALIDATION:
-            data = ChatCompletionRequest(**data).dict()
+                    if rep.msg["finish_reason"] is None:
+                        rep = ChatCompletionStreamResponse(**rep.msg)
+                    else:
+                        rep = ChatCompletionStreamResponseDone(**rep.msg)
 
-        for rep in self.stream_query(name, method, data, **kwargs):
-            if rep is None:
-                raise RuntimeError(f"Chat [{name}] server not found.")
+                    yield rep
+            return generator()
 
-            if rep.state == "ok":
-                if rep.msg["finish_reason"] is None:
-                    rep.msg = ChatCompletionStreamResponse(**rep.msg)
-                else:
-                    rep.msg = ChatCompletionStreamResponseDone(**rep.msg)
-            else:
-                raise RuntimeError(f"Chat [{name}] error, with error msg [{rep.msg}]")
+    def stream_chat(self, name, messages, options=None):
+        for rep in self.chat(name, messages, stream=True, options=options):
             yield rep
 
 
 if __name__ == '__main__':
+    import shortuuid
     from pprint import pprint
+    from gevent.pool import Pool
     CLIENT_VALIDATION = False
 
     prompt = "给我介绍一下大型语言模型。"
@@ -79,10 +83,35 @@ if __name__ == '__main__':
     print("="*80)
     print("stream == False")
     response = client.chat(model_name, messages)
-    print(response.msg.content)
-    print("response_length:", response.msg.completion_tokens)
+    print(response.content)
+    print("response_length:", response.completion_tokens)
 
     print("="*80)
     print("stream == True")
     for msg in client.stream_chat(model_name, messages):
         pprint(msg)
+
+    print("=" * 10)
+    print("Test asynchronous")
+
+    def worker(prompt):
+        request_id = f"{shortuuid.random(length=22)}"
+        messages = [
+            {"role": "user", "content": prompt}
+        ]
+        generated_text = ""
+        for output in client.stream_chat(model_name, messages):
+            if not isinstance(output, ChatCompletionStreamResponseDone):
+                generated_text += output.delta_content
+                print(f"ID:{request_id}, Generated text: {generated_text!r}")
+
+    prompts = [
+        "Hello, my name is",
+        "The president of the United States is",
+        "The capital of France is",
+        "The future of AI is",
+    ]
+
+    p = Pool(32)
+    for x in p.imap_unordered(worker, prompts*100):
+        pass

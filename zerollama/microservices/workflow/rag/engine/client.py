@@ -1,3 +1,5 @@
+
+import inspect
 from zerollama.core.framework.nameserver.client import ZeroClient
 from zerollama.microservices.workflow.rag.protocol import PROTOCOL
 from zerollama.microservices.workflow.rag.protocol import RAGRequest, RAGResponse
@@ -32,18 +34,19 @@ class RAGClient(ZeroClient):
         if CLIENT_VALIDATION:
             data = RAGRequest(**data).dict()
 
-        if not stream:
-            rep = self.query(name, method, data)
-            if rep is None:
+        response = self.query(name, method, data)
+
+        if not inspect.isgenerator(response):
+            if response is None:
                 raise RuntimeError("RAG server not found.")
 
-            if rep.state != "ok":
-                raise RuntimeError(f"RAG error, with error msg [{rep.msg}]")
+            if response.state != "ok":
+                raise RuntimeError(f"RAG error, with error msg [{response.msg}]")
 
-            return RAGResponse(**rep.msg)
+            return RAGResponse(**response.msg)
         else:
             def generation():
-                for rep in self.stream_query(name, method, data):
+                for rep in response:
                     if rep is None:
                         raise RuntimeError(f"RAG [{name}] server not found.")
 
@@ -78,7 +81,7 @@ if __name__ == '__main__':
     print(client.default_qa_prompt_tmpl().msg)
 
     response = client.rag(question="作者是谁？",
-                          chat_model="Qwen/Qwen1.5-0.5B-Chat-AWQ",
+                          chat_model="Qwen/Qwen2-0.5B-Instruct-AWQ",
                           retriever_model="BAAI/bge-m3",
                           reranker_model="BAAI/bge-reranker-v2-m3",
                           collection="test_collection",
@@ -94,7 +97,7 @@ if __name__ == '__main__':
     print("stream=True")
 
     response = client.rag(question="作者是谁？",
-                          chat_model="Qwen/Qwen1.5-0.5B-Chat-AWQ",
+                          chat_model="Qwen/Qwen2-0.5B-Instruct-AWQ",
                           retriever_model="BAAI/bge-m3",
                           reranker_model="BAAI/bge-reranker-v2-m3",
                           collection="test_collection",
