@@ -1,5 +1,7 @@
 from zerollama.microservices.vector_database.protocol import VectorDatabase_ENGINE_CLASS
 from zerollama.microservices.vector_database.engine.client import VectorDatabaseClient
+from zerollama.microservices.retriever_database.protocol import RetrieverDatabase_ENGINE_CLASS
+from zerollama.microservices.retriever_database.engine.client import RetrieverDatabaseClient
 from zerollama.microservices.workflow.rag.protocol import RAG_ENGINE_CLASS
 from zerollama.microservices.workflow.rag.offline import text2vec
 from zerollama.microservices.entrypoints.protocol import Entrypoint_ENGINE_CLASS
@@ -27,8 +29,17 @@ class Deploy(DeployBase):
                                           engine_kwargs={"server_class": VectorDatabase_ENGINE_CLASS,
                                                          "class_name": class_name,
                                                          "collection": collection,
-                                                         "embedding_model": embedding_model.name
-                                                         })
+                                                         "embedding_model": embedding_model.name})
+
+    def retriever_database_init(self):
+        retriever_model = self.config.retriever_database.retriever_model
+
+        for collection in self.config["documents"]["collections"]:
+            db_name = RetrieverDatabaseClient.get_db_name(collection, retriever_model)
+            self.manager_client.start(name=db_name,
+                                      engine_kwargs={"server_class": RetrieverDatabase_ENGINE_CLASS,
+                                                     "retriever_model": retriever_model,
+                                                     "collection": collection})
 
     def rag_server_init(self):
         self.manager_client.start(name="rag",
@@ -52,6 +63,7 @@ class Deploy(DeployBase):
 
         self.processing_document()
         self.vector_database_init()
+        self.retriever_database_init()
         self.rag_server_init()
         self.http_entrypoint_init()
 

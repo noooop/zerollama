@@ -15,6 +15,9 @@ reranker:
 vector_database:
   backend: "BruteForceVectorDatabase"
 
+retriever_database:
+  retriever_model: "BM25s"
+
 documents:
   collections: ["test_collection"]
 
