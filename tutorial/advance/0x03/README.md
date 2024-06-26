@@ -37,30 +37,31 @@ llm模型推理的时候，每个 token 的中间结果，都要占用一小块�
 
 > 更多长上下文相关内容请参考 [The What, Why, and How of Context Length Extension Techniques in Large Language Models -- A Detailed Survey](https://arxiv.org/abs/2401.07872)
 
-5. 24G 的 4090 实际支持最大上下文，以静态分配 kv cache 的 llama.cpp 为例
+5. 24G 的 4090 实际支持最大上下文，以静态分配 kv cache 的 llama.cpp 为例（前文介绍了如何用二分法实测llama.cpp 最大 kv cache
 
-| 模型   | w8kv16理论 | w4kv16理论 | q8_0   | q6_k   | q5_k_m | q5_0   | q4_k_m | q4_0   | q3_k_m | q2_k   |
-|------|----------|----------|--------|--------|--------|--------|--------|--------|--------|--------|
-| 0.5B | 257424   | 259784   | 180468 | 181236 | 181501 | 181501 | 181744 | 181744 | 182009 | 182253 |
-| 1.8B | 123312   | 127192   | 98808  | 100082 | 100863 | 101109 | 101355 | 101627 | 102123 | 102646 |
-| 4B   | 54220    | 58567    | 45565  | 47609  | 48376  | 48376  | 49131  | 49395  | 49901  | 50680  |
-| 7B   | 35612    | 42382    | 28398  | 31469  | 32757  | 32757  | 33780  | 34290  | 35060  | 36344  |
-| 14B  | 15114    | 23285    | 11250  | 14063  | 15846  | 16617  | 17395  | 18431  | 19186  | 20479  |
-| 32B  | oom      | 37778    | oom    | oom    | 5370   | 7158   | 15086  | 18419  | 25852  | 36076  |
+> | 模型   | w8kv16理论 | w4kv16理论 | q8_0   | q6_k   | q5_k_m | q5_0   | q4_k_m | q4_0   | q3_k_m | q2_k   |
+> |------|----------|----------|--------|--------|--------|--------|--------|--------|--------|--------|
+> | 0.5B | 257424   | 259784   | 180468 | 181236 | 181501 | 181501 | 181744 | 181744 | 182009 | 182253 |
+> | 1.8B | 123312   | 127192   | 98808  | 100082 | 100863 | 101109 | 101355 | 101627 | 102123 | 102646 |
+> | 4B   | 54220    | 58567    | 45565  | 47609  | 48376  | 48376  | 49131  | 49395  | 49901  | 50680  |
+> | 7B   | 35612    | 42382    | 28398  | 31469  | 32757  | 32757  | 33780  | 34290  | 35060  | 36344  |
+> | 14B  | 15114    | 23285    | 11250  | 14063  | 15846  | 16617  | 17395  | 18431  | 19186  | 20479  |
+> | 32B  | oom      | 37778    | oom    | oom    | 5370   | 7158   | 15086  | 18419  | 25852  | 36076  |
 
-- 7B模型，加载4bit模型后，还有差不多3万 kv cache，1k上下文可以同时服务30个用户，8k上下文同时服务4个用户
-- 14B模型，加载4bit模型后，还有差不多1.5万 kv cache，1k上下文可以同时服务15个用户，8k上下文同时服务2个用户
-- 32B模型，加载4bit模型后，还有差不多1.5万 kv cache，1k上下文可以同时服务15个用户，8k上下文同时服务2个用户 (GQA 使得 32B 成为 qwen1.5 系列性价比最高的模型)
+- 7B模型，加载4bit模型后，参考q4_k_m、q4_0模型，还有差不多3万 kv cache，1k上下文可以同时服务30个用户，8k上下文同时服务4个用户
+- 14B模型，加载4bit模型后，参考q4_k_m、q4_0模型，还有差不多1.5万 kv cache，1k上下文可以同时服务15个用户，8k上下文同时服务2个用户
+- 32B模型，加载4bit模型后，参考q4_k_m、q4_0模型，还有差不多1.5万 kv cache，1k上下文可以同时服务15个用户，8k上下文同时服务2个用户 (GQA 使得 32B 成为 qwen1.5 系列性价比最高的模型)
+- (上面说的 kv cache 数，考虑到模型还有运行时中间变量占用显存，实际还不一定能分配的出来
 
 6. 能不能超卖，代价是什么
 - 用户不可能每时每刻都打满最长的上下文，统计请求上下文长度，适当的超卖，可以提高资源利用率
 - 比如标称支持8k上下文，90%请求上下文长度4K，两倍超卖也可以让90%的请求满意。（如何制定 service-level agreement (SLA) 不在本文讨论范围内
 - 如果不够幸运，推理写满了 kv cache。 肯定要有倒霉蛋请求释放 kv cache，让其他请求继续执行。这个过程称之为 抢占 (Preemption)。只要超卖就会出现抢占。
-- 只要显存分配的总 kv cache 大于最长请求上下文长度，通过不断地抢占和华容道，一定能把所有请求都顺利回复，就是可能延迟有点高，让用户不太满意。
+- 只要显存分配的总 kv cache 大于最长请求上下文长度，通过不断地抢占和华容道，一定能把所有请求都顺利回复，就是可能中途卡住，让用户不太满意。
 - 以 vllm 为例，有两种抢占方式，recompute 重算倒霉蛋请求、swap 将倒霉蛋请求 暂时交换到cpu内存。
 - ~~暂时交换到cpu内存肯定比重算恢复快，cpu内存也比较便宜，有条件尽量用swap~~
-- 后续测试发现，交换到cpu内存是pcie带宽瓶颈。相比之下算力非常充足，recompute 可能更快。默认 recompute 还是有道理的。
-- （实际上还有一种方式，只要抢占就立马回复用户，finish_reason写length肯定会被认为有bug，那就finish_reason写preemption，侮辱性极强，用户看到应该再也不会用你们的产品了
+- （还需要更多实验验证）~~后续测试发现，交换到cpu内存是pcie带宽瓶颈。相比之下算力非常充足，recompute 可能更快。默认 recompute 还是有道理的。~~
+- （实际上还有一种方式，只要抢占就立马回复用户，finish_reason 写 length 肯定会被认为有 bug，那就 finish_reason 写 preemption，侮辱性极强，用户看到应该再也不会用你们的产品了
 - 如果抢占比例高，会产生系统颠簸。颠簸（Thrashing）：在分页系统中，如果进程频繁地在内存和外存之间移动，导致大量的缺页中断，这称为颠簸，降低了系统性能。 
 - 所以，超卖能提高提高资源利用率，代价是抢占导致部分用户延迟变高，甚至引起系统颠簸。
 
@@ -205,11 +206,11 @@ I’ll teach you differences. - William Shakespeare, King Lear
 
 对于 线性层
 - 解码 （Decoding） 阶段，一个请求计算一个 token。解码阶段倾向于小批次，低延迟
-- 预填充 (Prefill) 阶段，一般都一个请求计算一个 token 多很多。预填充阶段倾向于大批次，高吞吐
+- 预填充 (Prefill) 阶段，一般都比一个请求一个 token 多很多。预填充阶段倾向于大批次，高吞吐
 
 所以：
 - 搞简单一点，使用连续批处理(Continuous batching)时，对SDPA进行分组，解码使用 FlashDecoding，预填充使用 FlashAttention。
-  - vllm 使用 [attn_metadata](https://github.com/vllm-project/vllm/blob/main/vllm/attention/backends/abstract.py#L56) 区分 prefill 和 decode 使用不同 attention 实现， 
+  - vllm 使用 [attn_metadata](https://github.com/vllm-project/vllm/blob/main/vllm/attention/backends/abstract.py#L56) 区分 prefill 和 decode，使用不同 attention 实现， 
 - 搞复杂一点，将预填充和解码安排在不同的显卡上，再也不用为平衡预填充和解码的延迟设计一个批次大小，甚至可以单独控制预填充和解码占的显卡数量。
   - 更多细节参考 [DistServe: Disaggregating Prefill and Decoding for Goodput-optimized Large Language Model Serving](https://arxiv.org/abs/2401.09670)
 
@@ -388,7 +389,7 @@ else:
 
 ### 7.1.4 小结
 - vllm 启动开销比较低，相同模型都比 HF 快一些
-- 轻负载 (1-8) 建议使用量化模型
+- 轻负载 (并发1-8 甚至 1-32) 建议使用量化模型
   - 4bit 7B模型理论速度 3ms，天然比 bf16 快；bf16 理论速度 13ms 对比量化模型天然就慢一截
   - vllm GPTQ 使用 Marlin kernel 速度是最快的，Marlin kernel 调教也偏轻负载
   - vllm 不支持 exllama_v2，没有看到 exllama_v2 和 Marlin 正面对决比较遗憾 
@@ -496,7 +497,7 @@ else:
 
 4. 上图采样了并发用户量为1、2、4、8、16、32、64、128，vllm GPTQ 模型解码 （Decoding） 输出长度为 512 时，延迟和吞吐关系。
 - 研究曲线走势
-  - 14B和32B模型，并发数继续增加到64、128，kv cache 很快会被写满，抢占，实际并发为32
+  - 14B和32B模型，并发数继续增加到64、128，kv cache 很快会被写满，抢占，实际并发为32（64、128 跟 32的点挨在一起
   - 从曲线前段趋势推断，平衡延迟和吞吐的最优并发用户数从64往32移动
 - 忘掉不切实际的峰值吞吐吧，上下文长度1K时，24G的4090控制并发到32以下，这时延迟非常低，速度也非常稳定，用户会非常满意。
 - 对于一张一万五的游戏卡，不要要求太多
@@ -506,9 +507,9 @@ else:
 
 <img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/vllm/latency-throughput/preemption_mode.png?raw=true" width="800">
 
-没啥区别，甚至更糟糕
-- llm 模型推理带宽瓶颈，swap 走pcie总线也带宽瓶颈，显存内部带宽比pcie总线快多了。
-- 相比之下算力非常充足，recompute 可能更快
+~~没啥区别，甚至更糟糕~~（还需要更多实验验证）
+~~- llm 模型推理带宽瓶颈，swap 走pcie总线也带宽瓶颈，显存内部带宽比pcie总线快多了。~~
+~~- 相比之下算力非常充足，recompute 可能更快~~
 
 ### 7.3. Chunked Fill
 
@@ -516,6 +517,8 @@ else:
 
 那就开启 vllm chunked_prefill， max_num_seqs 设为 32，max_num_batched_tokens 设为 64 给 预填充 (Prefill) 阶段 的请求留一些空间
 
+> WARNING vLLM supports an experimental feature chunked prefill. experimental 的意思是暂时还不要在线上使用。
+> 
 > WARNING vllm 开启 chunked_prefill 会随机出现 RuntimeError: CUDA error: an illegal memory access was encountered。[复现代码](https://github.com/noooop/zerollama/blob/v0.4/test/debug/vllm_chunked_fill.py)
 
 ```
@@ -585,7 +588,7 @@ engine_args = EngineArgs(model=model_name,
 这种强行限制并发数至32，并发64、128的曲线被强行摁到32，减少系统颠簸，个人觉得非常好。
 
 ## 7.4. 遗憾
-- 因为 4090 24G显存限制，没法验证 bf16 在极限吞吐下优于量化模型。为了达成极限吞吐，延迟估计非常感人
+- 因为 4090 24G显存限制，没法验证 bf16 在极限吞吐下优于量化模型。（为了达成极限吞吐，延迟估计非常感人
 - 虽然 vllm 支持 deepspeedfp， 但还需要 json 文件的quantization_config，非常麻烦 
 
 # 8. VLLM Gevent 实际推理速度测试
@@ -612,7 +615,7 @@ VLLM 异步使用 asyncio，而我个人喜欢用 gevent，所以移植了一个
 | 14B overhead     | 1.46  | 1.47  | 1.52  | 1.63  | 2.52  | 3.88  | 2.68  |
 | 32B overhead     | 1.49  | 1.50  | 1.57  | 2.64  | 6.93  | 6.02  | 32.43 |
 
-- 从服务器到客户端，还有gevent线程池等所有加起来开销1~3ms，看起来还不错
+- 从客户端-服务器-客户端，流式返回，还有gevent线程池等所有开销加起来大部分1~3ms，看起来还不错
 - 4090 部署 32B模型，16并发各种开销已经来到6ms，很明显撑不起来
 
 再来看看延迟曲线
@@ -641,7 +644,7 @@ VLLM 异步使用 asyncio，而我个人喜欢用 gevent，所以移植了一个
 
 - 并发数为 32
 - 明显14B、32B模型撑不住。
-- 不是很清楚，为什么 vllm 推理 0.5B 模型 也会有30ms的峰，按需分配显存？ （上面只展示 7B 的延迟曲线，图太多根本展示不完
+- 不是很清楚，为什么 vllm 推理 0.5B 模型 也会有30ms的峰，按需分配显存？ 
 
 <img src="https://github.com/noooop/noooop.github.io/blob/main/benchmarking/vllm-gevent/concurrent-64.png?raw=true" width="800">
 
