@@ -41,15 +41,45 @@ def rag(question, chat_model, retriever_model, reranker_model, collection,
         return RAGResponse(**r.json())
 
 
+def chat_models():
+    r = requests.get(base_url + "/api/chat_models")
+    return r.json()
+
+
+def retriever_models():
+    r = requests.get(base_url + "/api/retriever_models")
+    return r.json()
+
+
+def reranker_models():
+    r = requests.get(base_url + "/api/reranker_models")
+    return r.json()
+
+
+def collections():
+    r = requests.get(base_url + "/api/vector_databases/collections")
+    return r.json()
+
+
 if __name__ == '__main__':
     from inspect import isgenerator
     from pprint import pprint
 
+    chat_model = chat_models()["models"][0]['name']
+    retriever_model = retriever_models()["models"][0]['name']
+    reranker_model = reranker_models()["models"][0]['name']
+    collection = collections()["collections"][0]['msg']["collection"]
+
+    print("chat_model:", chat_model)
+    print("retriever_model:", retriever_model)
+    print("reranker_model:", reranker_model)
+    print("collection:", collection)
+
     response = rag(question="作者是谁？",
-                   chat_model="Qwen/Qwen1.5-0.5B-Chat-AWQ",
-                   retriever_model="BAAI/bge-m3",
-                   reranker_model="BAAI/bge-reranker-v2-m3",
-                   collection="test_collection",
+                   chat_model=chat_model,
+                   retriever_model=retriever_model,
+                   reranker_model=reranker_model,
+                   collection=collection,
                    stream=False,
                    return_references=True)
     pprint(response.answer.dict())
@@ -62,10 +92,10 @@ if __name__ == '__main__':
     print("stream=True")
 
     response = rag(question="作者是谁？",
-                   chat_model="Qwen/Qwen1.5-0.5B-Chat-AWQ",
-                   retriever_model="BAAI/bge-m3",
-                   reranker_model="BAAI/bge-reranker-v2-m3",
-                   collection="test_collection",
+                   chat_model=chat_model,
+                   retriever_model=retriever_model,
+                   reranker_model=reranker_model,
+                   collection=collection,
                    stream=True,
                    return_references=True)
 

@@ -48,11 +48,11 @@ def rag(question, chat_model, retriever_model, reranker_model, collection,
 
     if not stream:
         response = chat_client.chat(chat_model, messages)
-        return response.msg, references
+        return response, references
     else:
         def generation():
             for rep in chat_client.stream_chat(chat_model, messages):
-                yield rep.msg
+                yield rep
 
         return generation(), references
 
@@ -61,7 +61,7 @@ if __name__ == '__main__':
     from inspect import isgenerator
 
     response, references = rag(question="作者是谁？",
-                               chat_model="Qwen/Qwen1.5-0.5B-Chat-AWQ",
+                               chat_model="Qwen/Qwen2-0.5B-Instruct-AWQ",
                                retriever_model="BAAI/bge-m3",
                                reranker_model="BAAI/bge-reranker-v2-m3",
                                collection="test_collection")
@@ -69,7 +69,7 @@ if __name__ == '__main__':
     print(response.content)
 
     response, references = rag(question="作者是谁？",
-                               chat_model="Qwen/Qwen1.5-0.5B-Chat-AWQ",
+                               chat_model="Qwen/Qwen2-0.5B-Instruct-AWQ",
                                retriever_model="BAAI/bge-m3",
                                reranker_model="BAAI/bge-reranker-v2-m3",
                                collection="test_collection",

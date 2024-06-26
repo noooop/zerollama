@@ -98,7 +98,6 @@ async def chat(req: ChatCompletionRequest):
                     return JSONResponse(status_code=404,
                                         content={"error": f"model '{req.model}' not found"})
 
-                rep = rep.msg
                 if isinstance(rep, ChatCompletionStreamResponseDone):
                     response = json.dumps({
                         "model": req.model,
@@ -124,7 +123,6 @@ async def chat(req: ChatCompletionRequest):
         if rep is None:
             return JSONResponse(status_code=404,
                                 content={"error": f"model '{req.model}' not found"})
-        rep = rep.msg
         content = rep.content
         response = {"model": req.model,
                     "created_at": get_timestamp(),
