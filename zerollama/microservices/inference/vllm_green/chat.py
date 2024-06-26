@@ -79,6 +79,7 @@ class VLLMChat(ChatInterface):
 
     def chat(self, messages, stream=False, options=None):
         options = options or {}
+        options["max_tokens"] = options.get("max_tokens", 256)
         skip_empty_delta_text = options.pop("skip_empty_delta_text", True)
         request_id = f"{shortuuid.random(length=22)}"
         sampling_params = self.SamplingParams(**options)
