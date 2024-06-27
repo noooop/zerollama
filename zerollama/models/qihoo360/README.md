@@ -1,4 +1,27 @@
-# qihoo360 360LayoutAnalysis
+# qihoo360 
+
+## 360Zhinao
+
+###  TL;DR
+360智脑大模型特点如下：
+- **基础模型**：采用 3.4 万亿 Tokens 的高质量语料库训练，以中文、英文、代码为主，在相关基准评测中，同尺寸有竞争力。
+- **对话模型**：具有强大的对话能力，开放4K、32K、360K三种不同文本长度。据了解，360K（约50万字）是当前国产开源模型文本长度最长的。
+
+### News
+- [2024.04.12] 我们发布了360Zhinao-7B 1.0版本，同时开放Base模型和4K、32K、360K三种文本长度的Chat模型。
+
+### License Agreement
+
+本仓库源码遵循开源许可证Apache 2.0。
+
+360智脑开源模型支持商用，若需将本模型及衍生模型用于商业用途，请通过邮箱(g-zhinao-opensource@360.cn)联系进行申请， 具体许可协议请见[《360智脑开源模型许可证》](https://github.com/Qihoo360/360zhinao/blob/main/360%E6%99%BA%E8%84%91%E5%BC%80%E6%BA%90%E6%A8%A1%E5%9E%8B%E8%AE%B8%E5%8F%AF%E8%AF%81.txt)。
+
+The source code of this repository follows the open-source license Apache 2.0.
+
+360​Zhinao open-source models support commercial use. If you wish to use these models or continue training them for commercial purposes, please contact us via email (g-zhinao-opensource@360.cn) to apply. For the specific license agreement, please see [<<360 Zhinao Open-Source Model License>>](https://github.com/Qihoo360/360zhinao/blob/main/360%E6%99%BA%E8%84%91%E5%BC%80%E6%BA%90%E6%A8%A1%E5%9E%8B%E8%AE%B8%E5%8F%AF%E8%AF%81.txt).
+
+
+## 360LayoutAnalysis
 
 ### setup
 
