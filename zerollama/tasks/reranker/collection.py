@@ -2,9 +2,10 @@
 
 from zerollama.models.baai.reranker import BGEReranker
 from zerollama.models.bce.reranker import BCEReranker
+from zerollama.models.jina.reranker import JinaReranker
 
 
-MODELS = [BGEReranker, BCEReranker]
+MODELS = [BGEReranker, BCEReranker, JinaReranker]
 MODELS_NAME_MAP = dict()
 MODELS_FAMILY_MAP = {m.family: m for m in MODELS}
 

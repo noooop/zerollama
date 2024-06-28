@@ -46,6 +46,7 @@
 ## Reranker 模型
 - [bge-reranker](https://github.com/noooop/zerollama/tree/main/zerollama/models/baai)
 - [bce-reranker](https://github.com/noooop/zerollama/tree/main/zerollama/models/bce)
+- [jina-reranker-v2](https://github.com/noooop/zerollama/tree/main/zerollama/models/jina)
 
 ## Vision-Language Multimodal 模型 
 - [CogVLM2](https://github.com/noooop/zerollama/tree/main/zerollama/models/thudm)
