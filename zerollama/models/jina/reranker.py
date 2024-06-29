@@ -14,8 +14,6 @@ class JinaReranker(Reranker):
 
 
 if __name__ == '__main__':
-    model_name = "BAAI/bge-reranker-v2-m3"
-
     for model_name, *_ in JinaReranker.info:
         model = JinaReranker.get_model(model_name, local_files_only=False)
         model.load()
