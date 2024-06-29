@@ -70,4 +70,4 @@ class SuryaDocumentLayoutAnalysis(DocumentLayoutAnalysisInterface):
             t["id"] = self.label2id[bbox.label]
             bboxes.append(t)
 
-        return DocumentLayoutAnalysisResult(bboxes=bboxes)
+        return DocumentLayoutAnalysisResult(bboxes=bboxes, class_names=self.labels)
