@@ -36,6 +36,7 @@
 - [Mistral](https://github.com/noooop/zerollama/tree/main/zerollama/models/mistral)
 - [GLM-4](https://github.com/noooop/zerollama/tree/main/zerollama/models/thudm)
 - [bilibili Index](https://github.com/noooop/zerollama/tree/main/zerollama/models/bilibili)
+- [360Zhinao](https://github.com/noooop/zerollama/tree/main/zerollama/models/qihoo360)
 
 ## Retriever(Embeddings) 模型
 - [bge-retrieval](https://github.com/noooop/zerollama/tree/main/zerollama/models/baai)
@@ -47,6 +48,7 @@
 - [bge-reranker](https://github.com/noooop/zerollama/tree/main/zerollama/models/baai)
 - [bce-reranker](https://github.com/noooop/zerollama/tree/main/zerollama/models/bce)
 - [jina-reranker-v2](https://github.com/noooop/zerollama/tree/main/zerollama/models/jina)
+- [360Zhinao-1.8B-Reranking](https://github.com/noooop/zerollama/tree/main/zerollama/models/qihoo360)
 
 ## Vision-Language Multimodal 模型 
 - [CogVLM2](https://github.com/noooop/zerollama/tree/main/zerollama/models/thudm)

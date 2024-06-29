@@ -20,6 +20,21 @@ The source code of this repository follows the open-source license Apache 2.0.
 
 360​Zhinao open-source models support commercial use. If you wish to use these models or continue training them for commercial purposes, please contact us via email (g-zhinao-opensource@360.cn) to apply. For the specific license agreement, please see [<<360 Zhinao Open-Source Model License>>](https://github.com/Qihoo360/360zhinao/blob/main/360%E6%99%BA%E8%84%91%E5%BC%80%E6%BA%90%E6%A8%A1%E5%9E%8B%E8%AE%B8%E5%8F%AF%E8%AF%81.txt).
 
+## 360Zhinao-1.8B-Reranking
+
+###  TL;DR
+The **360Zhinao-1.8B-Reranking** model utilizes the self-developed 360Zhinao-1.8b-Base model as its foundation. Through iterative discovery and resolution of the following technical issues, it continuously stimulates the world knowledge inherent in the large model during the pre-training phase, better bridging the gap between generative models and discriminative tasks.
+
+### News
+- 2024-05-24 发布 360Zhinao-1.8B-Reranking
+
+### TODO
+ModuleNotFoundError: No module named 'transformers_modules.qihoo360.360Zhinao-1'
+
+### License
+The source code of this repository follows the open-source license Apache 2.0.
+360​Zhinao open-source models support commercial use. If you wish to use these models or continue training them for commercial purposes, please contact us via email (g-zhinao-opensource@360.cn) to apply. For the specific license agreement, please see <<360 Zhinao Open-Source Model License>>.
+
 
 ## 360LayoutAnalysis
 
