@@ -19,42 +19,19 @@ def download(model_name, get_model_by_name):
 
 
 def get_pretrained_model_name_or_path(model_name, local_files_only, get_model_by_name, get_model_config_by_name=None):
-    config = config_setup()
-
     model = get_model_by_name(model_name)
     model_config = model.get_model_config(model_name)
     model_info = model_config.info
 
-    pretrained_model_name_or_path = model_name
+    pretrained_model_name = get_pretrained_model_name(model_name, local_files_only, get_model_by_name)
+
+    config = config_setup()
+
     if config.use_modelscope and not model_info.get("use_hf_only", False):
-        if "modelscope_name" in model_info:
-            pretrained_model_name_or_path = config.modelscope.cache_dir / model_info["modelscope_name"]
-
-        import modelscope
-        if local_files_only:
-            modelscope.snapshot_download = partial(modelscope.snapshot_download,
-                                                   local_files_only=True)
-            import transformers
-            transformers.utils.hub.cached_file = partial(transformers.utils.hub.cached_file,
-                                                         local_files_only=True)
-        else:
-            modelscope.snapshot_download(model_name)
+        pretrained_model_name_path = config.modelscope.cache_dir / model_info["modelscope_name"].replace(".", "___")
+        return pretrained_model_name_path
     else:
-        if "hf_name" in model_info:
-            pretrained_model_name_or_path = model_info["hf_name"]
-        import huggingface_hub
-
-        if local_files_only:
-            huggingface_hub.snapshot_download = partial(huggingface_hub.snapshot_download,
-                                                        local_files_only=True)
-
-            import transformers
-            transformers.utils.hub.cached_file = partial(transformers.utils.hub.cached_file,
-                                                         local_files_only=True)
-        else:
-            huggingface_hub.snapshot_download(model_name)
-
-    return pretrained_model_name_or_path
+        return pretrained_model_name
 
 
 def get_pretrained_model_name(model_name, local_files_only, get_model_by_name):
@@ -64,10 +41,11 @@ def get_pretrained_model_name(model_name, local_files_only, get_model_by_name):
     model_config = model.get_model_config(model_name)
     model_info = model_config.info
 
-    pretrained_model_name_or_path = model_name
     if config.use_modelscope and not model_info.get("use_hf_only", False):
         if "modelscope_name" in model_info:
-            pretrained_model_name_or_path = model_info["modelscope_name"]
+            pretrained_model_name = model_info["modelscope_name"]
+        else:
+            pretrained_model_name = model_name
 
         import modelscope
         if local_files_only:
@@ -77,22 +55,26 @@ def get_pretrained_model_name(model_name, local_files_only, get_model_by_name):
             transformers.utils.hub.cached_file = partial(transformers.utils.hub.cached_file,
                                                          local_files_only=True)
         else:
-            modelscope.snapshot_download(model_name)
+            modelscope.snapshot_download(pretrained_model_name)
     else:
         if "hf_name" in model_info:
-            pretrained_model_name_or_path = model_info["hf_name"]
+            pretrained_model_name = model_info["hf_name"]
+        else:
+            pretrained_model_name = model_name
 
         import huggingface_hub
+
         if local_files_only:
             huggingface_hub.snapshot_download = partial(huggingface_hub.snapshot_download,
                                                         local_files_only=True)
+
             import transformers
             transformers.utils.hub.cached_file = partial(transformers.utils.hub.cached_file,
                                                          local_files_only=True)
         else:
-            huggingface_hub.snapshot_download(model_name)
+            huggingface_hub.snapshot_download(pretrained_model_name)
 
-    return pretrained_model_name_or_path
+    return pretrained_model_name
 
 
 if __name__ == '__main__':
