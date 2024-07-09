@@ -87,7 +87,8 @@ def chat(req: ChatCompletionRequest):
                             "finish_reason": rep.finish_reason
                         })]
                     })
-                    yield data.model_dump_json()
+                    data = data.model_dump_json(exclude_unset=True)
+                    yield f"data: {data}\n\n"
                     break
                 else:
                     data = ChatCompletionStreamResponse(**{
@@ -97,9 +98,9 @@ def chat(req: ChatCompletionRequest):
                             "delta": DeltaMessage(role="assistant", content=rep.delta_content)
                         })]
                     })
-                    yield data.model_dump_json()
-                    yield "\n"
-        return StreamingResponse(generate(), media_type="application/x-ndjson")
+                    data = data.model_dump_json(exclude_unset=True)
+                    yield f"data: {data}\n\n"
+        return StreamingResponse(generate(), media_type="text/event-stream")
 
 
 @app.post("/v1/embeddings")
