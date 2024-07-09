@@ -37,6 +37,7 @@
 - [GLM-4](https://github.com/noooop/zerollama/tree/main/zerollama/models/thudm)
 - [bilibili Index](https://github.com/noooop/zerollama/tree/main/zerollama/models/bilibili)
 - [360Zhinao](https://github.com/noooop/zerollama/tree/main/zerollama/models/qihoo360)
+- [InternLM](https://github.com/noooop/zerollama/tree/main/zerollama/models/lnternlm)
 
 ## Retriever(Embeddings) 模型
 - [bge-retrieval](https://github.com/noooop/zerollama/tree/main/zerollama/models/baai)

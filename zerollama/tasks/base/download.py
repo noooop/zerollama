@@ -41,7 +41,8 @@ def get_pretrained_model_name(model_name, local_files_only, get_model_by_name):
     model_config = model.get_model_config(model_name)
     model_info = model_config.info
 
-    if config.use_modelscope and not model_info.get("use_hf_only", False):
+    if (config.use_modelscope and not model_info.get("use_hf_only", False) and
+            not ("modelscope_name" in model_info and model_info["modelscope_name"] == "")):
         if "modelscope_name" in model_info:
             pretrained_model_name = model_info["modelscope_name"]
         else:

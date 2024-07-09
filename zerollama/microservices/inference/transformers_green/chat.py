@@ -47,7 +47,8 @@ class HuggingFaceTransformers(object):
     def load(self):
         config = config_setup()
 
-        if config.use_modelscope and not self.model_info.get("use_hf_only", False):
+        if (config.use_modelscope and not self.model_info.get("use_hf_only", False) and
+                not ("modelscope_name" in self.model_info and self.model_info["modelscope_name"] == "")):
             from modelscope import AutoModelForCausalLM, AutoTokenizer
             from transformers import TextIteratorStreamer, BitsAndBytesConfig
         else:
