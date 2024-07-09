@@ -119,7 +119,7 @@ pip install llama-cpp-python==0.2.69 \
   --extra-index-url https://abetlen.github.io/llama-cpp-python/whl/cu121
   
 编译安装
-CMAKE_ARGS="-DLLAMA_CUBLAS=on" pip install llama-cpp-python==0.2.69 --upgrade --force-reinstall --no-cache-dir
+CMAKE_ARGS="-DLLAMA_CUBLAS=on" pip install llama-cpp-python==0.2.69 --no-cache-dir
 ```
 
 其他安装方式请 [参考](https://github.com/abetlen/llama-cpp-python#installation)
