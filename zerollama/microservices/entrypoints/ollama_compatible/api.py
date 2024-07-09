@@ -75,7 +75,11 @@ def chat(req: ChatCompletionRequest):
             data = {"model": response.model,
                     "created_at": get_timestamp(),
                     "message": {"role": "assistant", "content": response.content},
-                    "done": True}
+                    "done": True,
+
+                    "done_reason": response.finish_reason,
+                    "eval_count": response.completion_tokens,
+                    "prompt_eval_count": response.prompt_tokens}
             return data
         else:
             def generate():
@@ -85,7 +89,11 @@ def chat(req: ChatCompletionRequest):
                             "model": req.model,
                             "created_at": get_timestamp(),
                             "message": {"role": "assistant", "content": ""},
-                            "done": True
+                            "done": True,
+
+                            "done_reason": rep.finish_reason,
+                            "eval_count": rep.completion_tokens,
+                            "prompt_eval_count": rep.prompt_tokens
                         })
                         yield data
                         yield "\n"
@@ -95,7 +103,8 @@ def chat(req: ChatCompletionRequest):
                         data = json.dumps({"model": req.model,
                                            "created_at": get_timestamp(),
                                            "message": {"role": "assistant", "content": delta_content},
-                                           "done": False})
+                                           "done": False
+                        })
                         yield data
                         yield "\n"
             return StreamingResponse(generate(), media_type="application/x-ndjson")
