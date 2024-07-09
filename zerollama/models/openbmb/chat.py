@@ -1,5 +1,5 @@
 
-from zerollama.tasks.chat.interface import ChatModel
+from zerollama.tasks.chat.interface import ChatModel, ChatGGUFModel
 
 
 class MiniCPM(ChatModel):
@@ -24,21 +24,26 @@ class MiniCPM(ChatModel):
         ["openbmb/MiniCPM-1B-sft-bf16",                 "MiniCPM-1B-sft-bf16",         "1B",   "",                            "",   "bf16"],
         ["openbmb/MiniCPM-2B-128k",                     "openbmb/MiniCPM-2B-128k",     "2B",   "",                            "",   "fp32"],
         ["openbmb/MiniCPM-MoE-8x2B",                    "OpenBMB/MiniCPM-MoE-8x2B",    "8x2B", "",                            "",   "fp32"],
+
+        ["openbmb/MiniCPM-S-1B-sft",                    "openbmb/MiniCPM-S-1B-sft",    "1B",   "",                            "",   "bf16"],
+        ["openbmb/MiniCPM-S-1B-sft-llama-format",       "",                            "1B",   "",                            "",   "bf16"],
     ]
 
 
 if __name__ == '__main__':
-    import torch
-    from zerollama.microservices.inference.transformers_green.chat import run_test
+    def transformers_test():
+        import torch
+        from zerollama.microservices.inference.transformers_green.chat import run_test
 
-    for model_name in ["openbmb/MiniCPM-2B-sft-bf16",
-                       "openbmb/MiniCPM-2B-dpo-bf16"]:
-        run_test(model_name, stream=False)
+        for model_name in ["openbmb/MiniCPM-S-1B-sft"]:
+            print(model_name)
+            run_test(model_name, stream=False)
 
-        print(torch.cuda.memory_allocated() / 1024 ** 2)
+            print("memory_allocated:", torch.cuda.memory_allocated() / 1024 ** 2)
 
-    for model_name in ["openbmb/MiniCPM-2B-sft-bf16",
-                       "openbmb/MiniCPM-2B-dpo-bf16"]:
-        run_test(model_name, stream=True)
+        for model_name in ["openbmb/MiniCPM-S-1B-sft"]:
+            print(model_name)
+            run_test(model_name, stream=True)
+            print("memory_allocated:", torch.cuda.memory_allocated() / 1024 ** 2)
 
-        print(torch.cuda.memory_allocated() / 1024 ** 2)
+    transformers_test()
