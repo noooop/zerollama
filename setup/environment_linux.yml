@@ -1,4 +1,4 @@
-name: zerollama_v0.4
+name: zerollama_v0.5
 channels:
   - conda-forge
   - pytorch
