@@ -8,9 +8,8 @@ class SummaryAgent(ConversableAgent):
                  name: str = "SummaryAgent",
                  system_message=DEFAULT_SYSTEM_MESSAGE,
                  llm_config=None,
-                 description=None,
-                 human_input_mode="NEVER"):
-        super().__init__(name, system_message, llm_config, description, human_input_mode)
+                 description=None):
+        super().__init__(name, system_message, llm_config, description)
 
     def summary(self, session):
         return session.summary(self)

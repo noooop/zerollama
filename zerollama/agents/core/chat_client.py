@@ -119,7 +119,7 @@ def get_client(llm_config):
 
 
 if __name__ == '__main__':
-    model = "Qwen/Qwen2-7B-Instruct-AWQ"
+    model = "Qwen/Qwen2-7B-Instruct-GPTQ-Int4"
     prompt = "给我介绍一下大型语言模型。"
 
     messages = [

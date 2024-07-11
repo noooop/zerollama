@@ -1,10 +1,10 @@
 
-from collections import defaultdict
+import inspect
 from typing import Any, Callable, Dict, List, Literal, Optional, Tuple, Type, TypeVar, Union
 
 from zerollama.agents.core.chat_client import get_client
 from zerollama.agents.core.agent import Agent
-from zerollama.agents.core.session import Session
+from zerollama.tasks.chat.protocol import ChatCompletionStreamResponseDone
 
 
 class ConversableAgent(Agent):
@@ -12,11 +12,8 @@ class ConversableAgent(Agent):
                  name: str,
                  system_message: Optional[Union[str, List]] = "You are a helpful AI Assistant.",
                  llm_config: Optional[Union[Dict, Literal[False]]] = None,
-                 description: Optional[str] = None,
-                 human_input_mode: Literal["ALWAYS", "NEVER", "TERMINATE"] = "TERMINATE",):
+                 description: Optional[str] = None):
         super().__init__(name, description if description is not None else system_message)
-
-        self.human_input_mode = human_input_mode
 
         self.llm_config = llm_config
         self._chat_client = get_client(self.llm_config)
@@ -31,15 +28,22 @@ class ConversableAgent(Agent):
             messages = [{"content": messages, "role": "user"}]
             response = self._chat_client.chat(self._system_message + messages, stream, options)
 
-        return response.content
+        if not inspect.isgenerator(response):
+            return response.content
+        else:
+            def generator():
+                for rep in response:
+                    if not isinstance(rep, ChatCompletionStreamResponseDone):
+                        yield rep.delta_content
+
+            return generator()
 
 
 if __name__ == '__main__':
-    llm_config = {"type": "zerollama", "model": "Qwen/Qwen2-7B-Instruct-AWQ"}
+    llm_config = {"type": "zerollama", "model": "Qwen/Qwen2-7B-Instruct-GPTQ-Int4"}
     agent = ConversableAgent(
         name="chatbot",
         llm_config=llm_config,
-        human_input_mode="NEVER",
     )
 
     reply = agent.generate_reply(

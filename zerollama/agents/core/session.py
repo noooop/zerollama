@@ -32,9 +32,16 @@ class ViolationOFChatOrder(Exception):
 
 
 class Session(object):
-    def __init__(self, participants, history=None):
+    def __init__(self,
+                 participants,
+                 history=None,
+                 termination_msg=None,
+                 is_termination_msg=None):
         self.participants = participants
         self.history = list()
+
+        self.termination_msg = termination_msg
+        self.is_termination_msg = is_termination_msg
 
         if history is not None:
             self.extend(history)
@@ -134,6 +141,14 @@ class Session(object):
             if verbose:
                 _verbose(self.history[-1], len(self.history))
 
+            if isinstance(self.termination_msg, str):
+                if self.termination_msg.lower() in content.lower():
+                    return
+
+            if callable(self.is_termination_msg):
+                if self.is_termination_msg(content):
+                    return
+
         chat_order = self.chat_order()
         for i in range(max_turns-1):
             for role in chat_order:
@@ -142,6 +157,14 @@ class Session(object):
 
                 if verbose:
                     _verbose(self.history[-1], len(self.history))
+
+                if isinstance(self.termination_msg, str):
+                    if self.termination_msg.lower() in content.lower():
+                        return
+
+                if callable(self.is_termination_msg):
+                    if self.is_termination_msg(content):
+                        return
 
 
 if __name__ == '__main__':
