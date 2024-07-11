@@ -28,7 +28,7 @@ def get_pretrained_model_name_or_path(model_name, local_files_only, get_model_by
     config = config_setup()
 
     if config.use_modelscope and not model_info.get("use_hf_only", False):
-        pretrained_model_name_path = config.modelscope.cache_dir / model_info["modelscope_name"].replace(".", "___")
+        pretrained_model_name_path = config.modelscope.cache_dir / pretrained_model_name.replace(".", "___")
         return pretrained_model_name_path
     else:
         return pretrained_model_name
