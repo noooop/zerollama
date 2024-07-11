@@ -4,9 +4,10 @@ from zerollama.models.deepseek.vlm import DeepSeekVL
 from zerollama.models.openbmb.vlm import MiniCPMV
 from zerollama.models.thudm.vlm import CogVLM2
 from zerollama.models.florence.vlm import Florence
+from zerollama.models.llava.vlm import Llava
 
 
-MODELS = [DeepSeekVL, MiniCPMV, CogVLM2, Florence]
+MODELS = [DeepSeekVL, MiniCPMV, CogVLM2, Florence, Llava]
 MODELS_NAME_MAP = dict()
 MODELS_FAMILY_MAP = {m.family: m for m in MODELS}
 
