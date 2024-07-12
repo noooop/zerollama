@@ -74,6 +74,10 @@ def config_setup():
             plat = platform.system().lower()
             if plat == 'windows':
                 os.environ["PATH"] = os.environ["PATH"] + ";" + config_cuda["cudnn_path"]
+
+    if "agents" in config_global:
+        config_agents = config_global["agents"]
+        config.llm_config = config_agents.get("llm_config", {})
     return config
 
 

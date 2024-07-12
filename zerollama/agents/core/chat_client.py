@@ -101,8 +101,24 @@ class OllamaChatClient(ChatInterface):
             return generator()
 
 
-def get_client(llm_config):
+def get_client(llm_config=None, global_priority=None):
     import copy
+    from zerollama.core.config.main import config_setup
+    config = config_setup()
+    global_llm_config = config.get("llm_config", {})
+
+    if isinstance(llm_config, dict) and "global_priority" in llm_config:
+        global_priority = llm_config.pop("global_priority")
+
+    if global_llm_config:
+        if global_priority is None:
+            global_priority = global_llm_config.pop("global_priorit", True)
+
+        if global_priority:
+            llm_config = global_llm_config
+        elif llm_config is None or not llm_config:
+            llm_config = global_llm_config
+
     llm_config = copy.deepcopy(llm_config)
     llm_client_type = llm_config.pop("type")
 
@@ -135,7 +151,7 @@ if __name__ == '__main__':
         print("=" * 80)
         print(llm_config)
 
-        client = get_client(llm_config)
+        client = get_client(llm_config, global_priority=False)
 
         print("stream=False")
         print(client.chat(messages).content)
