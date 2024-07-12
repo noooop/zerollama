@@ -90,6 +90,10 @@
 ## Text to Image 文生图模型
 - [HunyuanDiT](https://github.com/noooop/zerollama/tree/main/zerollama/models/hunyun)
 
+相关模型
+### DepthEstimation
+- [Depth-Anything-V2](https://github.com/noooop/zerollama/tree/main/zerollama/models/depth_anything)
+
 
 ## Contribute
 贡献代码请交逻辑清晰思路、简单直接的代码、不要有魔法，甚至可以牺牲一部分性能换取可读性
