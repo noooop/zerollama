@@ -23,3 +23,21 @@ $ python -m applications.agents.cli server init applications/agents/deploy.yml
 2. [waterfall workflow - 多智能体顺序执行的工作流程](./tutorial/t2_waterfall_workflow.py)
 
 
+## 全局 llm_config
+通过配置文件，设置全局 llm_config，默认全局配置会覆盖代码里传入的配置，你可以使用 global_priority 来控制是否全局配置优先
+```
+文件位置
+windows
+C:\Users\%USERNAME%\.zerollama\config\
+
+linux
+~/.zerollama/config/
+```
+
+比如使用本地 ollama
+```
+agents:
+  llm_config:
+    model: "qwen2:0.5b"
+    type: "ollama"
+```
