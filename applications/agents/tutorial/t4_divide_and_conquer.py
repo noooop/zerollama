@@ -34,7 +34,7 @@ class CriticAgent(Agent):
         self.legal_reviewer = AssistantAgent(
             name="Legal Reviewer",
             llm_config=llm_config,
-            system_message="您是一名法律审阅者，以确保内容合法且不存在任何潜在法律问题的能力而闻名。"
+            system_message="您是一名法律审核员，以确保内容合法且不存在任何潜在法律问题的能力而闻名。"
                            "确保您的建议简洁（3 个要点以内）、具体且切中要点。"
                            "通过陈述您的角色来开始审查。",
         )
@@ -55,7 +55,7 @@ class CriticAgent(Agent):
         self.meta_reviewer = AssistantAgent(
             name="Meta Reviewer",
             llm_config=llm_config,
-            system_message="您是元审阅者，您汇总和审阅其他审阅者的工作，并对内容提出最终建议。",
+            system_message="您是元审核员，您汇总和审阅其他审核员的工作，并对内容提出最终建议。",
         )
 
         self.critices = [self.SEO_reviewer, self.legal_reviewer, self.ethics_reviewer]

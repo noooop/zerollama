@@ -1,11 +1,13 @@
+import os
+import sys
+from pathlib import Path
+pwd = Path(os.getcwd())
+sys.path.append(str(pwd.parent.parent.parent))
+
 from zerollama.agents import ConversableAgent
 
 model = "Qwen/Qwen2-7B-Instruct-GPTQ-Int4"
 prompt = "给我介绍一下大型语言模型。"
-
-messages = [
-    {"role": "user", "content": prompt}
-]
 
 for llm_config in [
     {"type": "zerollama", "model": model, "global_priority": False},
@@ -19,8 +21,6 @@ for llm_config in [
         name="chatbot",
         llm_config=llm_config,
     )
-
-    prompt = "给我介绍一下大型语言模型。"
 
     print("stream=False")
     reply = agent.generate_reply(

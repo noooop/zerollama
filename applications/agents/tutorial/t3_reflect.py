@@ -5,7 +5,7 @@ llm_config = {"model": "Qwen/Qwen2-7B-Instruct-GPTQ-Int4", "type": "openai", "ba
 
 
 task = '''
-    写一篇简洁但引人入胜的关于 DeepLearning.AI 博客文
+    写一篇简洁但引人入胜的关于 DeepLearning.AI 的博客文
        DeepLearning.AI. 确保文章在100字以内。
 '''
 

@@ -71,7 +71,7 @@ customer = ConversableAgent(
 )
 
 
-def agent_pipeline(customer):
+def agent_workflow(customer):
     session1 = Session(participants=[onboarding_personal_information_agent, customer],
                        termination_msg="terminate")
     session1.append(
@@ -99,9 +99,9 @@ def agent_pipeline(customer):
     session3.chat(max_turns=5)
 
 
-agent_pipeline(customer)
+agent_workflow(customer)
 
 customer = UserInput()
-agent_pipeline(customer)
+agent_workflow(customer)
 
 
