@@ -6,26 +6,34 @@ from zerollama.tasks.chat.protocol import ChatCompletionStreamResponse, ChatComp
 
 
 class ZerollamaChatClient(ChatInterface):
-    def __init__(self, model):
+    def __init__(self, model, options=None):
         from zerollama.tasks.chat.engine.client import ChatClient
+        self.options = options or {}
         self._chat_client = ChatClient()
         self.model_name = model
 
     def chat(self, messages, stream=False, options=None):
+        options = dict(**self.options)
+        options.update(options or {})
         response = self._chat_client.chat(self.model_name, messages, stream, options)
         return response
 
 
 class OpenAiChatClient(ChatInterface):
-    def __init__(self, model, base_url="http://localhost:8080", api_key="empty", **kwargs):
+    def __init__(self, model, options=None, base_url="http://localhost:8080", api_key="empty", **kwargs):
+        from gevent import monkey
+        monkey.patch_socket()
+
         from openai import OpenAI, Stream
+        self.options = options or {}
 
         self.Stream = Stream
         self._chat_client = OpenAI(base_url=base_url, api_key=api_key, **kwargs)
         self.model_name = model
 
     def chat(self, messages, stream=False, options=None):
-        options = options or {}
+        options = dict(**self.options)
+        options.update(options or {})
 
         response = self._chat_client.chat.completions.create(
             model=self.model_name,
@@ -62,13 +70,19 @@ class OpenAiChatClient(ChatInterface):
 
 
 class OllamaChatClient(ChatInterface):
-    def __init__(self, model, base_url=None, **kwargs):
-        from ollama import Client
+    def __init__(self, model, options=None, base_url=None, **kwargs):
+        from gevent import monkey
+        monkey.patch_socket()
 
+        from ollama import Client
+        self.options = options or {}
         self._chat_client = Client(host=base_url, **kwargs)
         self.model_name = model
 
     def chat(self, messages, stream=False, options=None):
+        options = dict(**self.options)
+        options.update(options or {})
+
         response = self._chat_client.chat(
             model=self.model_name,
             messages=messages,

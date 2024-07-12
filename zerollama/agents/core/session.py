@@ -1,6 +1,5 @@
 
 from zerollama.agents.core.agent import Agent
-from collections import namedtuple
 
 
 class MSG(object):
@@ -32,6 +31,8 @@ class ViolationOFChatOrder(Exception):
 
 
 class Session(object):
+    DEFAULT_SUMMARY_PROMPT = "Summarize the takeaway from the conversation. Do not add any introductory phrases."
+
     def __init__(self,
                  participants,
                  history=None,
@@ -103,15 +104,17 @@ class Session(object):
                 )
         return messages
 
-    def history_prompt(self):
+    def chat_messages_for_summary(self):
         prompt = ""
         for msg in self.history:
             prompt += f"{msg.role.name} : \n\n"
             prompt += f"{msg.content} : \n\n"
         return prompt
 
-    def summary(self, agent):
-        history_prompt = self.history_prompt()
+    def summary(self, agent, summary_prompt=DEFAULT_SUMMARY_PROMPT):
+        history_prompt = self.chat_messages_for_summary()
+        if summary_prompt:
+            history_prompt = history_prompt+summary_prompt
         return agent.generate_reply(history_prompt)
 
     def chat(self, max_turns=None, verbose=True, verbose_history=True):

@@ -17,7 +17,7 @@ class ConversableAgent(Agent):
 
         self.llm_config = llm_config
         self._chat_client = get_client(self.llm_config)
-        self._model_name = llm_config["model"]
+        self._model_name = self._chat_client.model_name
 
         self._system_message = [{"content": system_message, "role": "system"}]
 

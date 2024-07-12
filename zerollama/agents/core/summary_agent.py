@@ -11,5 +11,5 @@ class SummaryAgent(ConversableAgent):
                  description=None):
         super().__init__(name, system_message, llm_config, description)
 
-    def summary(self, session):
-        return session.summary(self)
+    def summary(self, session, summary_prompt=None):
+        return session.summary(self, summary_prompt)
