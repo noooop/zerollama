@@ -58,7 +58,8 @@ def model(model_id: str):
 
 @app.post("/v1/chat/completions")
 def chat(req: ChatCompletionRequest):
-    options = {}
+    options_key = {"temperature", "top_k", "top_p", "max_tokens", "presence_penalty", "frequency_penalty"}
+    options = {k: v for k, v in req.dict().items() if k in options_key and v is not None}
 
     response = chat_client.chat(name=req.model, messages=req.messages, stream=req.stream, options=options)
 
