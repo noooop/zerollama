@@ -21,6 +21,8 @@ $ python -m applications.agents.cli server init applications/agents/deploy.yml
 0. [支持 ollama和openai客户端、支持zerollama内部通讯协议](./tutorial/t0_llm_client.py)
 1. [ConversableAgent - 两个大模型相互对话](./tutorial/t1_conversable_agent.py)
 2. [waterfall workflow - 多智能体顺序执行的工作流程](./tutorial/t2_waterfall_workflow.py)
+3. [reflect - 反思，通过让大语言模型扮演多个角色，自问自答，不断提高输出结果](./tutorial/t3_reflect.py)
+4. [divide and conquer - 分治，将一个大任务分成多个子任务，让大语言模型扮演多个角色分别完成子任务，汇总形成更全面的结果](./tutorial/t4_divide_and_conquer.py)
 
 
 ## 全局 llm_config

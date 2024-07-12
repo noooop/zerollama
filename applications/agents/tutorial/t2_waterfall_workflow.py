@@ -1,7 +1,7 @@
-from zerollama.agents.core.conversable_agent import ConversableAgent
-from zerollama.agents.core.summary_agent import SummaryAgent
-from zerollama.agents.core.session import Session
-from zerollama.agents.core.user_input import UserInput
+from zerollama.agents import ConversableAgent
+from zerollama.agents import SummaryAgent
+from zerollama.agents import Session
+from zerollama.agents import UserInput
 
 llm_config = {"model": "Qwen/Qwen2-7B-Instruct-GPTQ-Int4", "type": "openai", "base_url": 'http://localhost:8080/v1/'}
 

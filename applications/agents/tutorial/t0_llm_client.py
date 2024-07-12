@@ -1,4 +1,4 @@
-from zerollama.agents.core.conversable_agent import ConversableAgent
+from zerollama.agents import ConversableAgent
 
 model = "Qwen/Qwen2-7B-Instruct-GPTQ-Int4"
 prompt = "给我介绍一下大型语言模型。"
@@ -8,9 +8,9 @@ messages = [
 ]
 
 for llm_config in [
-    {"type": "zerollama", "model": model},
-    {"type": "openai", "model": model, "base_url": 'http://localhost:8080/v1/'},
-    {"type": "ollama", "model": model}
+    {"type": "zerollama", "model": model, "global_priority": False},
+    {"type": "openai", "model": model, "base_url": 'http://localhost:8080/v1/', "global_priority": False},
+    {"type": "ollama", "model": model, "global_priority": False},
 
 ]:
     print("-" * 80)
