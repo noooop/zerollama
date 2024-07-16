@@ -1,7 +1,8 @@
 
 from zerollama.models.hunyun.text2image import HunyuanDiT
+from zerollama.models.kolors.text2image import Kolors
 
-MODELS = [HunyuanDiT]
+MODELS = [HunyuanDiT, Kolors]
 MODELS_NAME_MAP = dict()
 MODELS_FAMILY_MAP = {m.family: m for m in MODELS}
 
