@@ -48,6 +48,9 @@ def get_pretrained_model_name(model_name, local_files_only, get_model_by_name):
         else:
             pretrained_model_name = model_name
 
+        import os
+        os.environ["VLLM_USE_MODELSCOPE"] = "True"
+
         import modelscope
         if local_files_only:
             modelscope.snapshot_download = partial(modelscope.snapshot_download,

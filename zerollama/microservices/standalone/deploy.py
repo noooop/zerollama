@@ -1,7 +1,7 @@
 import yaml
 import importlib
 from easydict import EasyDict as edict
-from zerollama.tasks.base.download import download
+from zerollama.tasks.base.download import get_pretrained_model_name
 from zerollama.core.framework.zero_manager.client import ZeroManagerClient
 from zerollama.tasks.chat.protocol import Chat_ENGINE_CLASS
 from zerollama.tasks.retriever.protocol import Retriever_ENGINE_CLASS
@@ -53,7 +53,7 @@ class Deploy(object):
                 module_name = f"zerollama.tasks.{protocol}.collection"
                 module = importlib.import_module(module_name)
                 get_model_by_name = getattr(module, "get_model_by_name")
-                download(model.name, get_model_by_name)
+                get_pretrained_model_name(model.name, False, get_model_by_name)
 
     def model_init(self):
         for protocol, engine_class in [

@@ -46,9 +46,6 @@ def config_setup():
     config.modelscope = {}
     config.modelscope.cache_dir = Path(get_modelscope_cache_dir())
 
-    if config.use_modelscope:
-        os.environ["VLLM_USE_MODELSCOPE"] = "True"
-
     rag_path = Path.home() / ".zerollama/rag/documents"
     config.rag = edict({"path": rag_path})
     if "rag" in config_global:
