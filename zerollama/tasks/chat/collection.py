@@ -14,11 +14,12 @@ from zerollama.models.bilibili.chat import Index, IndexGGUF
 from zerollama.models.qihoo360.chat import Zhinao360
 from zerollama.models.lnternlm.chat import InternLM, InternLM_GGUF
 from zerollama.models.arcee.chat import ArceeSpark
+from zerollama.models.hermes.chat import Hermes
 
 MODELS = [DeepSeekLLM, MiniCPM, Qwen1_5, Qwen1_5_GGUF, Qwen2,
           Yi, Yi_1_5, Llama3, Llama3ZH, XVERSE, XVERSE_GGUF,
           Yuan, Yuan_GGUF, Mistral, GLM4, Index, IndexGGUF,
-          Zhinao360, InternLM, InternLM_GGUF, ArceeSpark]
+          Zhinao360, InternLM, InternLM_GGUF, ArceeSpark, Hermes]
 
 MODELS_NAME_MAP = dict()
 MODELS_FAMILY_MAP = {m.family: m for m in MODELS}

@@ -39,6 +39,7 @@
 - [360Zhinao](https://github.com/noooop/zerollama/tree/main/zerollama/models/qihoo360)
 - [InternLM](https://github.com/noooop/zerollama/tree/main/zerollama/models/lnternlm)
 - [Arcee-Spark](https://github.com/noooop/zerollama/tree/main/zerollama/models/arcee)
+- [NousResearch/Hermes-2](https://github.com/noooop/zerollama/tree/main/zerollama/models/hermes)
 
 ## Retriever(Embeddings) 模型
 - [bge-retrieval](https://github.com/noooop/zerollama/tree/main/zerollama/models/baai)
