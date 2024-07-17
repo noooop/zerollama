@@ -23,6 +23,7 @@ $ python -m applications.agents.cli server init applications/agents/deploy.yml
 2. [waterfall workflow - 多智能体顺序执行的工作流程](./tutorial/t2_waterfall_workflow.py)
 3. [reflect - 反思，通过让大语言模型扮演多个角色，自问自答，不断提高输出结果](./tutorial/t3_reflect.py)
 4. [divide and conquer - 分治，将一个大任务分成多个子任务，让大语言模型扮演多个角色分别完成子任务，汇总形成更全面的结果](./tutorial/t4_divide_and_conquer.py)
+5. [use tools - 使用工具](./tutorial/t5_use_tools.py)
 
 
 ## 全局 llm_config

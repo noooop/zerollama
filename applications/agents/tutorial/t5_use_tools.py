@@ -48,6 +48,7 @@ for llm_config in [
         tools=[get_current_temperature, get_current_wind_speed],
         llm_config=llm_config
     )
+    print(llm_config["type"])
 
     messages = [
         {"role": "user", "content": "What is the current temperature of New York, San Francisco and Chicago?"}
