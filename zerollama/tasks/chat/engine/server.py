@@ -9,10 +9,13 @@ from zerollama.tasks.base.engine.server import ZeroInferenceEngine
 class ZeroChatInferenceEngine(ZeroInferenceEngine):
     get_model_by_name = staticmethod(get_model_by_name)
 
-    def inference_worker(self, req):
+    def inference_worker(self, req, **kwargs):
         ccr = ChatCompletionRequest(**req.data)
 
-        response = self.inference.chat(ccr.messages, ccr.stream, ccr.options)
+        kwargs = ccr.model_dump()
+        kwargs.pop("model", None)
+
+        response = self.inference.chat(**kwargs)
 
         if not inspect.isgenerator(response):
             rep = ZeroServerResponseOk(msg=response)

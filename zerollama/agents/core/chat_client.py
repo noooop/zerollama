@@ -12,10 +12,10 @@ class ZerollamaChatClient(ChatInterface):
         self._chat_client = ChatClient()
         self.model_name = model
 
-    def chat(self, messages, stream=False, options=None):
+    def chat(self, messages, tools=None, stream=False, options=None):
         options = dict(**self.options)
         options.update(options or {})
-        response = self._chat_client.chat(self.model_name, messages, stream, options)
+        response = self._chat_client.chat(self.model_name, messages, tools, stream, options)
         return response
 
 
@@ -31,7 +31,7 @@ class OpenAiChatClient(ChatInterface):
         self._chat_client = OpenAI(base_url=base_url, api_key=api_key, **kwargs)
         self.model_name = model
 
-    def chat(self, messages, stream=False, options=None):
+    def chat(self, messages, tools=None, stream=False, options=None):
         options = dict(**self.options)
         options.update(options or {})
 
@@ -39,6 +39,7 @@ class OpenAiChatClient(ChatInterface):
             model=self.model_name,
             messages=messages,
             stream=stream,
+            tools=tools,
             **options
         )
 
@@ -79,7 +80,7 @@ class OllamaChatClient(ChatInterface):
         self._chat_client = Client(host=base_url, **kwargs)
         self.model_name = model
 
-    def chat(self, messages, stream=False, options=None):
+    def chat(self, messages, tools=None, stream=False, options=None):
         options = dict(**self.options)
         options.update(options or {})
 

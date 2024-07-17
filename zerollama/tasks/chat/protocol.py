@@ -21,6 +21,7 @@ Chat_PROTOCOL = PROTOCOL
 
 class ChatCompletionRequest(BaseModel):
     model: str
+    tools: Optional[list] = None
     messages: list = Field(default_factory=list)
     options: dict = Field(default_factory=dict)
     stream: bool = True

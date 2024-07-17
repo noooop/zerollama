@@ -82,14 +82,7 @@ class ChatInterface(object):
         """
         raise NotImplementedError
 
-    def chat(self, messages, stream=False, options=None):
-        """
-
-        :param messages:
-        :param stream:
-        :param options:
-        :return:
-        """
+    def chat(self, messages, tools=None, stream=False, options=None):
         raise NotImplementedError
 
     def stream_chat(self, messages, options=None):
