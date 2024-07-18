@@ -91,8 +91,12 @@
 ## Text to Image 文生图模型
 - [HunyuanDiT](https://github.com/noooop/zerollama/tree/main/zerollama/models/hunyun)
 - [Kwai-Kolors](https://github.com/noooop/zerollama/tree/main/zerollama/models/kolors)
-- 
+
 相关模型
+
+- controlnet-union (hold)
+- controlnet_aux (hold)
+
 ### DepthEstimation
 - [Depth-Anything-V2](https://github.com/noooop/zerollama/tree/main/zerollama/models/depth_anything)
 
