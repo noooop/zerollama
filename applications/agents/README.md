@@ -44,3 +44,14 @@ agents:
     model: "qwen2:0.5b"
     type: "ollama"
 ```
+
+# 设计理念
+zerollama.agents 大幅借鉴了 [AutoGen](https://github.com/microsoft/autogen) 的设计理念，强烈建议去看看[原始论文](https://openreview.net/pdf?id=uAjxFFing2).
+
+1. agents 只有一个外部接口 generate_reply 接受会话历史，产生回复
+2. agents 自身没有记忆，就叫agentless吧，会话历史由Session保持
+3. agents 自身没有“自动回复”等流程控制功能。agents之间的交替发言，必须把参与的agents拉入同一个Session， 由Session交替调用对应generate_reply
+4. 内部复杂工作流，通过定义一个agent子类，封装复杂工作流在generate_reply完成。而不是使用nested chat，通过 register_reply 注册自定义回复函数
+5. 使用gevent显示或隐式的并发加快运行， 个人非常讨厌 asyncio
+
+AutoGen 复杂强大的 agent， zerollama.agents 简单弱小的 agent 都是语法糖，agent 的能力最终取决于底层大语言模型的能力。
