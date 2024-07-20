@@ -1,5 +1,5 @@
 
-from zerollama.agents.core.agent import Agent
+from zerollama.agents.core.conversable_agent import Agent
 
 
 class MSG(object):

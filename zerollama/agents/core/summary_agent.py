@@ -1,7 +1,7 @@
-from zerollama.agents.core.conversable_agent import ConversableAgent
+from zerollama.agents.core.llm_agent import LLMAgent
 
 
-class SummaryAgent(ConversableAgent):
+class SummaryAgent(LLMAgent):
     DEFAULT_SYSTEM_MESSAGE = "Summarize the takeaway from the conversation. Do not add any introductory phrases."
 
     def __init__(self,

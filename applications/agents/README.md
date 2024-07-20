@@ -19,7 +19,7 @@ $ python -m applications.agents.cli server init applications/agents/deploy.yml
 
 ## 教程
 0. [支持 ollama和openai客户端、支持zerollama内部通讯协议](./tutorial/t0_llm_client.py)
-1. [ConversableAgent - 两个大模型相互对话](./tutorial/t1_conversable_agent.py)
+1. [ConversableAgent - 两个大模型相互对话](./tutorial/t1_role_playing_agent.py)
 2. [waterfall workflow - 多智能体顺序执行的工作流程](./tutorial/t2_waterfall_workflow.py)
 3. [reflect - 反思，通过让大语言模型扮演多个角色，自问自答，不断提高输出结果](./tutorial/t3_reflect.py)
 4. [divide and conquer - 分治，将一个大任务分成多个子任务，让大语言模型扮演多个角色分别完成子任务，汇总形成更全面的结果](./tutorial/t4_divide_and_conquer.py)
@@ -55,3 +55,23 @@ zerollama.agents 大幅借鉴了 [AutoGen](https://github.com/microsoft/autogen)
 5. 使用gevent显示或隐式的并发加快运行， 个人非常讨厌 asyncio
 
 AutoGen 复杂强大的 agent， zerollama.agents 简单弱小的 agent 都是语法糖，agent 的能力最终取决于底层大语言模型的能力。
+
+# 实现逻辑
+1. 什么是Agent，如同人工智能一样，agent是不断发展快速演进的概念，恕我不在这里做出定义。理论上，Agent是这个项目实现能力的超集，共性存在于个性之中，所以Agent理论上应该是基类。
+实际代码里 Agent = ConversableAgent。
+2. ConversableAgent，我毫不怀疑很快大语言模型可以熟练使用文本图像语音甚至所有计算机支持的模态跟外界交流，但目前大语言模型只能用自然语言流畅的跟外界交流。
+ConversableAgent 有 name 和 description 两个变量和 generate_reply 唯一外部接口，接受会话历史，产生回复。
+ConversableAgent 抽象并不新奇，本质就是输入和输出都是string的、严格执行request-response的协议，所以http也是一种 ConversableAgent (狗头)。
+本项目中 Agent 都没有状态，参考 serverless 可以叫它 agentless。
+3. LLMAgent，是大语言模型接口的简单封装。在ConversableAgent基础上，变量增加system_message和llm_config，内部有chat_client与大语言模型推理引擎交互。
+generate_reply 接受会话历史，调用chat_client与大语言模型推理引擎交互，产生回复。
+很明显整个项目就是为了这点醋包的饺子。
+4. RolePlayingAgent, 很快大家发现大语言模型不仅可以扮演 "You are a helpful AI Assistant." 扮演其他角色也活灵活现，大语言模型立即展现了巨大的潜力和商业价值。
+在这个项目里，RolePlayingAgent = LLMAgent，你可以通过修改system_message赋予大语言模型不同人设，让大语言模型扮演不同角色
+5. Multi-Agent, 多个具有不同人设的Agent可以进行交谈，把参与的agents拉入同一个Session， 由Session交替调用对应generate_reply，会话历史由Session保持。
+多Agent系统根据任务类型，可以配置为对抗型(competitive)和合作型(Cooperative)，这只是个开阔思路的分类学，并没有严格限定。可以发挥想象力创建非常复杂的场景，agent之间也有非常复杂的交互模式。
+6. UserInput, 用户可以通过UserInput混迹于一群Agent中，你可以配置为其他Agent都围绕这User服务，也可以配置为User只是众多Agent中普通的一员。安利 2010年的电影《创：战纪 Tron: Legacy》希望给你一些启发.
+7. Workflow, 内部复杂工作流，通过定义一个 agent 子类，封装复杂工作流在 generate_reply 完成。这里不区分代码写死的手工工作流、静态工作流，还是由大语言模型或方式实现自动选择分支的动态工作流，将工作流包装成agent方便测试和模块复用。
+8. AgentUseTools，理论上你可以把任何输入和输出都是string的、严格执行request-response的协议的函数直接包装成Agent。但一般的函数都接受结构化输入输出，很难跟其他大语言模型或者人类使用自然语言直接交互。
+所以要使用大语言模型包一层，非标转标，将自然语言转为函数需要的抽象格式化输入，函数输出整理为流畅具体的自然语言。 大语言模型还负责从提供的工具集中选择最适合的工具。
+9. Multi-Agent 不同的交流拓扑适合解决不同的任务，逐渐发展出一些成熟的模式，比如reflect反思，分治divide and conquer...使用这些成熟的模式可以快速搭建复杂系统

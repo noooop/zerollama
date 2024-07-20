@@ -1,8 +1,8 @@
 
-from zerollama.agents.core.conversable_agent import ConversableAgent
+from zerollama.agents.core.llm_agent import LLMAgent
 
 
-class AssistantAgent(ConversableAgent):
+class AssistantAgent(LLMAgent):
     DEFAULT_SYSTEM_MESSAGE = """You are a helpful AI assistant.
     Solve tasks using your coding and language skills.
     In the following cases, suggest python code (in a python coding block) or shell script (in a sh coding block) for the user to execute.

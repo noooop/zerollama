@@ -1,10 +1,10 @@
 import shortuuid
-from zerollama.agents.core.conversable_agent import ConversableAgent
+from zerollama.agents.core.llm_agent import LLMAgent
 from zerollama.agents.use_tool.function_utils import get_json_schema
 from zerollama.agents.use_tool.utils import validate_and_extract_tool_calls
 
 
-class AgentUseTools(ConversableAgent):
+class AgentUseTools(LLMAgent):
     DEFAULT_SYSTEM_MESSAGE = "You are a helpful AI assistant."
 
     def __init__(self,
