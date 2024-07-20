@@ -74,4 +74,4 @@ generate_reply 接受会话历史，调用chat_client与大语言模型推理引
 7. Workflow, 内部复杂工作流，通过定义一个 agent 子类，封装复杂工作流在 generate_reply 完成。这里不区分代码写死的手工工作流、静态工作流，还是由大语言模型或方式实现自动选择分支的动态工作流，将工作流包装成agent方便测试和模块复用。
 8. AgentUseTools，理论上你可以把任何输入和输出都是string的、严格执行request-response的协议的函数直接包装成Agent。但一般的函数都接受结构化输入输出，很难跟其他大语言模型或者人类使用自然语言直接交互。
 所以要使用大语言模型包一层，非标转标，将自然语言转为函数需要的抽象格式化输入，函数输出整理为流畅具体的自然语言。 大语言模型还负责从提供的工具集中选择最适合的工具。
-9. Multi-Agent 不同的交流拓扑适合解决不同的任务，逐渐发展出一些成熟的模式，比如reflect反思，分治divide and conquer...使用这些成熟的模式可以快速搭建复杂系统
+9. Agent Topology and Conversation Patterns 不同的交流模式适合解决不同的任务，逐渐发展出一些成熟的模式，比如reflect反思，divide and conquer分治...使用这些成熟的模式可以快速搭建复杂系统
