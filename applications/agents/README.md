@@ -17,13 +17,25 @@ $ python -m applications.agents.cli server init applications/agents/deploy.yml
 
 默认部署文件 “[deploy.yml](https://github.com/noooop/zerollama/blob/v0.5/applications/agents/deploy.yml)” 使用 vllm 部署 Qwen/Qwen2-7B-Instruct-GPTQ-Int4， 并部署 ollama 和 openai 网关。
 
-## 教程
-0. [支持 ollama和openai客户端、支持zerollama内部通讯协议](./tutorial/t0_llm_client.py)
-1. [ConversableAgent - 两个大模型相互对话](./tutorial/t1_role_playing_agent.py)
-2. [waterfall workflow - 多智能体顺序执行的工作流程](./tutorial/t2_waterfall_workflow.py)
-3. [reflect - 反思，通过让大语言模型扮演多个角色，自问自答，不断提高输出结果](./tutorial/t3_reflect.py)
-4. [divide and conquer - 分治，将一个大任务分成多个子任务，让大语言模型扮演多个角色分别完成子任务，汇总形成更全面的结果](./tutorial/t4_divide_and_conquer.py)
-5. [use tools - 使用工具](./tutorial/t5_use_tools.py)
+## 先提过示例了解agent可以做啥
+
+### Basic 
+0. [多种协议支持 - 支持 ollama 和 openai 客户端、支持 zerollama 内部通讯协议，支持流式推理](./notebook/t0_llm_client.ipynb)
+1. [RolePlayingAgent - 角色扮演](./notebook/t1_role_playing_agent.ipynb)
+
+### Multi-Agent
+2. [Competitive - 对抗型](./notebook/t2_multi-agent-competitive.ipynb)
+3. [Cooperative - 合作型](./notebook/t3_multi-agent-cooperative.ipynb)
+
+### Workflow
+4. [waterfall workflow - 多智能体顺序执行的工作流程](./notebook/t4_waterfall_workflow.ipynb)
+
+### Conversation Patterns
+5. [reflect - 反思，通过让大语言模型扮演多个角色，自问自答，不断提高输出结果](./notebook/t5_reflect.ipynb)
+6. [divide and conquer - 分治，将一个大任务分成多个子任务，让大语言模型扮演多个角色分别完成子任务，汇总形成更全面的结果](./notebook/t6_divide_and_conquer.ipynb)
+
+### Use tools
+7. [use tools - 使用工具](./notebook/t7_use_tools.ipynb)
 
 
 ## 全局 llm_config
@@ -45,17 +57,6 @@ agents:
     type: "ollama"
 ```
 
-# 设计理念
-zerollama.agents 大幅借鉴了 [AutoGen](https://github.com/microsoft/autogen) 的设计理念，强烈建议去看看[原始论文](https://openreview.net/pdf?id=uAjxFFing2).
-
-1. agents 只有一个外部接口 generate_reply 接受会话历史，产生回复
-2. agents 自身没有记忆，就叫agentless吧，会话历史由Session保持
-3. agents 自身没有“自动回复”等流程控制功能。agents之间的交替发言，必须把参与的agents拉入同一个Session， 由Session交替调用对应generate_reply
-4. 内部复杂工作流，通过定义一个agent子类，封装复杂工作流在generate_reply完成。而不是使用nested chat，通过 register_reply 注册自定义回复函数
-5. 使用gevent显示或隐式的并发加快运行， 个人非常讨厌 asyncio
-
-AutoGen 复杂强大的 agent， zerollama.agents 简单弱小的 agent 都是语法糖，agent 的能力最终取决于底层大语言模型的能力。
-
 # 实现逻辑
 1. 什么是Agent，如同人工智能一样，agent是不断发展快速演进的概念，恕我不在这里做出定义。理论上，Agent是这个项目实现能力的超集，共性存在于个性之中，所以Agent理论上应该是基类。
 实际代码里 Agent = ConversableAgent。
@@ -69,9 +70,20 @@ generate_reply 接受会话历史，调用chat_client与大语言模型推理引
 4. RolePlayingAgent, 很快大家发现大语言模型不仅可以扮演 "You are a helpful AI Assistant." 扮演其他角色也活灵活现，大语言模型立即展现了巨大的潜力和商业价值。
 在这个项目里，RolePlayingAgent = LLMAgent，你可以通过修改system_message赋予大语言模型不同人设，让大语言模型扮演不同角色
 5. Multi-Agent, 多个具有不同人设的Agent可以进行交谈，把参与的agents拉入同一个Session， 由Session交替调用对应generate_reply，会话历史由Session保持。
-多Agent系统根据任务类型，可以配置为对抗型(competitive)和合作型(Cooperative)，这只是个开阔思路的分类学，并没有严格限定。可以发挥想象力创建非常复杂的场景，agent之间也有非常复杂的交互模式。
+多Agent系统根据任务类型，可以配置为对抗型(Competitive)和合作型(Cooperative)，这只是个开阔思路的分类学，并没有严格限定。可以发挥想象力创建非常复杂的场景，agent之间也有非常复杂的交互模式。
 6. UserInput, 用户可以通过UserInput混迹于一群Agent中，你可以配置为其他Agent都围绕这User服务，也可以配置为User只是众多Agent中普通的一员。安利 2010年的电影《创：战纪 Tron: Legacy》希望给你一些启发.
 7. Workflow, 内部复杂工作流，通过定义一个 agent 子类，封装复杂工作流在 generate_reply 完成。这里不区分代码写死的手工工作流、静态工作流，还是由大语言模型或方式实现自动选择分支的动态工作流，将工作流包装成agent方便测试和模块复用。
 8. AgentUseTools，理论上你可以把任何输入和输出都是string的、严格执行request-response的协议的函数直接包装成Agent。但一般的函数都接受结构化输入输出，很难跟其他大语言模型或者人类使用自然语言直接交互。
 所以要使用大语言模型包一层，非标转标，将自然语言转为函数需要的抽象格式化输入，函数输出整理为流畅具体的自然语言。 大语言模型还负责从提供的工具集中选择最适合的工具。
 9. Agent Topology and Conversation Patterns 不同的交流模式适合解决不同的任务，逐渐发展出一些成熟的模式，比如reflect反思，divide and conquer分治...使用这些成熟的模式可以快速搭建复杂系统
+
+# 设计理念
+zerollama.agents 大幅借鉴了 [AutoGen](https://github.com/microsoft/autogen) 的设计理念，强烈建议去看看[原始论文](https://openreview.net/pdf?id=uAjxFFing2).
+
+1. agents 只有一个外部接口 generate_reply 接受会话历史，产生回复
+2. agents 自身没有记忆，就叫agentless吧，会话历史由Session保持
+3. agents 自身没有“自动回复”等流程控制功能。agents之间的交替发言，必须把参与的agents拉入同一个Session， 由Session交替调用对应generate_reply
+4. 内部复杂工作流，通过定义一个agent子类，封装复杂工作流在generate_reply完成。而不是使用nested chat，通过 register_reply 注册自定义回复函数
+5. 使用gevent显示或隐式的并发加快运行， 个人非常讨厌 asyncio
+
+AutoGen 复杂强大的 agent， zerollama.agents 简单弱小的 agent 都是语法糖，agent 的能力最终取决于底层大语言模型的能力。
