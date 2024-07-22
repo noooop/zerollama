@@ -17,7 +17,7 @@ $ python -m applications.agents.cli server init applications/agents/deploy.yml
 
 默认部署文件 “[deploy.yml](https://github.com/noooop/zerollama/blob/v0.5/applications/agents/deploy.yml)” 使用 vllm 部署 Qwen/Qwen2-7B-Instruct-GPTQ-Int4， 并部署 ollama 和 openai 网关。
 
-## 先提过示例了解agent可以做啥
+## 先通过示例了解 agent 可以做啥
 
 ### Basic 
 0. [多种协议支持 - 支持 ollama 和 openai 客户端、支持 zerollama 内部通讯协议，支持流式推理](./notebook/t0_llm_client.ipynb)
