@@ -87,3 +87,17 @@ zerollama.agents 大幅借鉴了 [AutoGen](https://github.com/microsoft/autogen)
 5. 使用gevent显示或隐式的并发加快运行， 个人非常讨厌 asyncio
 
 AutoGen 复杂强大的 agent， zerollama.agents 简单弱小的 agent 都是语法糖，agent 的能力最终取决于底层大语言模型的能力。
+
+# 更多 Agent 定义
+很多 Agent 的论文会引用 Franklin and Graesser (1997) 对 Autonomous agents 的定义
+> “An autonomous agent is a system situated within and a part of an environment that senses that environment and acts on it, over time, in pursuit of its own agenda and so as to effect what it senses in the future.”
+
+以及 [LLM Powered Autonomous Agents](https://lilianweng.github.io/posts/2023-06-23-agent/) 的定义和系统概述
+
+> <img src="https://lilianweng.github.io/posts/2023-06-23-agent/agent-overview.png"  width="400">
+> 
+> 关键组成部分包括 Planning、Memory、Tool use、Action。
+
+[ReAct](https://arxiv.org/pdf/2210.03629) 论文里展示 HotPotQA with ReAct 使用 learning = prompt 不到 30% 的 EM 和 learning = finetune 比 30% 多一点点的 EM。Autonomous agents 还有巨大的可能性让研究人员充分探索。
+
+zerollama.agents 是一个更实用主义的框架, 希望将能落地的大模型应用快速落地。
