@@ -14,6 +14,7 @@
 3. [检索增强生成 (RAG) (work in progress!)](./applications/rag)
 4. [使用 vllm](./applications/chat_with_vllm)
 5. [OCR (work in progress!)](./applications/ocr)
+6. [multi-agent](https://github.com/noooop/zerollama/tree/main/applications/agents)
 
 # 支持的推理框架
 ## Chat 模型
