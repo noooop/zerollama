@@ -1,9 +1,9 @@
 torch==2.3.0
-torchvision==0.18.0
-huggingface_hub==0.22.2
-transformers==4.40.2
-accelerate==0.30.1
-optimum==1.19.2
+torchvision
+huggingface_hub
+transformers==4.42.4
+accelerate
+optimum
 auto-gptq==0.7.1
 autoawq==0.2.5
 prettytable==3.10.0

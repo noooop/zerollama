@@ -45,7 +45,31 @@ If you intend to utilize the model for commercial purposes, please reach out to 
 
 [Hugging Face](https://huggingface.co/openbmb)
 
+## MiniCPM-S-1B
 
+###  TL;DR
+The utilization of activation sparsity, namely the existence of considerable weakly-contributed elements among activation outputs, is a promising method for inference acceleration of large language models (LLMs) ([Liu et al., 2023](https://proceedings.mlr.press/v202/liu23am/liu23am.pdf); [Song et al., 2023](https://arxiv.org/pdf/2312.12456.pdf)). Concretely, acceleration methods based on activation sparsity usually achieve higher inference speed by making wiser resource allocation and computation policies to avoid resource waste on these weakly-contributed parameters.
+
+Adopting ReLU as the activation function is a straightforward method to achieve activation sparsity. However, most recent mainstream LLMs adopt activation functions without intrinsic sparsity (e.g., GELU and Swish). Some efforts ([Zhang et al., 2022](https://aclanthology.org/2022.findings-acl.71.pdf); [Mirzadeh et al., 2023](https://arxiv.org/pdf/2310.04564.pdf); [Zhang et al., 2024](https://arxiv.org/pdf/2402.03804.pdf)) introduce ReLU or its variants as the substitutive activation function to help non-ReLU LLMs achieve activation sparsity and inference acceleration, but few can concurrently obtain high sparsity and comparable task-specific performance.
+
+In this work, we introduce a simple and effective sparsification method named "ProSparse" to push LLMs for higher activation sparsity while maintaining comparable performance. By applying ProSparse to Swish-activated LLaMA2-7B, LLaMA2-13B, and MiniCPM-1B, we obtain ReLU-activated models with high sparsity of 89.32%, 88.80%, and 87.89%, respectively, while their performance is comparable to the original version. These present the most sparsely activated models among open-source LLaMA versions and competitive end-size models, considerably surpassing ReluLLaMA-7B (66.98%) and ReluLLaMA-13B (71.56%). Further inference acceleration experiments demonstrate the practical speedup effects of higher sparsity on both [PowerInfer](https://arxiv.org/pdf/2312.12456.pdf) and our two sparse GPU [operators](https://github.com/Raincleared-Song/sparse_gpu_operator).
+
+### News
+- 2024/07/04 发布 MiniCPM-S-1B。
+
+### License 
+This repository is released under the [Apache-2.0](https://github.com/OpenBMB/MiniCPM/blob/main/LICENSE) License.
+
+The usage of MiniCPM model weights must strictly follow [the General Model License (GML)](https://github.com/OpenBMB/General-Model-License/blob/main/%E9%80%9A%E7%94%A8%E6%A8%A1%E5%9E%8B%E8%AE%B8%E5%8F%AF%E5%8D%8F%E8%AE%AE-%E6%9D%A5%E6%BA%90%E8%AF%B4%E6%98%8E-%E5%AE%A3%E4%BC%A0%E9%99%90%E5%88%B6-%E5%95%86%E4%B8%9A%E6%8E%88%E6%9D%83.md).
+
+The models and weights of MiniCPM are completely free for academic research.
+
+If you intend to utilize the model for commercial purposes, please reach out to cpm@modelbest.cn to obtain the certificate of authorization.
+
+### Reference
+[Hugging Face](https://huggingface.co/openbmb/MiniCPM-S-1B-sft/)
+
+Paper: [link](https://arxiv.org/pdf/2402.13516.pdf) (Note: `MiniCPM-S-1B` is denoted as `ProSparse-1B` in the paper.)
 
 ## MiniCPM-V
 

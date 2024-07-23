@@ -1,6 +1,6 @@
 
 import os
-import PIL.Image
+from PIL import Image
 from pathlib import Path
 from zerollama.tasks.ocr.document_layout_analysis.interface import DocumentLayoutAnalysisInterface
 from zerollama.tasks.ocr.document_layout_analysis.collection import get_model_by_name
@@ -22,6 +22,7 @@ class LayoutAnalysis360(DocumentLayoutAnalysisInterface):
         self.model_name = model_name
         self.model_config = model_config
         self.model_info = self.model_config.info
+        self.class_names = self.model_info["class_names"]
 
         self.model = None
         self.weight_dtype = None
@@ -33,16 +34,18 @@ class LayoutAnalysis360(DocumentLayoutAnalysisInterface):
 
     def detection(self, image, lines=None, options=None):
         options = options or {}
+        if not isinstance(image, Image.Image):
+            image = Image.fromarray(image)
 
         bboxes = []
-        for bbox in self.model(source=PIL.Image.fromarray(image), **options)[0].summary():
+        for bbox in self.model(source=image, **options)[0].summary():
             t = {"id": bbox["class"],
                  "label": bbox["name"],
-                 "bbox": [bbox["box"]["x1"], bbox["box"]["y1"],bbox["box"]["x2"], bbox["box"]["y2"]],
+                 "bbox": [bbox["box"]["x1"], bbox["box"]["y1"], bbox["box"]["x2"], bbox["box"]["y2"]],
                  "confidence": bbox["confidence"]}
             bboxes.append(t)
 
-        return DocumentLayoutAnalysisResult(bboxes=bboxes)
+        return DocumentLayoutAnalysisResult(bboxes=bboxes, class_names=self.class_names)
 
 
 

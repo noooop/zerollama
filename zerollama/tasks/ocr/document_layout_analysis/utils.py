@@ -45,7 +45,7 @@ def draw_box(im, result, lables, threshold=0.5):
     result = [r for r in result if r.confidence >= threshold]
 
     for dt in result:
-        color = tuple(clsid2color[dt.label])
+        color = tuple(clsid2color[dt.label.lower()])
         xmin, ymin, xmax, ymax = dt.bbox
         draw.line(
             [(xmin, ymin), (xmin, ymax), (xmax, ymax), (xmax, ymin),
@@ -63,9 +63,7 @@ def draw_box(im, result, lables, threshold=0.5):
 
 
 def get_annotated_image(image, results):
-    class_names = np.array([x.label for x in results.bboxes])
-    lables = list(set(class_names))
-    return draw_box(image, results.bboxes, lables)
+    return draw_box(image, results.bboxes, results.class_names)
 
 
 

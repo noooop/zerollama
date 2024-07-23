@@ -62,12 +62,12 @@ class VLLMChat(ChatInterface):
         self.TextTokensPrompt = TextTokensPrompt
 
     def __del__(self):
-        self.engine.terminate()
-        self.SamplingParams = None
-        self.TextTokensPrompt = None
-        self.engine = None
-
         try:
+            self.engine.terminate()
+            self.SamplingParams = None
+            self.TextTokensPrompt = None
+            self.engine = None
+
             gc.collect()
             torch.cuda.empty_cache()
         except Exception:
@@ -77,29 +77,7 @@ class VLLMChat(ChatInterface):
     def info(self):
         return self.model_info
 
-    def chat(self, messages, stream=False, options=None):
-        options = options or {}
-        options["max_tokens"] = options.get("max_tokens", 256)
-        skip_empty_delta_text = options.pop("skip_empty_delta_text", True)
-        request_id = f"{shortuuid.random(length=22)}"
-        sampling_params = self.SamplingParams(**options)
-
-        def encode(messages):
-            tokenizer = self.engine.get_tokenizer()
-            prompt = tokenizer.apply_chat_template(
-                conversation=messages,
-                tokenize=False,
-                add_generation_prompt=True,
-            )
-
-            prompt_token_ids = tokenizer.encode(prompt)
-            inputs = self.TextTokensPrompt(prompt=prompt, prompt_token_ids=prompt_token_ids)
-            return inputs
-
-        with ThreadPoolExecutor(1) as executor:
-            f = executor.submit(encode, messages)
-            inputs = f.result()
-
+    def _generate(self, stream, request_id, inputs, sampling_params, skip_empty_delta_text):
         result_generator = self.engine.generate(inputs=inputs,
                                                 sampling_params=sampling_params,
                                                 request_id=request_id)
@@ -149,7 +127,49 @@ class VLLMChat(ChatInterface):
                                                           "prompt_tokens": prompt_tokens,
                                                           "completion_tokens": completion_tokens,
                                                           "total_tokens": prompt_tokens + completion_tokens})
+
             return generator()
+
+    def chat(self, messages, tools=None, stream=False, options=None):
+        options = options or {}
+        options["max_tokens"] = options.get("max_tokens", 256)
+        skip_empty_delta_text = options.pop("skip_empty_delta_text", True)
+        request_id = f"{shortuuid.random(length=22)}"
+        sampling_params = self.SamplingParams(**options)
+
+        def encode_chat(messages):
+            tokenizer = self.engine.get_tokenizer()
+            prompt = tokenizer.apply_chat_template(
+                conversation=messages,
+                tokenize=False,
+                add_generation_prompt=True,
+            )
+
+            prompt_token_ids = tokenizer.encode(prompt)
+            inputs = self.TextTokensPrompt(prompt=prompt, prompt_token_ids=prompt_token_ids)
+            return inputs
+
+        def encode_tools(messages):
+            tokenizer = self.engine.get_tokenizer()
+            prompt = tokenizer.apply_chat_template(
+                messages,
+                chat_template="tool_use",
+                tools=tools,
+                add_generation_prompt=True,
+                tokenize=False
+            )
+            prompt_token_ids = tokenizer.encode(prompt)
+            inputs = self.TextTokensPrompt(prompt=prompt, prompt_token_ids=prompt_token_ids)
+            return inputs
+
+        with ThreadPoolExecutor(1) as executor:
+            if tools is not None:
+                f = executor.submit(encode_tools, messages)
+            else:
+                f = executor.submit(encode_chat, messages)
+            inputs = f.result()
+
+        return self._generate(stream, request_id, inputs, sampling_params, skip_empty_delta_text)
 
 
 def run_test(model_name, stream=False, **kwargs):

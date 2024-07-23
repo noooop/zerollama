@@ -47,7 +47,8 @@ class HuggingFaceTransformers(object):
     def load(self):
         config = config_setup()
 
-        if config.use_modelscope and not self.model_info.get("use_hf_only", False):
+        if (config.use_modelscope and not self.model_info.get("use_hf_only", False) and
+                not ("modelscope_name" in self.model_info and self.model_info["modelscope_name"] == "")):
             from modelscope import AutoModelForCausalLM, AutoTokenizer
             from transformers import TextIteratorStreamer, BitsAndBytesConfig
         else:
@@ -94,6 +95,12 @@ class HuggingFaceTransformers(object):
                                                   trust_remote_code=self.trust_remote_code)
         streamer = TextIteratorStreamer(tokenizer, skip_prompt=True, skip_special_tokens=True)
 
+        if self.model_config.model_kwargs.get("use_generation_config", False):
+            from transformers.generation import GenerationConfig
+            self.generation_config = GenerationConfig.from_pretrained(
+                self.pretrained_model_name,
+                trust_remote_code=self.trust_remote_code)
+
         self.model = model
         self.tokenizer = tokenizer
         self.streamer = streamer
@@ -129,10 +136,11 @@ class HuggingFaceTransformersChat(HuggingFaceTransformers, ChatInterface):
         prompt_tokens = len(model_inputs.input_ids[0])
 
         if not stream:
-            generated_ids = self.model.generate(
-                model_inputs.input_ids,
-                max_new_tokens=max_new_tokens
-            )
+            generation_kwargs = dict(model_inputs, max_new_tokens=max_new_tokens)
+            if self.model_config.model_kwargs.get("use_generation_config", False):
+                generation_kwargs["generation_config"] = self.generation_config
+
+            generated_ids = self.model.generate(**generation_kwargs)
             generated_ids = [
                 output_ids[len(input_ids):] for input_ids, output_ids in zip(model_inputs.input_ids, generated_ids)
             ]
@@ -151,6 +159,9 @@ class HuggingFaceTransformersChat(HuggingFaceTransformers, ChatInterface):
         else:
             def generator():
                 generation_kwargs = dict(model_inputs, streamer=self.streamer, max_new_tokens=max_new_tokens)
+                if self.model_config.model_kwargs.get("use_generation_config", False):
+                    generation_kwargs["generation_config"] = self.generation_config
+
                 thread = Thread(target=self.model.generate, kwargs=generation_kwargs)
                 thread.start()
 

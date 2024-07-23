@@ -45,3 +45,4 @@ class LayoutBox(BboxC):
 
 class DocumentLayoutAnalysisResult(BaseModel):
     bboxes: List[LayoutBox]
+    class_names: List[str]

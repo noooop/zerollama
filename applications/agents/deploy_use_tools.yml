@@ -1,0 +1,9 @@
+chat:
+  models:
+    -
+      name: "NousResearch/Hermes-2-Pro-Llama-3-8B"
+      engine_kwargs:
+        gpu_memory_utilization: 0.9
+        use_vllm: True
+
+entrypoints: ["ollama_compatible", "openai_compatible"]

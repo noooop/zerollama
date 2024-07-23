@@ -17,13 +17,13 @@ def setup():
                                         })
     entrypoint1 = HttpEntrypoint(
         name="ollama_compatible",
-        server_class="zerollama.microservices.entrypoints.ollama_compatible.api:app",
-        server_kwargs={"port": 11434})
+        engine_class="zerollama.microservices.entrypoints.ollama_compatible.api:app",
+        engine_kwargs={"port": 11434})
 
     entrypoint2 = HttpEntrypoint(
         name="openai_compatible",
-        server_class="zerollama.microservices.entrypoints.openai_compatible.api:app",
-        server_kwargs={"port": 8080})
+        engine_class="zerollama.microservices.entrypoints.openai_compatible.api:app",
+        engine_kwargs={"port": 8080})
 
     handle = [nameserver, chat_manager, retriever_manager, entrypoint1, entrypoint2]
     return handle

@@ -42,4 +42,4 @@ class VLMChatCompletionRequest(BaseModel):
 class VLMChatCompletionResponse(BaseModel):
     model: str
     content: Optional[str] = None
-    data: Any
+    data: Optional[Any] = None

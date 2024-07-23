@@ -77,4 +77,4 @@ class PaddleOCRDocumentLayoutAnalysis(DocumentLayoutAnalysisInterface):
                  "confidence": 1.0}
             bboxes.append(t)
 
-        return DocumentLayoutAnalysisResult(bboxes=bboxes)
+        return DocumentLayoutAnalysisResult(bboxes=bboxes, class_names=self.labels)

@@ -14,6 +14,7 @@
 3. [检索增强生成 (RAG) (work in progress!)](./applications/rag)
 4. [使用 vllm](./applications/chat_with_vllm)
 5. [OCR (work in progress!)](./applications/ocr)
+6. [multi-agent](https://github.com/noooop/zerollama/tree/main/applications/agents)
 
 # 支持的推理框架
 ## Chat 模型
@@ -36,6 +37,10 @@
 - [Mistral](https://github.com/noooop/zerollama/tree/main/zerollama/models/mistral)
 - [GLM-4](https://github.com/noooop/zerollama/tree/main/zerollama/models/thudm)
 - [bilibili Index](https://github.com/noooop/zerollama/tree/main/zerollama/models/bilibili)
+- [360Zhinao](https://github.com/noooop/zerollama/tree/main/zerollama/models/qihoo360)
+- [InternLM](https://github.com/noooop/zerollama/tree/main/zerollama/models/lnternlm)
+- [Arcee-Spark](https://github.com/noooop/zerollama/tree/main/zerollama/models/arcee)
+- [NousResearch/Hermes-2](https://github.com/noooop/zerollama/tree/main/zerollama/models/hermes)
 
 ## Retriever(Embeddings) 模型
 - [bge-retrieval](https://github.com/noooop/zerollama/tree/main/zerollama/models/baai)
@@ -46,12 +51,15 @@
 ## Reranker 模型
 - [bge-reranker](https://github.com/noooop/zerollama/tree/main/zerollama/models/baai)
 - [bce-reranker](https://github.com/noooop/zerollama/tree/main/zerollama/models/bce)
+- [jina-reranker-v2](https://github.com/noooop/zerollama/tree/main/zerollama/models/jina)
+- [360Zhinao-1.8B-Reranking](https://github.com/noooop/zerollama/tree/main/zerollama/models/qihoo360)
 
 ## Vision-Language Multimodal 模型 
 - [CogVLM2](https://github.com/noooop/zerollama/tree/main/zerollama/models/thudm)
 - [MiniCPM-V](https://github.com/noooop/zerollama/tree/main/zerollama/models/openbmb)
 - [DeepSeek-VL](https://github.com/noooop/zerollama/tree/main/zerollama/models/deepseek)
 - [Florence-2](https://github.com/noooop/zerollama/tree/main/zerollama/models/florence)
+- [LLaVA](https://github.com/noooop/zerollama/tree/main/zerollama/models/llava)
 
 ## Super Resolution 模型 
 - [APISR](https://github.com/noooop/zerollama/tree/main/zerollama/models/apisr)
@@ -80,6 +88,19 @@
 ### Table Structure Recognition
 - [ragflow/deepdoc_tsr](https://github.com/noooop/zerollama/tree/main/zerollama/models/ragflow)
 - [PaddleOCR_tsr](https://github.com/noooop/zerollama/tree/main/zerollama/models/paddleocr)
+
+## Text to Image 文生图模型
+- [HunyuanDiT](https://github.com/noooop/zerollama/tree/main/zerollama/models/hunyun)
+- [Kwai-Kolors](https://github.com/noooop/zerollama/tree/main/zerollama/models/kolors)
+
+相关模型
+
+- controlnet-union (hold)
+- controlnet_aux (hold)
+
+### DepthEstimation
+- [Depth-Anything-V2](https://github.com/noooop/zerollama/tree/main/zerollama/models/depth_anything)
+
 
 ## Contribute
 贡献代码请交逻辑清晰思路、简单直接的代码、不要有魔法，甚至可以牺牲一部分性能换取可读性

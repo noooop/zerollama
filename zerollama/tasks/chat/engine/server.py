@@ -1,3 +1,5 @@
+
+import inspect
 from zerollama.tasks.chat.collection import get_model_by_name
 from zerollama.tasks.chat.protocol import ChatCompletionRequest, ChatCompletionStreamResponseDone
 from zerollama.tasks.chat.protocol import ZeroServerResponseOk, ZeroServerStreamResponseOk
@@ -7,18 +9,23 @@ from zerollama.tasks.base.engine.server import ZeroInferenceEngine
 class ZeroChatInferenceEngine(ZeroInferenceEngine):
     get_model_by_name = staticmethod(get_model_by_name)
 
-    def inference_worker(self, req):
+    def inference_worker(self, req, **kwargs):
         ccr = ChatCompletionRequest(**req.data)
-        if ccr.stream:
-            for rep_id, response in enumerate(self.inference.stream_chat(ccr.messages, ccr.options)):
-                rep = ZeroServerStreamResponseOk(msg=response,
-                                                 snd_more=not isinstance(response, ChatCompletionStreamResponseDone),
-                                                 rep_id=rep_id)
-                self.zero_send(req, rep)
-        else:
-            response = self.inference.chat(ccr.messages, ccr.options)
+
+        kwargs = ccr.model_dump()
+        kwargs.pop("model", None)
+
+        response = self.inference.chat(**kwargs)
+
+        if not inspect.isgenerator(response):
             rep = ZeroServerResponseOk(msg=response)
             self.zero_send(req, rep)
+        else:
+            for rep_id, rsp in enumerate(response):
+                rep = ZeroServerStreamResponseOk(msg=rsp,
+                                                 snd_more=not isinstance(rsp, ChatCompletionStreamResponseDone),
+                                                 rep_id=rep_id)
+                self.zero_send(req, rep)
 
 
 if __name__ == '__main__':

@@ -62,4 +62,4 @@ class DeepDocDocumentLayoutAnalysis(DocumentLayoutAnalysisInterface):
                  "confidence": bbox["score"]}
             bboxes.append(t)
 
-        return DocumentLayoutAnalysisResult(bboxes=bboxes)
+        return DocumentLayoutAnalysisResult(bboxes=bboxes, class_names=self.labels)
