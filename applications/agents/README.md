@@ -113,7 +113,7 @@ Agent 原始的定义偏向于将其部署于未知的环境中，agent 提过�
 而现在的大语言模型中心的应用，部署在完全为其发挥能力的环境中，环境对大语言模型都是已知的，尽可能按大语言模型设计、改造，手把手的教生怕大语言出问题。
 
 说的更直白一点，一个用大语言模型做角色扮演的最简单应用，不涉及Planning、Memory、Tool use、Action，也没有观察周围环境，与周围环境交互，逐渐学习，是否可以称之为 Agent。
-这不经让人怀疑，大语言模型收编 agent 的过程，是否是对 “Agent” 这个词的滥用，而之前 “Agent” 指代的学科沦为大语言模型使用的一个场景。
+这不禁让人怀疑，大语言模型收编 agent 的过程，是否是对 “Agent” 这个词的滥用，而之前 “Agent” 指代的学科沦为大语言模型使用的一个场景。
 
 回到 zerollama.agents 这个库来，Agent=ConversableAgent->LLMAgent=RolePlayingAgent->AgentUseTools，角色扮演称之为 Agent，AgentUseTools 沦为大语言模型使用的一个场景。
 这样的抽象层次简单直观。虽然我对这样的分类学和 “Agent” 这个词的滥用有所保留。
