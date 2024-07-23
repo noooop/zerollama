@@ -92,12 +92,30 @@ AutoGen 复杂强大的 agent， zerollama.agents 简单弱小的 agent 都是�
 很多 Agent 的论文会引用 Franklin and Graesser (1997) 对 Autonomous agents 的定义
 > “An autonomous agent is a system situated within and a part of an environment that senses that environment and acts on it, over time, in pursuit of its own agenda and so as to effect what it senses in the future.”
 
+很长时间，Autonomous agents 都是跟机器学习、深度学习、神经网络、自然语言处理等平行发展，直到ChatGPT时刻。
+ChatGPT 的 in-Context Learning 和 follow instructions 的能力，以及chat自然语言交互方式深刻影响了包括 Autonomous agents 的众多领域。
+
 以及 [LLM Powered Autonomous Agents](https://lilianweng.github.io/posts/2023-06-23-agent/) 的定义和系统概述
 
 > <img src="https://lilianweng.github.io/posts/2023-06-23-agent/agent-overview.png"  width="400">
 > 
 > 关键组成部分包括 Planning、Memory、Tool use、Action。
 
-[ReAct](https://arxiv.org/pdf/2210.03629) 论文里展示 HotPotQA with ReAct 使用 learning = prompt 不到 30% 的 EM 和 learning = finetune 比 30% 多一点点的 EM。Autonomous agents 还有巨大的可能性让研究人员充分探索。
+在 [A Survey on Large Language Model based Autonomous Agents](https://arxiv.org/abs/2308.11432) 中
 
-zerollama.agents 是一个更实用主义的框架, 希望将能落地的大模型应用快速落地。
+> <img src="https://github.com/Paitesanshi/LLM-Agent-Survey/raw/main/assets/architecture-1.png?raw=true"  width="400">
+>
+> 关键组成部分包括 Profile、Memory、Planning、Action。
+
+Agent 越来越变成大语言模型的样子。
+
+Agent 原始的定义偏向于将其部署于未知的环境中，agent 提过观察周围环境，与周围环境交互，逐渐学习，最终完成既定目标。
+而现在的大语言模型中心的应用，部署在完全为其发挥能力的环境中，环境对大语言模型都是已知的，尽可能按大语言模型设计、改造，手把手的教生怕大语言出问题。
+
+说的更直白一点，一个用大语言模型做角色扮演的最简单应用，不涉及Planning、Memory、Tool use、Action，也没有观察周围环境，与周围环境交互，逐渐学习，是否可以称之为 Agent。
+这不经让人怀疑，大语言模型收编 agent 的过程，是否是对 “Agent” 这个词的滥用，而之前 “Agent” 指代的学科沦为大语言模型使用的一个场景。
+
+回到 zerollama.agents 这个库来，Agent=ConversableAgent->LLMAgent=RolePlayingAgent->AgentUseTools，角色扮演称之为 Agent，AgentUseTools 沦为大语言模型使用的一个场景。
+这样的抽象层次简单直观。虽然我对这样的分类学和 “Agent” 这个词的滥用有所保留。
+
+
