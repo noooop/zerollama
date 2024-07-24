@@ -123,7 +123,7 @@ class HuggingFaceTransformers(object):
 
 class HuggingFaceTransformersChat(HuggingFaceTransformers, ChatInterface):
     @torch.no_grad()
-    def chat(self, messages, stream=False, options=None):
+    def chat(self, messages, tools=None, stream=False, options=None):
         options = options or dict()
         max_new_tokens = options.get("max_new_tokens", 512)
 

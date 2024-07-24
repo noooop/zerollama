@@ -57,7 +57,7 @@ class LLamaCPPChat(ChatInterface):
     def info(self):
         return self.model_info
 
-    def chat(self, messages, stream=False, options=None):
+    def chat(self, messages, tools=None, stream=False, options=None):
         options = options or dict()
         response = self.model.create_chat_completion(messages, stream=stream, **options)
 

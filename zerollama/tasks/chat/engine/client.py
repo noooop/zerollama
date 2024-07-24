@@ -51,42 +51,6 @@ class ChatClient(ZeroClient):
                     yield rep
             return generator()
 
-    def tool_use(self, name, messages, tools, stream=False, options=None):
-        method = "inference"
-        data = {"model": name,
-                "messages": messages,
-                "options": options or dict(),
-                "stream": stream}
-        if CLIENT_VALIDATION:
-            data = ChatCompletionRequest(**data).dict()
-
-        response = self.query(name, method, data)
-        if response is None:
-            raise RuntimeError(f"Chat [{name}] server not found.")
-
-        if not inspect.isgenerator(response):
-            if response.state != "ok":
-                raise RuntimeError(f"Chat [{name}] error, with error msg [{response.msg}]")
-
-            rep = ChatCompletionResponse(**response.msg)
-            return rep
-        else:
-            def generator():
-                for rep in response:
-                    if rep is None:
-                        raise RuntimeError(f"Chat [{name}] server not found.")
-
-                    if rep.state != "ok":
-                        raise RuntimeError(f"Chat [{name}] error, with error msg [{rep.msg}]")
-
-                    if rep.msg["finish_reason"] is None:
-                        rep = ChatCompletionStreamResponse(**rep.msg)
-                    else:
-                        rep = ChatCompletionStreamResponseDone(**rep.msg)
-
-                    yield rep
-            return generator()
-
     def stream_chat(self, name, messages, options=None):
         for rep in self.chat(name, messages, stream=True, options=options):
             yield rep
