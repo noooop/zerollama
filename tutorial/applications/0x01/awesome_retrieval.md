@@ -23,6 +23,20 @@ retrieval rerank 两阶段检索，第一阶段先用双塔模型大量召回比
   - It also achieves considerable speedups compared to highly optimized Java-based implementations, which are used by popular commercial products.
   - 单线程跟 lucene 有的一拼，速度真的很快
 
+# History
+诡异的数据集构建和测试方法怎么来的。
+- Thu, 22 Aug 2019 [Multi-passage BERT: A Globally Normalized BERT Model for Open-domain Question Answering](https://arxiv.org/abs/1908.08167)
+  - previous work defines passages as articles, paragraphs, or sentences. However, the question of proper granularity of passages is still underexplored.
+    - (RAG chucking 的粒度问题从 2019 年一直讨论到 2024 年，base模型的推理能力和上下文能力每增强一次都会重新讨论一次
+  - we find that splitting articles into passages with the length of 100 words by sliding window improves performance by 4%.
+    - We set the window size as 100 words, and the stride as 50 words(half the window size). 
+    - 记住这个 100 words as passages
+  - Passage ranker reranks all retrieved passages, and selects a list of high-quality passages for the multi-passage BERT model.
+    - First, the retriever returns top-100 passages for each question. Then, the passage ranker is employed to rerank these 100 passages. Finally, multi-passage BERT takes top30 reranked passages as input to pinpoint the final answer. 
+    - (ranker 理念出现的时间也非常早
+  - we use the 2016-12-21 English Wikipedia dump. Following DrQA 2017
+
+
 # Retrieval(Embeddings) model
 - Fri, 10 Apr 2020 [Dense Passage Retrieval for Open-Domain Question Answering](https://arxiv.org/abs/2004.04906)
   - DPR 论文提出的整个体系，包括模型、训练、在线推理，都跟现在主流相近，数据集的处理方式最新论文还在follow，在几个数据集上的结果最新论文仍作为baseline比较。那就多写一点。
@@ -32,7 +46,7 @@ retrieval rerank 两阶段检索，第一阶段先用双塔模型大量召回比
   - Experimental Setup:
     - English Wikipedia dump from Dec. 20, 2018 as the source documents for answering questions. Following (Lee et al., 2019), Following DrQA 2017 
     - We then split each article into multiple, disjoint text blocks of 100 words as passages, serving as our basic retrieval units. Following (Wang et al., 2019) 
-    - 后续工作 100 words as passages 就是从这里来的
+      - 记住这个 100 words as passages
     - five QA datasets(Natural Questions 2019(NQ), TriviaQA 2017, WebQuestions 2013(WQ), CuratedTREC 2015(TREC), SQuAD v1.1 2016)
     - Selection of positive passages
       - TREC, WebQuestions and TriviaQA:  we use the highest-ranked passage from BM25 that contains the answer as the positive passage. If none of the top 100 retrieved passages has the answer, the question will be discarded.
@@ -58,7 +72,7 @@ retrieval rerank 两阶段检索，第一阶段先用双塔模型大量召回比
     - Run-time Efficiency
       - BM25+Lucene vs DPR+FAISS
   - End-to-end QA System
-    - The probabilities of a token being the starting/ending positions of an answer span and a passage being selected. (这种预测答案位置的bert已经退出历史舞台)
+    - The probabilities of a token being the starting/ending positions of an answer span and a passage being selected. (这种预测答案位置的 reading comprehension (RC) 任务已经退出历史舞台)
     - measured by exact match with the reference answer after minor normalization as in (Chen et al., 2017; Lee et al., 2019)  (EM的评判标准一直延续下来）
     - higher retriever accuracy typically leads to better final QA results
     - Recent work (Izacard and Grave, 2020; Lewis et al., 2020b) have also shown that DPR can be combined with generation models such as BART (Lewis et al., 2020a) and T5 (Raffel et al., 2019), achieving good performance on open-domain QA and other knowledge-intensive tasks.
@@ -68,6 +82,14 @@ retrieval rerank 两阶段检索，第一阶段先用双塔模型大量召回比
   - <img src="https://github.com/noooop/noooop.github.io/blob/main/applications/rag/dpr2.png?raw=true" width="400">
 
 
+# Chucking Granularity
+- Thu, 22 Aug 2019 [Multi-passage BERT: A Globally Normalized BERT Model for Open-domain Question Answering](https://arxiv.org/abs/1908.08167)
+- Mon, 11 Dec 2023 [Dense X Retrieval: What Retrieval Granularity Should We Use?](https://arxiv.org/abs/2312.06648)
+- Wed, 31 Jan 2024 [RAPTOR: Recursive Abstractive Processing for Tree-Organized Retrieval](https://arxiv.org/abs/2401.18059)
+- Mon, 20 May 2024 [Question-Based Retrieval using Atomic Units for Enterprise RAG](https://arxiv.org/abs/2405.12363)
+- Fri, 21 Jun 2024 [LongRAG: Enhancing Retrieval-Augmented Generation with Long-context LLMs](https://arxiv.org/abs/2406.15319)
+- Tue, 25 Jun 2024 [LumberChunker: Long-Form Narrative Document Segmentation](https://arxiv.org/abs/2406.17526)
+  
 # Rerank model
 - Tue, 27 Aug 2019 [Sentence-BERT: Sentence Embeddings using Siamese BERT-Networks](https://arxiv.org/abs/1908.10084)
   - [sentence-transformers](https://github.com/UKPLab/sentence-transformers/)
