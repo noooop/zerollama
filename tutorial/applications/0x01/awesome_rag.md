@@ -9,13 +9,6 @@
 - Wed, 8 May 2024 [A Method for Parsing and Vectorization of Semi-structured Data used in Retrieval Augmented Generation](https://arxiv.org/abs/2405.03989)
   - unstructured -> .docx -> chunk by title -> RAG
 
-# Retrieval
-
-- Fri, 23 Feb 2024 [Self-Retrieval: Building an Information Retrieval System with One Large Language Model](https://arxiv.org/abs/2403.00801)
-  - LLM can memorize (passage -> title)
-  - 至少Hit@1、 Hit@5、 MRR@5 指标比 dense retrieval 模型 GTR BGE OpenAI 效果好?? 所以 dense retrieval 必须配合 reranker ??
-
-
 # Adaptive Retrieval
 - Sun, 8 Oct 2023 [Self-Knowledge Guided Retrieval Augmentation for Large Language Models](https://arxiv.org/abs/2310.05002)
   - 将 query 二分类，需不需检索
