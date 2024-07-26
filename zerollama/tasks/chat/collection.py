@@ -4,7 +4,7 @@ from zerollama.models.deepseek.chat import DeepSeekLLM
 from zerollama.models.openbmb.chat import MiniCPM
 from zerollama.models.qwen.chat import Qwen1_5, Qwen1_5_GGUF, Qwen2
 from zerollama.models.yi.chat import Yi, Yi_1_5
-from zerollama.models.llama.llama3 import Llama3
+from zerollama.models.llama.llama3 import Llama3, Llama3_1
 from zerollama.models.llama.llama3zh import Llama3ZH
 from zerollama.models.xverse.chat import XVERSE, XVERSE_GGUF
 from zerollama.models.yuan.chat import Yuan, Yuan_GGUF
@@ -17,7 +17,7 @@ from zerollama.models.arcee.chat import ArceeSpark
 from zerollama.models.hermes.chat import Hermes
 
 MODELS = [DeepSeekLLM, MiniCPM, Qwen1_5, Qwen1_5_GGUF, Qwen2,
-          Yi, Yi_1_5, Llama3, Llama3ZH, XVERSE, XVERSE_GGUF,
+          Yi, Yi_1_5, Llama3, Llama3_1, Llama3ZH, XVERSE, XVERSE_GGUF,
           Yuan, Yuan_GGUF, Mistral, GLM4, Index, IndexGGUF,
           Zhinao360, InternLM, InternLM_GGUF, ArceeSpark, Hermes]
 
