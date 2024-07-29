@@ -18,10 +18,14 @@ class Llama3_1(ChatModel):
     model_kwargs = {}
     header = ["name", "modelscope_name", "size", "quantization", "bits"]
     info = [
-        # name                                          modelscope_name                               size    quantization(_, GPTQ, AWQ)     bits
-        ["meta-llama/Meta-Llama-3.1-8B-Instruct",       "LLM-Research/Meta-Llama-3.1-8B-Instruct",   "8B",   "",                            ""],
-        ["meta-llama/Meta-Llama-3.1-70B-Instruct",      "LLM-Research/Meta-Llama-3.1-70B-Instruct",  "70B",  "",                            ""],
-        ["meta-llama/Meta-Llama-3.1-405B-Instruct",     "LLM-Research/Meta-Llama-3.1-405B-Instruct", "405B", "",                            ""],
+        # name                                                modelscope_name                                      size    quantization(_, GPTQ, AWQ)     bits
+        ["meta-llama/Meta-Llama-3.1-8B-Instruct",            "LLM-Research/Meta-Llama-3.1-8B-Instruct",            "8B",   "",                            ""],
+        ["meta-llama/Meta-Llama-3.1-70B-Instruct",           "LLM-Research/Meta-Llama-3.1-70B-Instruct",           "70B",  "",                            ""],
+        ["meta-llama/Meta-Llama-3.1-405B-Instruct",          "LLM-Research/Meta-Llama-3.1-405B-Instruct",          "405B", "",                            ""],
+
+        ["meta-llama/Meta-Llama-3.1-8B-Instruct-AWQ-INT4",   "LLM-Research/Meta-Llama-3.1-8B-Instruct-AWQ-INT4",   "8B",   "AWQ",                         "4bit"],
+        ["meta-llama/Meta-Llama-3.1-70B-Instruct-AWQ-INT4",  "LLM-Research/Meta-Llama-3.1-70B-Instruct-AWQ-INT4",  "70B",  "AWQ",                         "4bit"],
+        ["meta-llama/Meta-Llama-3.1-405B-Instruct-AWQ-INT4", "LLM-Research/Meta-Llama-3.1-405B-Instruct-AWQ-INT4", "405B", "AWQ",                         "4bit"],
     ]
 
 
