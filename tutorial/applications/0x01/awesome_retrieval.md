@@ -144,6 +144,22 @@ retrieval rerank 两阶段检索，第一阶段先用双塔模型大量召回比
     - DPR 全面超越 BM25，multi-dataset训练出来的模型效果更好，DPR+BM25相互补充效果稍微有提高
     - <img src="https://github.com/noooop/noooop.github.io/blob/main/applications/rag/dpr2.png?raw=true" width="400">
     - <img src="https://github.com/noooop/noooop.github.io/blob/main/applications/rag/dpr1.png?raw=true" width="400">
+- Sun, 18 Apr 2021 [SimCSE: Simple Contrastive Learning of Sentence Embeddings](https://arxiv.org/abs/2104.08821)
+  - We first describe an unsupervised approach, which takes an input sentence and predicts itself in a contrastive objective, 
+  - with only standard dropout used as noise. 
+  - This simple method works surprisingly well, performing on par with previous supervised counterparts. 
+  - We find that dropout acts as minimal data augmentation, and removing it leads to a representation collapse.
+    - 有意思。
+  - unsupervised 效果甚至不如 BM25，但 SimCSE 已经成为 Dense Retrieval 有监督训练之前无监督训练的标准操作
+- Thu, 19 Aug 2021 [Sentence-T5: Scalable Sentence Encoders from Pre-trained Text-to-Text Models](https://arxiv.org/abs/2108.08877)
+  - Google 的 sentence embeddings from text-to-text transformers (ST5)
+    - ST5-Enc Base 110M, Large 335M, 3B 1.24B, 11B 4.8B
+    - ST5-EncDec Base 110M, Large 335M, 3B 3B, 11B 11B
+  - ST5-Enc mean 效果比 ST5-EncDec first 和 ST5-Enc first 效果好。
+  - encoder-only 对于 Retrieval 任务已经足够了
+- Wed, 15 Dec 2021 [Large Dual Encoders Are Generalizable Retrievers](https://arxiv.org/abs/2112.07899)
+  - Google 的 Generalizable T5-based dense Retrievers (GTR)
+  - Base 110M, Large 335M, XL 1.24B, XXL 4.8B
 - Thu, 14 Apr 2022 [Exploring Dual Encoder Architectures for Question Answering](https://arxiv.org/abs/2204.07120)
   - Dual encoders have been used for questionanswering (QA) and information retrieval (IR) tasks with good results.
   - Previous research focuses on two major types of dual encoders,
@@ -161,6 +177,73 @@ retrieval rerank 两阶段检索，第一阶段先用双塔模型大量召回比
 - Sun, 27 Nov 2022 [Dense Text Retrieval based on Pretrained Language Models: A Survey](https://arxiv.org/abs/2211.14876)
   - 2022 年对于 Dense Text Retrieval 的 Survey 已经有 351 引用
   - 其中包括 6 篇 之前的 Survey。行吧
+- Wed, 7 Dec 2022 [Text Embeddings by Weakly-Supervised Contrastive Pre-training](https://arxiv.org/abs/2212.03533)
+  - 微软的E5
+  - We pre-train on our proposed text pair dataset for three model sizes: E5small, E5base and E5large initialized from MiniLM, bert-base-uncased, and bert-large-uncased-whole-wordmasking respectively
+  - E5-PTlarge 也就略好于 BM25，Weakly-Supervised Contrastive Pre-training 不如 Supervised models
+  - Supervised models E5large 比之前 GTRxxl、Sentence-T5xxl强
+  - Weakly-Supervised Contrastive Pre-training + Supervised Fine-tuning 称为 sota 模型的标配
+- Mon, 5 Feb 2024 [BGE M3-Embedding: Multi-Lingual, Multi-Functionality, Multi-Granularity Text Embeddings Through Self-Knowledge Distillation](https://arxiv.org/abs/2402.03216)
+  - BAAI的BGE M3
+  - we introduce a new embedding model called M3-Embedding Supervised models
+    - Multi-Linguality:  It provides a uniform support for the semantic retrieval of more than 100 working languages. Enables both multilingual retrieval within each language and crosslingual retrieval between different languages.
+    - Multi-Functionality: It can simultaneously accomplish the three common retrieval functionalities: dense retrieval, multi-vector retrieval, and sparse retrieval.
+    - Multi-Granularity:  Besides, it is also capable of processing inputs of different granularities, spanning from short sentences to long documents of up to 8,192 tokens
+  - Related Work
+    - powerful text encoders bert 2019, DPR 2020, ST5 2022
+    - negative sampling (Xiong et al., 2020; Qu et al.,2021) 
+    - knowledge distillation (Hofstatter et al. ¨ , 2021; Ren et al., 2021; Zhang et al., 2021a). 
+    - 之前的 Dense Retrieval：Contriever (Izacard et al., 2022), LLM-Embedder (Zhang et al., 2023a), E5 (Wang et al., 2022), BGE (Xiao et al., 2023), SGPT (Muennighoff, 2022), and Open Text Embedding (Neelakantan et al., 2022),
+  - In our work, the following technical contributions are made to optimize the embedding quality. 
+    - Firstly, we propose a novel self knowledge distillation framework
+      - the [CLS] embedding is used for dense retrieval, while embeddings from other tokens are used for sparse retrieval and multi-vector retrieval.
+      - we integrate the relevance scores from different retrieval functions as the teacher signal, which is used to enhance the learning process via knowledge distillation.
+    - Secondly, we optimize the batching strategy to achieve a large batch size and high training throughput, which substantially contributes to the discriminativeness of embeddings. 
+    - Last but not least, we perform extensive and high-quality data curation. 
+      - Our dataset includes three sources: 
+        - 1) the extraction of unsupervised data from massive multi-lingual corpora, In total, it brings in 1.2 billion text pairs of 194 languages and 2655 cross-lingual correspondences.
+        - 2) we collect relatively small but diverse and high-quality fine-tuning data from labeled corpora. we incorporate 8 datasets, For Chinese, we integrate 7 datasets, For other languages, we leverage the training data from Mr. Tydi (Zhang et al., 2021b) and MIRACL (Zhang et al., 2023c).
+        - 3) the synthesization of scarce training data
+          - Specifically, we sample lengthy articles from Wikipedia, Wudao (Yuan et al., 2021) and mC4 datasets and randomly choose paragraphs from them. 
+          - Then we use GPT3.5 to generate questions based on these paragraphs.
+          - 使用 GPT 合成数据训练模型开始成为主流
+      - The three data sources are complement to each other and applied to different training stages, which lays a solid foundation for the versatile text embeddings.
+    - Train
+      - loss
+        - minimize the InfoNCE loss(NCE stands for Noise-Contrastive Estimation)
+      - native multi-objective training can be unfavorable to the embedding’s quality.
+        -  we integrate the relevance scores from different retrieval functions as the teacher signal, which is used to enhance the learning process via knowledge distillation.
+      - The training process constituta multi-stage workflow
+        - the text encoder (an XLM-RoBERTa (Conneau et al., 2020) model adapted by RetroMAE (Xiao et al., 2022) method) is pre-trained with the massive unsupervised data, where only the dense retrieval is trained in the basic form of contrastive learning.
+        - The self-knowledge distillation is applied to the second stage, where the embedding model is fine-tuned to establish the three retrieval functionalities.
+          - Both labeled and synthetic data are used in this stage, where hard negative samples are introduced for each query following the ANCE method (Xiong et al., 2020).
+      - Efficient Batch
+        - It also needs to keep the batch size as large as possible(introducing a huge amount of in-batch negatives) to ensure the discriminativeness of text embeddings
+        - Particularly, the training data is pre-processed by being grouped by sequence length. When producing a mini-batch, the training instances are sampled from the same group.
+        - We iteratively encode each sub-batch using gradient checkpointing (Chen et al., 2016)and gather all generated embeddings.
+        - Finally, the embeddings from different GPUs are broadcasted, allowing each device to obtain all embeddings in the distributed environment, 
+          - which notably expands the scale of in-bath negative samples.
+    - Experiment
+      - Multi-Lingual Retrieval
+      - Cross-Lingual Retrieval
+      - Multilingual Long-Doc Retrieval
+    - Ablation study
+      - Self-knowledge distillation
+      - Impact of multi-stage training
+         - | Model (Dense)                | MIRACL | 
+           |------------------------------|--------| 
+           | Fine-tune                    | 60.5   | 
+           | RetroMAE + Fine-tune         | 66.1   | 
+           | RetroMAE + Unsup + Fine-tune | 69.2   |
+
+
+
+# Generation-Augmented Retrieval
+你没看错，是生成增强检索
+- Thu, 17 Sep 2020 [Generation-Augmented Retrieval for Open-domain Question Answering](https://arxiv.org/abs/2009.08553)
+- Tue, 20 Dec 2022 [Precise Zero-Shot Dense Retrieval without Relevance Labels](https://arxiv.org/abs/2212.10496)
+  -  Given a query, HyDE first zero-shot instructs an instruction-following language model (e.g. InstructGPT) to generate a hypothetical document.
+- Wed, 31 Jan 2024 [RAPTOR: Recursive Abstractive Processing for Tree-Organized Retrieval](https://arxiv.org/abs/2401.18059)
 
 # Chucking Granularity
 - Thu, 22 Aug 2019 [Multi-passage BERT: A Globally Normalized BERT Model for Open-domain Question Answering](https://arxiv.org/abs/1908.08167)
@@ -175,6 +258,13 @@ retrieval rerank 两阶段检索，第一阶段先用双塔模型大量召回比
   - [sentence-transformers](https://github.com/UKPLab/sentence-transformers/)
   - [Document](https://www.sbert.net/)
 - Mon, 27 Apr 2020 [ColBERT: Efficient and Effective Passage Search via Contextualized Late Interaction over BERT](https://arxiv.org/abs/2004.12832)
+
+# Toolkit 
+- Tue, 27 Aug 2019 [Sentence-BERT: Sentence Embeddings using Siamese BERT-Networks](https://arxiv.org/abs/1908.10084)
+  - [sentence-transformers](https://github.com/UKPLab/sentence-transformers/)
+  - [Document](https://www.sbert.net/)
+- Fri, 19 Feb 2021 [Pyserini: An Easy-to-Use Python Toolkit to Support Replicable IR Research with Sparse and Dense Representations](https://arxiv.org/abs/2102.10073)
+  - [pyserini](https://github.com/castorini/pyserini)
 
 # Other
 - Fri, 23 Feb 2024 [Self-Retrieval: Building an Information Retrieval System with One Large Language Model](https://arxiv.org/abs/2403.00801)
