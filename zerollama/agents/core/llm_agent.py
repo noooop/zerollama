@@ -1,4 +1,3 @@
-
 import inspect
 from typing import Any, Callable, Dict, List, Literal, Optional, Tuple, Type, TypeVar, Union
 
@@ -8,9 +7,11 @@ from zerollama.tasks.chat.protocol import ChatCompletionStreamResponseDone
 
 
 class LLMAgent(ConversableAgent):
+    DEFAULT_SYSTEM_MESSAGE = "You are a helpful AI Assistant."
+
     def __init__(self,
                  name: str,
-                 system_message: Optional[Union[str, List]] = "You are a helpful AI Assistant.",
+                 system_message: Optional[Union[str, List]] = None,
                  llm_config: Optional[Union[Dict, Literal[False]]] = None,
                  description: Optional[str] = None):
         super().__init__(name, description if description is not None else system_message)
@@ -19,14 +20,14 @@ class LLMAgent(ConversableAgent):
         self._chat_client = get_client(self.llm_config)
         self._model_name = self._chat_client.model_name
 
-        self._system_message = [{"content": system_message, "role": "system"}]
+        self._system_message = [{"content": system_message or self.DEFAULT_SYSTEM_MESSAGE, "role": "system"}]
 
     def generate_reply(self, messages, stream=False, options=None):
         if isinstance(messages, list):
-            response = self._chat_client.chat(self._system_message+messages, None, stream, options)
+            response = self._chat_client.chat(self._system_message + messages, None, stream, options)
         elif isinstance(messages, str):
             messages = [{"content": messages, "role": "user"}]
-            response = self._chat_client.chat(self._system_message+messages, None, stream, options)
+            response = self._chat_client.chat(self._system_message + messages, None, stream, options)
 
         if not inspect.isgenerator(response):
             return response.content
@@ -40,7 +41,6 @@ class LLMAgent(ConversableAgent):
 
 
 RolePlayingAgent = LLMAgent
-
 
 if __name__ == '__main__':
     llm_config = {"type": "zerollama", "model": "Qwen/Qwen2-7B-Instruct-GPTQ-Int4"}
