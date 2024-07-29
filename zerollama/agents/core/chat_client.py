@@ -120,7 +120,9 @@ def get_client(llm_config=None, global_priority=None):
     import copy
     from zerollama.core.config.main import config_setup
     config = config_setup()
-    global_llm_config = config.get("llm_config", {})
+
+    llm_config = copy.deepcopy(llm_config)
+    global_llm_config = copy.deepcopy(config.get("llm_config", {}))
 
     if isinstance(llm_config, dict) and "global_priority" in llm_config:
         global_priority = llm_config.pop("global_priority")
