@@ -7,11 +7,11 @@ class Mistral(ChatModel):
     header = ["name", "modelscope_name"]
     info = [
         # name
-        ["mistralai/Mistral-7B-Instruct-v0.3",    "AI-ModelScope/Mistral-7B-Instruct-v0.3"],
-        ["mistralai/Mistral-7B-Instruct-v0.2",    "AI-ModelScope/Mistral-7B-Instruct-v0.2"],
-        ["mistralai/Mistral-7B-Instruct-v0.1",    "AI-ModelScope/Mistral-7B-Instruct-v0.1"],
-        ["mistralai/Mixtral-8x7B-Instruct-v0.1",  "AI-ModelScope/Mixtral-8x7B-Instruct-v0.1"],
-        ["mistralai/Mixtral-8x22B-Instruct-v0.1", "AI-ModelScope/Mixtral-8x22B-Instruct-v0.1"],
+        ["mistralai/Mistral-7B-Instruct-v0.3",    "LLM-Research/Mistral-7B-Instruct-v0.3"],
+        ["mistralai/Mistral-7B-Instruct-v0.2",    "LLM-Research/Mistral-7B-Instruct-v0.2"],
+        ["mistralai/Mistral-7B-Instruct-v0.1",    "LLM-Research/Mistral-7B-Instruct-v0.1"],
+        ["mistralai/Mixtral-8x7B-Instruct-v0.1",  "LLM-Research/Mixtral-8x7B-Instruct-v0.1"],
+        ["mistralai/Mixtral-8x22B-Instruct-v0.1", "LLM-Research/Mixtral-8x22B-Instruct-v0.1"],
     ]
 
 
