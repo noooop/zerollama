@@ -149,8 +149,7 @@ retrieval rerank 两阶段检索，第一阶段先用双塔模型大量召回比
   - with only standard dropout used as noise. 
   - This simple method works surprisingly well, performing on par with previous supervised counterparts. 
   - We find that dropout acts as minimal data augmentation, and removing it leads to a representation collapse.
-    - 有意思。
-  - unsupervised 效果甚至不如 BM25，但 SimCSE 已经成为 Dense Retrieval 有监督训练之前无监督训练的标准操作
+    - 有意思。 但 unsupervised 效果甚至不如 BM25
 - Thu, 19 Aug 2021 [Sentence-T5: Scalable Sentence Encoders from Pre-trained Text-to-Text Models](https://arxiv.org/abs/2108.08877)
   - Google 的 sentence embeddings from text-to-text transformers (ST5)
     - ST5-Enc Base 110M, Large 335M, 3B 1.24B, 11B 4.8B
