@@ -15,7 +15,10 @@ retrieval rerank 两阶段检索，第一阶段先用双塔模型大量召回比
 
 # Traditional Retrieval(Sparse lexical search algorithms)
 虽然 dense retrieval 从2020年开始变成检索模型的主流，传统检索算法比如 BM25 对关键词、专业名词等召回效果比较好，仍然是 dense retrieval 有效的补充。
-- [Which bm25 do you mean? a large-scale reproducibility study of scoring variants](https://link.springer.com/chapter/10.1007/978-3-030-45442-5_4)
+- 2009 [The probabilistic relevance framework: Bm25 and beyond](https://www.staff.city.ac.uk/~sbrp622/papers/foundations_bm25_review.pdf)
+  - Stephen Robertson, Hugo Zaragoza, et al. 2009.
+  - Foundations and Trends in Information Retrieval, 3(4):333–389.
+- 2020 [Which bm25 do you mean? a large-scale reproducibility study of scoring variants](https://link.springer.com/chapter/10.1007/978-3-030-45442-5_4)
   - Chris Kamphuis, Arjen P De Vries, Leonid Boytsov, and Jimmy Lin. 2020. : 42nd European Conference on IR Research, ECIR 2020, Lisbon, Portugal, April 14–17, 2020, 
   - In Advances in Information Retrieval Proceedings, Part II 42, pages 28–34. Springer.
 - Thu, 4 Jul 2024 [BM25S: Orders of magnitude faster lexical search via eager sparse scoring](https://arxiv.org/abs/2407.03618)
@@ -25,6 +28,66 @@ retrieval rerank 两阶段检索，第一阶段先用双塔模型大量召回比
 
 # History
 诡异的数据集构建和测试方法怎么来的。
+- Fri, 31 Mar 2017 [Reading Wikipedia to Answer Open-Domain Questions](https://arxiv.org/abs/1704.00051)
+  - Machine reading at scale (MRS).
+    - Using Wikipedia articles as the knowledge source causes the task of question answering (QA) to combine the challenges of both large-scale open-domain QA and of machine comprehension of text.
+  - In this paper, we show how multiple existing QA datasets can be used to evaluate MRS by requiring an open-domain system to perform well on all of them at once.
+  - In the following we describe our system DrQA for MRS which consists of two components: 
+    - (1) the Document Retriever module for finding relevant articles and 
+    - (2) a machine comprehension model, Document Reader, for extracting answers from a single document or a small collection of documents.
+    - Retriever + Reader 架构至少在2017年已经提出
+  - Document Retriever
+    - we use an efficient (non-machine learning) document retrieval system to first narrow our search space and focus on reading only articles that are likely to be relevant. 
+  - Document Reader
+    - Our Document Reader model is inspired by the recent success of neural network models on machine comprehension tasks, in a similar spirit to the AttentiveReader described in (Hermann et al., 2015; Chen et al., 2016).
+    - RNN model predicting the two ends of the span. 
+  - Experimental Setup:
+    - (WebQuestions 2013(WQ), CuratedTREC 2015(TREC), WikiMovies 2016, SQuAD v1.1 2016)
+    - Evidence Corpus
+      - We use the 2016-12-21 dump of English Wikipedia for all of our full-scale experiments as the knowledge source used to answer questions.
+- Sat, 1 Jun 2019 [Latent Retrieval for Weakly Supervised Open Domain Question Answering](https://arxiv.org/abs/1906.00300)
+  - 将 ORQA 列在历史里，而将 DPR 列为 Retrieval 模型的第一篇是否有失偏颇？
+  - open domain question answering (QA)
+    - Due to recent advances in reading comprehension systems, 
+    - there has been a revival of interest in open domain question answering (QA), 
+    - where the evidence must be retrieved from an open corpus, rather than being given as input. 
+    - This presents a more realistic scenario for practical applications.
+  - However, QA is fundamentally different from IR (Singh, 2012).
+  - Retriever component
+    - Query 和 Document使用不同模型，也就是要训练两个模型，inner product 作为相似函数。Embeddings 投影到维度 128。
+    - Retriever模型结构跟DPR大差不差
+  - Reader component 
+    - The reader is a span-based variant of the reading comprehension model proposed in Devlin et al. (2018):
+    - Reader模型结构跟DPR大差不差
+  - Inverse Cloze Task
+    - Since this is impractical to learn from scratch, we pre-train the retriever with an Inverse Cloze Task.
+    - 虽然Retriever component模型结构和DPR大差不差，差异在 loss，DPR 使用 Metric Learning 方法。
+  - Experimental Setup:
+    - Evidence Corpus
+      - We use the English Wikipedia snapshot from December 20, 2018 as the evidence corpus.
+      - The corpus is greedily split into chunks of at most 288 wordpieces based on BERT’s tokenizer, while preserving sentence boundaries.
+    - We train and evaluate on data from 5 existing question answering or reading comprehension datasets.
+    - (Natural Questions 2019(NQ), WebQuestions 2013(WQ), CuratedTREC 2015(TREC), TriviaQA 2017, SQuAD v1.1 2016) 与 DPR 相同
+    - we convert them to open formats, following DrQA (Chen et al., 2017).
+      - Natural Questions 
+        - we only keep questions with short answers and discard the given evidence document. 
+        - Answers with many tokens often resemble extractive snippets rather than canonical answers, so we discard answers with more than 5 tokens.
+      - WebQuestions
+        - The answers are annotated with respect to Freebase, but we only keep the string representation of the entities.
+      - CuratedTrec
+      - TriviaQA
+        - We use their unfiltered set and discard their distantly supervised evidence
+      - SQuAD
+    - | Dataset           | Train | Dev  | Test  |
+      |-------------------|-------|------|-------|
+      | Natural Questions | 79168 | 8757 | 3610  |
+      | WebQuestions      | 3417  | 361  | 2032  |
+      | CuratedTrec       | 1353  | 133  | 694   |
+      | TriviaQA          | 78785 | 8837 | 11313 |
+      | SQuAD             | 78713 | 8886 | 10570 |
+  - Main Results
+    - BM25 + BERT 在 TriviaQA SQuAD 效果好
+    - ORQA(ours) 在 Natural Questions, WebQuestions, CuratedTrec 上效果好
 - Thu, 22 Aug 2019 [Multi-passage BERT: A Globally Normalized BERT Model for Open-domain Question Answering](https://arxiv.org/abs/1908.08167)
   - previous work defines passages as articles, paragraphs, or sentences. However, the question of proper granularity of passages is still underexplored.
     - (RAG chucking 的粒度问题从 2019 年一直讨论到 2024 年，base模型的推理能力和上下文能力每增强一次都会重新讨论一次
@@ -36,16 +99,16 @@ retrieval rerank 两阶段检索，第一阶段先用双塔模型大量召回比
     - (ranker 理念出现的时间也非常早
   - we use the 2016-12-21 English Wikipedia dump. Following DrQA 2017
 
-
 # Retrieval(Embeddings) model
 - Fri, 10 Apr 2020 [Dense Passage Retrieval for Open-Domain Question Answering](https://arxiv.org/abs/2004.04906)
   - DPR 论文提出的整个体系，包括模型、训练、在线推理，都跟现在主流相近，数据集的处理方式最新论文还在follow，在几个数据集上的结果最新论文仍作为baseline比较。那就多写一点。
   - Transformer 2017年发布，BERT 2019年发布，开始刷nlp任务。真是勃勃生机万物竞发的时代。
   - 使用BERT预训练模型，Embeddings 维度 768，Query 和 Document使用不同模型，也就是要训练两个模型，inner product 作为相似函数， loss function 使用 negative log likelihood
-  - DPR performs consistently better than BM25 on all datasets.
+  - DPR performs consistently better than BM25 on all datasets. （Dense Retrieval 登上历史的舞台
   - Experimental Setup:
-    - English Wikipedia dump from Dec. 20, 2018 as the source documents for answering questions. Following (Lee et al., 2019), Following DrQA 2017 
-    - We then split each article into multiple, disjoint text blocks of 100 words as passages, serving as our basic retrieval units. Following (Wang et al., 2019) 
+    - Evidence Corpus
+      - English Wikipedia dump from Dec. 20, 2018 as the source documents for answering questions. Following (Lee et al., 2019), Following DrQA 2017 
+      - We then split each article into multiple, disjoint text blocks of 100 words as passages, serving as our basic retrieval units. Following (Wang et al., 2019) 
       - 记住这个 100 words as passages
     - five QA datasets(Natural Questions 2019(NQ), TriviaQA 2017, WebQuestions 2013(WQ), CuratedTREC 2015(TREC), SQuAD v1.1 2016)
     - Selection of positive passages
@@ -77,10 +140,27 @@ retrieval rerank 两阶段检索，第一阶段先用双塔模型大量召回比
     - higher retriever accuracy typically leads to better final QA results
     - Recent work (Izacard and Grave, 2020; Lewis et al., 2020b) have also shown that DPR can be combined with generation models such as BART (Lewis et al., 2020a) and T5 (Raffel et al., 2019), achieving good performance on open-domain QA and other knowledge-intensive tasks.
     - Retrieval + generation 这已经很RAG了
-
-  - <img src="https://github.com/noooop/noooop.github.io/blob/main/applications/rag/dpr1.png?raw=true" width="400">
-  - <img src="https://github.com/noooop/noooop.github.io/blob/main/applications/rag/dpr2.png?raw=true" width="400">
-
+  - Main Results
+    - DPR 全面超越 BM25，multi-dataset训练出来的模型效果更好，DPR+BM25相互补充效果稍微有提高
+    - <img src="https://github.com/noooop/noooop.github.io/blob/main/applications/rag/dpr2.png?raw=true" width="400">
+    - <img src="https://github.com/noooop/noooop.github.io/blob/main/applications/rag/dpr1.png?raw=true" width="400">
+- Thu, 14 Apr 2022 [Exploring Dual Encoder Architectures for Question Answering](https://arxiv.org/abs/2204.07120)
+  - Dual encoders have been used for questionanswering (QA) and information retrieval (IR) tasks with good results.
+  - Previous research focuses on two major types of dual encoders,
+    - Siamese Dual Encoder (SDE), with parameters shared across two encoders,  (SBERT (Reimers and Gurevych, 2019), ST5 (Ni et al., 2021b) 
+    - and Asymmetric Dual Encoder (ADE), with two distinctly parameterized encoders. (DPR (Karpukhin et al., 2020), DensePhrases (Lee et al., 2021a) 
+  - we show that SDE performs significantly better than ADE.
+  - We further propose three different improved versions of ADEs by sharing or freezing parts of the architectures between two encoder towers.
+    - We find that sharing parameters in projection layers would enable ADEs to perform competitively with or outperform SDEs.
+    - We further explore and explain why parameter sharing in projection layer significantly improves the efficacy of the dual encoders, by directly probing the embedding spaces of the two encoder towers with t-SNE algorithm.
+  - Main Results
+    - By directly probing the embedding space, we demonstrate that the shared projection layers in SDE and ADE-SPL maps the embeddings of the two encoder towers into coinciding parameter spaces, 
+    - which is crucial for improving the retrieval quality. Therefore, we recommend to share the projection layers between two encoders of ADEs in practice.
+    - <img src="https://github.com/noooop/noooop.github.io/blob/main/applications/rag/edea.png?raw=true" width="400">
+    - 这个结论可以泛化在整个在 Metric Learning 问题
+- Sun, 27 Nov 2022 [Dense Text Retrieval based on Pretrained Language Models: A Survey](https://arxiv.org/abs/2211.14876)
+  - 2022 年对于 Dense Text Retrieval 的 Survey 已经有 351 引用
+  - 其中包括 6 篇 之前的 Survey。行吧
 
 # Chucking Granularity
 - Thu, 22 Aug 2019 [Multi-passage BERT: A Globally Normalized BERT Model for Open-domain Question Answering](https://arxiv.org/abs/1908.08167)
