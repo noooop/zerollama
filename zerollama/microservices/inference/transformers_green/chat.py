@@ -20,7 +20,7 @@ TORCH_TYPE = torch.bfloat16 if torch.cuda.is_available() and torch.cuda.get_devi
 class HuggingFaceTransformers(object):
     get_model_by_name = staticmethod(get_model_by_name)
 
-    def __init__(self, model_name, local_files_only=True, quantization_config=None, device="cuda"):
+    def __init__(self, model_name, local_files_only=True, quantization_config=None, device="cuda", **engine_args):
         model = self.get_model_by_name(model_name)
         model_config = model.get_model_config(model_name)
 
@@ -38,7 +38,7 @@ class HuggingFaceTransformers(object):
                                                                local_files_only=local_files_only,
                                                                get_model_by_name=get_model_by_name)
         self.torch_dtype = None
-
+        self.engine_args = engine_args
         self.model = None
         self.tokenizer = None
         self.streamer = None
@@ -46,6 +46,10 @@ class HuggingFaceTransformers(object):
 
     def load(self):
         config = config_setup()
+
+        import transformers
+
+        transformers.logging.set_verbosity_error()
 
         if (config.use_modelscope and not self.model_info.get("use_hf_only", False) and
                 not ("modelscope_name" in self.model_info and self.model_info["modelscope_name"] == "")):
@@ -81,6 +85,7 @@ class HuggingFaceTransformers(object):
             if isinstance(self.quantization_config, BitsAndBytesConfig):
                 self.quantization_config.bnb_4bit_compute_dtype = TORCH_TYPE
             model_kwargs["quantization_config"] = self.quantization_config
+        model_kwargs.update(**self.engine_args)
 
         try:
             model = AutoModelForCausalLM.from_pretrained(**model_kwargs)
