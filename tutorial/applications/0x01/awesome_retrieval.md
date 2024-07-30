@@ -173,6 +173,11 @@ retrieval rerank 两阶段检索，第一阶段先用双塔模型大量召回比
     - which is crucial for improving the retrieval quality. Therefore, we recommend to share the projection layers between two encoders of ADEs in practice.
     - <img src="https://github.com/noooop/noooop.github.io/blob/main/applications/rag/edea.png?raw=true" width="400">
     - 这个结论可以泛化在整个在 Metric Learning 问题
+- Thu, 26 May 2022 [Matryoshka Representation Learning](https://arxiv.org/abs/2205.13147)
+  - 支持多个向量维度
+- Thu, 13 Oct 2022 [MTEB: Massive Text Embedding Benchmark](https://arxiv.org/abs/2210.07316)
+  - Hugging Face 主导的 Massive Text Embedding Benchmark
+  - https://huggingface.co/spaces/mteb/leaderboard
 - Sun, 27 Nov 2022 [Dense Text Retrieval based on Pretrained Language Models: A Survey](https://arxiv.org/abs/2211.14876)
   - 2022 年对于 Dense Text Retrieval 的 Survey 已经有 351 引用
   - 其中包括 6 篇 之前的 Survey。行吧
@@ -182,6 +187,15 @@ retrieval rerank 两阶段检索，第一阶段先用双塔模型大量召回比
   - E5-PTlarge 也就略好于 BM25，Weakly-Supervised Contrastive Pre-training 不如 Supervised models
   - Supervised models E5large 比之前 GTRxxl、Sentence-T5xxl强
   - Weakly-Supervised Contrastive Pre-training + Supervised Fine-tuning 称为 sota 模型的标配
+- Sun, 31 Dec 2023 [Improving Text Embeddings with Large Language Models](https://arxiv.org/abs/2401.00368)
+  - LLM as Retrieval +1
+- Sun, 4 Feb 2024 [为RAG而生-BCE embedding技术报告](https://zhuanlan.zhihu.com/p/681370855)
+  - 二阶段检索器（Two-stage Retriever）“离线”的Embedding搭配“在线”的Reranker
+  - 难负样例挖掘？
+    - 我们在训练Embedding模型时发现，过难的负样本对模型训练有损害，训练过程中会使模型“困惑”，[影响模型最终性能](https://kexue.fm/archives/8847#%E9%9A%BE%E6%90%9E%E7%9A%84%E9%98%88%E5%80%BC)。
+    - 在大量的语料库中，脱离人工校验的自动化难负样例挖掘，难免会“挖到正例”。
+    - 其实所谓的“正例”和“难负样例”是根据你业务的定义来的。
+    - 所以回归业务目标和好的检索器的“评判标准”，Embedding模型应该能尽量召回相关片段，不要将Reranker要干的精排任务强压在Embedding身上，“越俎代庖”终究会害了它。
 - Mon, 5 Feb 2024 [BGE M3-Embedding: Multi-Lingual, Multi-Functionality, Multi-Granularity Text Embeddings Through Self-Knowledge Distillation](https://arxiv.org/abs/2402.03216)
   - BAAI的BGE M3
   - we introduce a new embedding model called M3-Embedding Supervised models
@@ -234,8 +248,49 @@ retrieval rerank 两阶段检索，第一阶段先用双塔模型大量召回比
            | Fine-tune                    | 60.5   | 
            | RetroMAE + Fine-tune         | 66.1   | 
            | RetroMAE + Unsup + Fine-tune | 69.2   |
-
-
+- Sat, 24 Feb 2024 [OpenAI vs Open-Source Multilingual Embedding Models Choosing the model that works best for your data](https://towardsdatascience.com/openai-vs-open-source-multilingual-embedding-models-e5ccb7c90f05)
+  - Generate a custom Q/A dataset
+  - 介绍了一种用ChatGPT合成问答数据集测试检索模型的方法
+  - 用ChatGPT合成问答数据集训练模型，用ChatGPT合成问答数据集测试模型的世界达成了
+- Wed, 27 Mar 2024 [Scaling Laws For Dense Retrieval](https://arxiv.org/abs/2403.18684)
+  - 24 BERT checkpoints from the original Google release, with model sizes ranging from 0.5 million (BERT-Tiny) to 82 million parameters (BERT-Base)
+  - For experiments on Chinese retrieval benchmarks, we selected the ERNIE series
+  - <img src="https://github.com/noooop/noooop.github.io/blob/main/applications/rag/sldr.png?raw=true" width="400">
+- Tue, 9 Apr 2024 [LLM2Vec: Large Language Models Are Secretly Powerful Text Encoders](https://arxiv.org/abs/2404.05961)
+  - additional training phase with a specially designed masked token prediction to warm-up the bidirectional attention.
+  - LLM as Retrieval +2
+- Wed, 8 May 2024 [Arctic-Embed: Scalable, Efficient, and Accurate Text Embedding Models](https://arxiv.org/abs/2405.05374)
+  - we conduct two training rounds using two different kinds of datasets.
+    - The initial training round is large-scale pretraining using only in-batch negative examples.
+    - The second round of training (often referred to as the fine-tuning step) calls for similar pairs of queries and documents augmented with an additional set of “hard” negative documents
+  - How hard should these negatives be for maximally effective learning in the fine-tuning phase? 
+    - Our answer to this question was ultimately a tunable hard negative mining strategy in which we leveraged a preexisting text embedding model to identify and score the hardest negatives for each training example. 
+    - Then, we applied a score threshold to discard the hard negatives from the above set. 
+    - We found that using an upper threshold rather than a specific rank helped account for the fact that some queries admit much harder top-k negatives than others.
+    - we perform a parameter sweep of the negative hardness threshold to demonstrate the value of a tunable approach (the optimal threshold value scores significantly better than other choices). 
+- Sat, 11 May 2024 [Piccolo2: General Text Embedding with Multi-task Hybrid Loss Training](https://arxiv.org/abs/2405.06932)
+  - Multi-task Hybrid Loss
+- Mon, 27 May 2024 [NV-Embed: Improved Techniques for Training LLMs as Generalist Embedding Models](https://arxiv.org/abs/2405.17428)
+  - LLM as Retrieval +3
+- Mon, 22 Jul 2024 [NV-Retriever: Improving text embedding models with effective hard-negative mining](https://arxiv.org/abs/2407.15831)
+  - hard-negative mining
+- Fri, 26 Jul 2024 [bge-multilingual-gemma2,bge-en-icl](https://github.com/FlagOpen/FlagEmbedding/tree/master)
+  - LLM as Retrieval +4 +5
+- Mon, 29 Jul 2024 [mGTE: Generalized Long-Context Text Representation and Reranking Models for Multilingual Text Retrieval](https://arxiv.org/abs/2407.19669)
+  - LLM as Retrieval +6
+  
+# 总结，如何训练一个效果很好的Retrieval(Embeddings) model
+- 模型
+  - Dense Retrieval 总体展现出明显的 Scaling Laws，但时不时也有小模型的在MTEB榜单前列
+  - 选择适合的基础模型，多语言能力和长上下文能力比较重要，但 bert 都是2020年左右训练的，普遍不如现在llm训练的充分 
+  - 越来越多的 Large decoder-only language models (LLMs) as Retrieval的模型上MTEB榜，基础模型选择范围就大大拓宽了
+- 数据
+  - 使用 GPT 合成数据
+  - Weakly-Supervised Contrastive Pre-training + Supervised Fine-tuning
+- 算法
+  - 适合难度的 Hard Example Mining
+  - 从其他 Metric Learning 和 Contrastive Learning 学习任务中寻找启发
+  - 多任务学习，模型蒸馏
 
 # Generation-Augmented Retrieval
 你没看错，是生成增强检索
