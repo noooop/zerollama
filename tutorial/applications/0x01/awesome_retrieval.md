@@ -284,13 +284,35 @@ retrieval rerank 两阶段检索，第一阶段先用双塔模型大量召回比
 - Fri, 26 Jul 2024 [bge-multilingual-gemma2,bge-en-icl](https://github.com/FlagOpen/FlagEmbedding/tree/master)
   - LLM as Retrieval +4 +5
 - Mon, 29 Jul 2024 [mGTE: Generalized Long-Context Text Representation and Reranking Models for Multilingual Text Retrieval](https://arxiv.org/abs/2407.19669)
-  - LLM as Retrieval +6
+  - 从头训练一个基础模型，并微调成一个 Retrieval(Embeddings) model 和 Reranking Model, 有钱真好
+  - pre-train
+    - We pre-train the model via masked language modeling (MLM)，The MLM probability is set to 30% 
+    - To train the native 8192-context model more efficiently, we adopt a phased training curriculum (Xiong et al., 2024)
+      - MLM-2048: we chunk the input into 2048 tokens and set RoPE base to 10, 000.
+      - MLM-8192: we chunk the input into 8192 tokens and set RoPE base to 160, 000.
+  - Retrieval(Embeddings) model
+    - we construct the TRM for first-stage text retrieval in two steps: 
+      - contrastive pre-training and fine-tuning (Wang et al., 2022; Li et al., 2023). 
+      - Both steps share the same InfoNCE(Oord et al., 2018) learning objective
+    - Contrastive Pre-Training
+    - Matryoshka Embedding
+    - Sparse Representation
+    - Contrastive Fine-Tuning 
+  - Text Reranking Model
+    - It takes the query and document as input: [CLS] q [SEP] d, and directly predicts their relevance score by the [CLS] output state:
+    - srerank = W h[CLS]
+    - The model is fine-tuned by InfoNCE in one step6 based on our text encoder
+  - 论文没有提 Hard Example Mining，不知道是想表达 no bells and whistles，[Stella_v5](https://github.com/DunZhang/Stella/blob/main/news_and_todo.md)系列在这个基础上微调效果就好一些。
+  - [gte-Qwen2-7B-instruct](https://huggingface.co/Alibaba-NLP/gte-Qwen2-7B-instruct) [gte-Qwen1.5-7B-instruct](https://huggingface.co/Alibaba-NLP/gte-Qwen1.5-7B-instruct) 
+    - gte-Qwen2-7B-instruct is the latest model in the gte (General Text Embedding) model family that ranks No.1 in both English and Chinese evaluations on the Massive Text Embedding Benchmark MTEB benchmark (as of June 16, 2024).
+    - LLM as Retrieval +6 +7  居然没有写在论文里
   
 # 总结，如何训练一个效果很好的Retrieval(Embeddings) model
 - 模型
   - Dense Retrieval 总体展现出明显的 Scaling Laws，但时不时也有小模型的在MTEB榜单前列
-  - 选择适合的基础模型，多语言能力和长上下文能力比较重要，但 bert 都是2020年左右训练的，普遍不如现在llm训练的充分 
+  - 选择适合的基础模型，多语言能力和长上下文能力比较重要，但 bert 都是2020年左右训练的，普遍不如现在llm训练的充分
   - 越来越多的 Large decoder-only language models (LLMs) as Retrieval的模型上MTEB榜，基础模型选择范围就大大拓宽了
+  - 更有钱的公司会从头训练一个基础模型，微调成一个检索模型 比如 ST5、mGTE。。
 - 数据
   - 使用 GPT 合成数据
   - Weakly-Supervised Contrastive Pre-training + Supervised Fine-tuning
@@ -322,6 +344,8 @@ Rerank model 真的要无聊很多，Rerank model 本质上就是个二分类任
   - Ultra-fast: 15x more documents throughput than bge-reranker-v2-m3, and 6x more than jina-reranker-v1-base-en.
 - Fri, 26 Jul 2024 [bge-reranker-v2.5-gemma2-lightweight](https://huggingface.co/BAAI/bge-reranker-v2.5-gemma2-lightweight)
   - trained based on gemma2-9b
+- Mon, 29 Jul 2024 [mGTE: Generalized Long-Context Text Representation and Reranking Models for Multilingual Text Retrieval](https://arxiv.org/abs/2407.19669)
+  - 从头训练一个基础模型，并微调成一个 Retrieval(Embeddings) model 和 Reranking Model, 有钱真好
 
 # Generation-Augmented Retrieval
 你没看错，是生成增强检索
