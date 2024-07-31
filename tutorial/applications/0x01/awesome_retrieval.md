@@ -282,6 +282,7 @@ retrieval rerank 两阶段检索，第一阶段先用双塔模型大量召回比
 - Mon, 22 Jul 2024 [NV-Retriever: Improving text embedding models with effective hard-negative mining](https://arxiv.org/abs/2407.15831)
   - hard-negative mining
 - Fri, 26 Jul 2024 [bge-multilingual-gemma2,bge-en-icl](https://github.com/FlagOpen/FlagEmbedding/tree/master)
+  - 2024-07-31 MTEB en榜单 1.bge-en-icl 2.stella_en_1.5B_v5 3.SFR-Embedding-2_R 4.gte-Qwen2-7B-instruct 5.stella_en_400M_v5 6.bge-multilingual-gemma2 7.NV-Embed-v1 8.voyage-large-2-instruct 9.Linq-Embed-Mistral 10.SFR-Embedding-Mistral  
   - LLM as Retrieval +4 +5
 - Mon, 29 Jul 2024 [mGTE: Generalized Long-Context Text Representation and Reranking Models for Multilingual Text Retrieval](https://arxiv.org/abs/2407.19669)
   - 从头训练一个基础模型，并微调成一个 Retrieval(Embeddings) model 和 Reranking Model, 有钱真好
