@@ -100,6 +100,13 @@ retrieval rerank 两阶段检索，第一阶段先用双塔模型大量召回比
   - we use the 2016-12-21 English Wikipedia dump. Following DrQA 2017
 
 # Retrieval(Embeddings) model
+- Tue, 27 Aug 2019 [Sentence-BERT: Sentence Embeddings using Siamese BERT-Networks](https://arxiv.org/abs/1908.10084)
+  - sbert 是 Siamese Dual Encoder 也就是一个模型，DPR 是 Asymmetric Dual Encoder 也就是两个模型。SDE效果比ADE好，当然这是后话了。
+  - 这篇论文没有向open domain question answering 方向发力，非常可惜，评估方法现在没什么论文follow，所以一般都没有跟DPR进行比较。当然sentence-transformers的名气也很大了。
+  - [sentence-transformers](https://github.com/UKPLab/sentence-transformers/)
+  - [Document](https://www.sbert.net/)
+  - Ablation Study
+    - Pooling Strategy MEAN > CLS > MAX
 - Fri, 10 Apr 2020 [Dense Passage Retrieval for Open-Domain Question Answering](https://arxiv.org/abs/2004.04906)
   - DPR 论文提出的整个体系，包括模型、训练、在线推理，都跟现在主流相近，数据集的处理方式最新论文还在follow，在几个数据集上的结果最新论文仍作为baseline比较。那就多写一点。
   - Transformer 2017年发布，BERT 2019年发布，开始刷nlp任务。真是勃勃生机万物竞发的时代。
@@ -292,6 +299,30 @@ retrieval rerank 两阶段检索，第一阶段先用双塔模型大量召回比
   - 从其他 Metric Learning 和 Contrastive Learning 学习任务中寻找启发
   - 多任务学习，模型蒸馏
 
+# Rerank model
+很多文章吧 Rerank model 称为 cross-encoder，相对与 Dense Retrieval 的 dual-encoder。
+相比 Dense Retrieval 模型，算法上可以结合Metric Learning 和 Contrastive Learning，系统上可以跟 approximate nearest neighbor 结合， 下游任务又可以跟  large-scale open-domain QA 结合。
+Rerank model 真的要无聊很多，Rerank model 本质上就是个二分类任务，约等于 bert 预训练任务 Next Sentence Prediction。
+- Mon, 27 Apr 2020 [ColBERT: Efficient and Effective Passage Search via Contextualized Late Interaction over BERT](https://arxiv.org/abs/2004.12832)
+- Sun, 4 Feb 2024 [为RAG而生-BCE embedding技术报告](https://zhuanlan.zhihu.com/p/681370855)
+  - 我们将BCEmbedding设计为二阶段检索器，分工合作：“离线”的Embedding负责尽可能召回，“在线”的Reranker负责精排和低质量过滤。
+    - 精排阶段为了解决信息交互的问题，采用cross-encoder架构（如图二-2 (b)所示）。Reranker模型可以实现用户问题和知识库语料的信息交互，使模型可以“见机行事”地识别到更加准确的语义关系，算法性能上限可以很高。该方式的缺点是，需要对用户问题和知识库语料进行在线（online）地语义关系提取，效率比较低，无法对全量的知识库语料进行实时处理。
+    - 结合召回和精排二者的优势，召回阶段可以快速找到用户问题相关文本片段，精排阶段可以将正确相关片段尽可能排在靠前位置，并过滤掉低质量的片段。二阶段检索可以很好地权衡检索效果和效率，具有巨大应用价值。
+  - 有意义的Rerank分数
+    - “评判标准”中好检索器还有一个特点，可以过滤低质量信息。我们设计的Reranker模型，输出的(query, passage)语义相关分数，不仅能用来做psaages排序，其分数的绝对值可表征真实的语义相关程度，这可以用来判断哪些是低质量passages，实现低质量片段过滤。这对RAG中LLM回答问题非常有帮助，更干练、干扰信息少的context，可以有效提高LLM回答质量[17]。
+    - 根据我们业务实践经验和开源社区的反馈，bce-reranker-base_v1输出的分数推荐以0.35～0.4为阈值，来进行低质量passage过滤。用户实际使用反馈，收获很不错的效果。
+- Mon, 18 Mar 2024 [bge-reranker-v2-m3、BAAI/bge-reranker-v2-gemma、 BAAI/bge-reranker-v2-minicpm-layerwise.](https://github.com/FlagOpen/FlagEmbedding/tree/master/FlagEmbedding/llm_reranker)
+  - reranker 都不配有篇技术报告
+  - LLM-based reranker
+- Tue, 25 Jun 2024 [Jina Reranker v2 for Agentic RAG: Ultra-Fast, Multilingual, Function-Calling & Code Search](https://jina.ai/news/jina-reranker-v2-for-agentic-rag-ultra-fast-multilingual-function-calling-and-code-search)
+  - Jina Reranker v2 将 Reranker 玩出了新高度
+  - Multilingual: More relevant search results in 100+ languages, outperforming bge-reranker-v2-m3;
+  - Agentic: State-of-the-art function-calling and text-to-SQL aware document reranking for agentic RAG;
+  - Code retrieval: Top performance on code retrieval tasks, and
+  - Ultra-fast: 15x more documents throughput than bge-reranker-v2-m3, and 6x more than jina-reranker-v1-base-en.
+- Fri, 26 Jul 2024 [bge-reranker-v2.5-gemma2-lightweight](https://huggingface.co/BAAI/bge-reranker-v2.5-gemma2-lightweight)
+  - trained based on gemma2-9b
+
 # Generation-Augmented Retrieval
 你没看错，是生成增强检索
 - Thu, 17 Sep 2020 [Generation-Augmented Retrieval for Open-domain Question Answering](https://arxiv.org/abs/2009.08553)
@@ -307,11 +338,6 @@ retrieval rerank 两阶段检索，第一阶段先用双塔模型大量召回比
 - Fri, 21 Jun 2024 [LongRAG: Enhancing Retrieval-Augmented Generation with Long-context LLMs](https://arxiv.org/abs/2406.15319)
 - Tue, 25 Jun 2024 [LumberChunker: Long-Form Narrative Document Segmentation](https://arxiv.org/abs/2406.17526)
   
-# Rerank model
-- Tue, 27 Aug 2019 [Sentence-BERT: Sentence Embeddings using Siamese BERT-Networks](https://arxiv.org/abs/1908.10084)
-  - [sentence-transformers](https://github.com/UKPLab/sentence-transformers/)
-  - [Document](https://www.sbert.net/)
-- Mon, 27 Apr 2020 [ColBERT: Efficient and Effective Passage Search via Contextualized Late Interaction over BERT](https://arxiv.org/abs/2004.12832)
 
 # Toolkit 
 - Tue, 27 Aug 2019 [Sentence-BERT: Sentence Embeddings using Siamese BERT-Networks](https://arxiv.org/abs/1908.10084)
