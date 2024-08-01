@@ -36,7 +36,7 @@ class HuggingFaceTransformers(object):
         self.trust_remote_code = self.model_config.model_kwargs.get("trust_remote_code", False)
         self.pretrained_model_name = get_pretrained_model_name(model_name=model_name,
                                                                local_files_only=local_files_only,
-                                                               get_model_by_name=get_model_by_name)
+                                                               get_model_by_name=self.get_model_by_name)
         self.torch_dtype = None
         self.engine_args = engine_args
         self.model = None

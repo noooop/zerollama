@@ -54,6 +54,9 @@
 - [jina-reranker-v2](https://github.com/noooop/zerollama/tree/main/zerollama/models/jina)
 - [360Zhinao-1.8B-Reranking](https://github.com/noooop/zerollama/tree/main/zerollama/models/qihoo360)
 
+## QA
+[ChatQA](https://github.com/noooop/zerollama/tree/main/zerollama/models/chatqa)
+
 ## Vision-Language Multimodal 模型 
 - [CogVLM2](https://github.com/noooop/zerollama/tree/main/zerollama/models/thudm)
 - [MiniCPM-V](https://github.com/noooop/zerollama/tree/main/zerollama/models/openbmb)
