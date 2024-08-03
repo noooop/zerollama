@@ -20,6 +20,10 @@ class InternLM(ChatModel):
         ["internlm/internlm2_5-7b-chat",          "Shanghai_AI_Laboratory/internlm2_5-7b-chat",      "7b",     "",                            ""],
         ["internlm/internlm2_5-7b-chat-1m",       "Shanghai_AI_Laboratory/internlm2_5-7b-chat-1m",   "7b",     "",                            ""],
         ["internlm/internlm2_5-7b-chat-4bit",     "",                                                "7b",     "AWQ",                         "4bit"],
+
+        ["internlm/internlm2-1_8b-reward",        "Shanghai_AI_Laboratory/internlm2-1_8b-reward",    "1.8b",   "",                            ""],
+        ["internlm/internlm2-7b-reward",          "Shanghai_AI_Laboratory/internlm2-7b-reward",      "7b",     "",                            ""],
+        ["internlm/internlm2-20b-reward",         "Shanghai_AI_Laboratory/internlm2-20b-reward",     "20b",    "",                            ""],
     ]
 
 

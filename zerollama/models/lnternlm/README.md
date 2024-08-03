@@ -1,7 +1,16 @@
 # InternLM  (书生·浦语)
  InternLM is mainly developed by Shanghai AI Laboratory(上海人工智能实验室). 
 
-## TL;DR
+## InternLM2-Reward
+### TL;DR
+InternLM2-Reward is a series of reward models, trained on 2.4 million preference samples, available in 1.8B, 7B, and 20B sizes. These model were applied to the PPO training process of our chat models. See [model cards](./model_cards/internlm2_reward.md) for more details.
+
+
+### News
+- \[2024.07.19\] We release the InternLM2-Reward series of reward models in 1.8B, 7B and 20B sizes. See [model zoo below](#model-zoo) for download or [model cards](./model_cards/internlm2_reward.md) for more details.
+
+## InternLM2.5
+### TL;DR
 
 InternLM2.5 has open-sourced a 7 billion parameter base model and a chat model tailored for practical scenarios. The model has the following characteristics:
 
