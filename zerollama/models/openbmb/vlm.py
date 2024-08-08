@@ -10,6 +10,7 @@ class MiniCPMV(VLMModel):
         # name
         ["openbmb/MiniCPM-V"],
         ["openbmb/MiniCPM-V-2"],
+        ["openbmb/MiniCPM-V-2_6"],
 
         ["openbmb/MiniCPM-Llama3-V-2_5"],
         ["openbmb/MiniCPM-Llama3-V-2_5-int4"],
@@ -26,24 +27,10 @@ if __name__ == '__main__':
 
     vlm_test_path = Path(os.path.dirname(__file__)).parent.parent.parent / "static/test_sample/vlm"
 
-    def get_model(model_name):
-        model_kwargs = {}
+    model_name = "openbmb/MiniCPM-V-2_6"
 
-        model_class = MiniCPMV.inference_backend
-        module_name, class_name = model_class.split(":")
-        import importlib
-
-        module = importlib.import_module(module_name)
-        model_class = getattr(module, class_name)
-
-        model = model_class(model_name=model_name, **model_kwargs)
-        model.load()
-        return model
-
-
-    model_name = "openbmb/MiniCPM-V"
-
-    model = get_model(model_name)
+    model = MiniCPMV.get_model(model_name, local_files_only=False)
+    model.load()
 
     messages = [
         {
@@ -61,3 +48,20 @@ if __name__ == '__main__':
 
     print(answer.content)
 
+    vlm_test_path = Path(os.path.dirname(__file__)).parent.parent.parent / "static/test_sample/dla"
+
+    messages = [
+        {
+            "role": "user",
+            "content": "to markdown."
+        }
+    ]
+
+    images = [vlm_test_path / "input_sample.png"]
+
+    images = [PIL.Image.open(path).convert("RGB") for path in images]
+    images = [np.array(image) for image in images]
+
+    answer = model.chat(messages, images)
+
+    print(answer.content)

@@ -80,9 +80,15 @@ Paper: [link](https://arxiv.org/pdf/2402.13516.pdf) (Note: `MiniCPM-S-1B` is den
 
 - **MiniCPM-V 2.0**：MiniCPM-V系列的最轻量级模型。总参数量2B，多模态综合性能超越 Yi-VL 34B、CogVLM-Chat 17B、Qwen-VL-Chat 10B 等更大参数规模的模型，可接受 180 万像素的任意长宽比图像输入，实现了和 Gemini Pro 相近的场景文字识别能力以及和 GPT-4V 相匹的低幻觉率。
 
+MiniCPM-V 2.6 is the latest and most capable model in the MiniCPM-V series. The model is built on SigLip-400M and Qwen2-7B with a total of 8B parameters. It exhibits a significant performance improvement over MiniCPM-Llama3-V 2.5, and introduces new features for multi-image and video understanding. Notable features of MiniCPM-V 2.6 include:
+
 
 ### News
-
+* [2024.08.06] 🔥🔥🔥 We open-source MiniCPM-V 2.6, which outperforms GPT-4V on single image, multi-image and video understanding. It advances popular features of MiniCPM-Llama3-V 2.5, and can support real-time video understanding on iPad. Try it now!
+* [2024.08.03] MiniCPM-Llama3-V 2.5 technical report is released! See here.
+* [2024.07.19] MiniCPM-Llama3-V 2.5 supports vLLM now! See here.
+* [2024.05.28] 🚀🚀🚀 MiniCPM-Llama3-V 2.5 now fully supports its feature in llama.cpp and ollama! Please pull the latest code of our provided forks (llama.cpp, ollama). GGUF models in various sizes are available here. MiniCPM-Llama3-V 2.5 series is not supported by the official repositories yet, and we are working hard to merge PRs. Please stay tuned!
+* [2024.05.28] 💫 We now support LoRA fine-tuning for MiniCPM-Llama3-V 2.5, using only 2 V100 GPUs! See more statistics here.
 * [2024.05.23] 我们添加了Phi-3-vision-128k-instruct与MiniCPM-Llama3-V 2.5的全面对比，包括基准测试评估和多语言能力 🌟📊🌍。点击[这里](./docs/compare_with_phi-3_vision.md)查看详细信息。
 <!-- * [2024.05.22] 我们进一步提升了端侧推理速度！实现了 6-8 tokens/s 的流畅体验，欢迎试用！ -->
 * [2024.05.20] 我们开源了 MiniCPM-Llama3-V 2.5，增强了 OCR 能力，支持 30 多种语言，并首次在端侧实现了 GPT-4V 级的多模态能力！我们提供了[高效推理](#手机端部署)和[简易微调](./finetune/readme.md)的支持，欢迎试用！

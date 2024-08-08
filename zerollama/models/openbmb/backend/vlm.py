@@ -53,6 +53,16 @@ class MiniCPMV(VLMInterface):
     def chat(self, messages, images, options=None):
         pil_images = [PIL.Image.fromarray(image) for image in images]
 
+        if self.model_name == 'openbmb/MiniCPM-V-2_6':
+            messages[-1]['content'] = pil_images + [messages[-1]['content']]
+
+            answer = self.model.chat(
+                image=None,
+                msgs=messages,
+                tokenizer=self.tokenizer
+            )
+            return VLMChatCompletionResponse(model=self.model_name, content=answer)
+
         res, context, _ = self.model.chat(
             image=pil_images[0],
             msgs=messages,
