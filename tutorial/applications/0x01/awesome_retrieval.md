@@ -356,7 +356,7 @@ Rerank model 真的要无聊很多，Rerank model 本质上就是个二分类任
 - Wed, 31 Jan 2024 [RAPTOR: Recursive Abstractive Processing for Tree-Organized Retrieval](https://arxiv.org/abs/2401.18059)
 
 # Chunking / Chucking Granularity
-[跳转](../awesome_rag.md#chunking--chucking-granularity)
+[跳转](./awesome_rag.md#chunking--chucking-granularity)
   
 
 # Toolkit 
