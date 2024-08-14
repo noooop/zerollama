@@ -26,6 +26,11 @@ retrieval rerank 两阶段检索，第一阶段先用双塔模型大量召回比
   - It also achieves considerable speedups compared to highly optimized Java-based implementations, which are used by popular commercial products.
   - 单线程跟 lucene 有的一拼，速度真的很快
 
+# Hybrid Retrievers
+- Fri, 22 Mar 2024 [Blended RAG: Improving RAG (Retriever-Augmented Generation) Accuracy with Semantic Search and Hybrid Query-Based Retrievers](https://arxiv.org/abs/2404.07220)
+- Mon, 1 Jul 2024 [Searching for Best Practices in Retrieval-Augmented Generation](https://arxiv.org/abs/2407.01219)
+  - Taking efficiency into consideration, Hybrid Search combines sparse retrieval (BM25) and dense retrieval (Original embedding) and achieves notable performance with relatively low latency.
+
 # History
 诡异的数据集构建和测试方法怎么来的。
 - Fri, 31 Mar 2017 [Reading Wikipedia to Answer Open-Domain Questions](https://arxiv.org/abs/1704.00051)
@@ -279,6 +284,7 @@ retrieval rerank 两阶段检索，第一阶段先用双塔模型大量召回比
   - Multi-task Hybrid Loss
 - Mon, 27 May 2024 [NV-Embed: Improved Techniques for Training LLMs as Generalist Embedding Models](https://arxiv.org/abs/2405.17428)
   - LLM as Retrieval +3
+- Mon, 27 May 2024 [Recent advances in text embedding: A Comprehensive Review of Top-Performing Methods on the MTEB Benchmark](https://arxiv.org/abs/2406.01607)
 - Mon, 22 Jul 2024 [NV-Retriever: Improving text embedding models with effective hard-negative mining](https://arxiv.org/abs/2407.15831)
   - hard-negative mining
 - Fri, 26 Jul 2024 [bge-multilingual-gemma2,bge-en-icl](https://github.com/FlagOpen/FlagEmbedding/tree/master)

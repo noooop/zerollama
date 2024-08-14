@@ -1,4 +1,8 @@
 
+# Routing
+In response to diverse queries, the RAG system routes to specific pipelines tailored for different scenario, a feature essential for a versatile RAG architecture designed to handle a wide array of situations.
+
+
 # Adaptive Retrieval / Query Classification
 Not all queries require retrieval-augmented due to the inherent capabilities of LLMs.
 Queries requiring retrieval proceed through the RAG modules; others are handled directly by LLMs.
@@ -19,7 +23,7 @@ Queries requiring retrieval proceed through the RAG modules; others are handled 
   - 将 query 二分类，需不需检索
   - BERT-base-multilingual Acc 0.95 Prec 0.96 Rec 0.94 F1 0.95
 
-# Chunking / Chucking Granularity
+# Chunking / Chucking Granularity / Chunking Techniques
 - Thu, 22 Aug 2019 [Multi-passage BERT: A Globally Normalized BERT Model for Open-domain Question Answering](https://arxiv.org/abs/1908.08167)
   - 实际测试，Natural Questions这类不是Multi-hop的数据集就是100 words的上下文就够了，对所有生成模型上下文越长，效果越差
   - 就是很迷，长上下文能不能支棱起来
@@ -35,6 +39,83 @@ Queries requiring retrieval proceed through the RAG modules; others are handled 
   - While smaller chunks may not fully convey the necessary context, they do have less noise
 - Fri, 26 Jul 2024 [Modular RAG: Transforming RAG Systems into LEGO-like Reconfigurable Frameworks](https://arxiv.org/abs/2407.21059)
   - 除了论文里提出，有名有姓的方法，Sliding Window、Metadata Attachment、Hierarchical Index也是简单有效的方法
+
+# Retrieval / Embedding Model
+[跳转](./awesome_retrieval.md#retrievalembeddings-model)
+
+# Vector Databases
+- BruteForce 对于几个pdf的数据量，硬算速度也很快
+- Milvus
+- Chroma
+- Faiss
+- hnswlib
+
+# Query Rewriting
+- Thu, 30 Apr 2020 [Question Rewriting for Conversational Question Answering](https://arxiv.org/abs/2004.14652)
+- Tue, 19 Jan 2021 [A Comparison of Question Rewriting Methods for Conversational Passage Retrieval](https://arxiv.org/abs/2101.07382)
+- Sat, 22 Jan 2022 [Question rewriting? Assessing its importance for conversational question answering](https://arxiv.org/abs/2201.09146)
+- Tue, 23 May 2023 [Query Rewriting for Retrieval-Augmented Large Language Models](https://arxiv.org/abs/2305.14283)
+- Tue, 7 Nov 2023 [Large Language Model based Long-tail Query Rewriting in Taobao Search](https://arxiv.org/abs/2311.03758)
+- Tue, 19 Dec 2023 [Rewriting Conversational Utterances with Instructed Large Language Models](https://ieeexplore.ieee.org/document/10350178)
+- Thu, 18 Jan 2024 [ChatQA: Surpassing GPT-4 on Conversational QA and RAG](https://arxiv.org/abs/2401.10225)
+  - Query Rewriting 并没有增加新的信息，最新的 Retrieval(Embedding) Model 大小来到了7B 甚至更大，基础模型也使用LLM as Retrieval。
+  - Conversational Query Rewriting Most of the previous solutions are query rewriting methods.
+    - The latest turn of question is rewritten to be a standalone query without additional information from previous dialogue history (Vakulenko et al., 2021a; Ye et al., 2023; Mo et al., 2023), 
+    - so it can be directly used by retrieval model to retrieve relevant context (Vakulenko et al., 2021b; Mele et al., 2021; Raposo et al., 2022; Mo et al., 2023).
+    - 使用大 retrieval model 的效果与使用 GPT-3.5-Turbo Query Rewriting 相当
+  - fine-tuning a good single-turn retriever on high-quality conversational query context pairs performs on par with leveraging the state-of-the-art rewriter.
+  - However, rewriting method requires extra computational time for autoregressive generation process and probably also API cost for using powerful models like GPT-3.5-Turbo. 
+- Mon, 1 Jul 2024 [Searching for Best Practices in Retrieval-Augmented Generation](https://arxiv.org/abs/2407.01219)
+  - However, query rewriting and query decomposition did not enhance retrieval performance as effectively
+
+# Query Decomposition
+- Mon, 1 Jul 2024 [Searching for Best Practices in Retrieval-Augmented Generation](https://arxiv.org/abs/2407.01219)
+  - However, query rewriting and query decomposition did not enhance retrieval performance as effectively
+
+# Reranking 
+[跳转](./awesome_retrieval.md#rerank-model)
+
+- Fri, 26 Jul [Modular RAG: Transforming RAG Systems into LEGO-like Reconfigurable Frameworks](https://arxiv.org/abs/2407.21059)
+  - 使用通用大模型做 Reranking 也不是不行，就是有的慢
+  - Another straightforward and effective approach involves having the LLM evaluate the retrieved content before generating the final answer
+
+# Summarization
+Retrieval results may contain redundant or unnecessary information. Additionally, long prompts can slow down the inference process.
+
+Summarization tasks can be extractive or abstractive.
+- Fri, 6 Oct 2023 [RECOMP: Improving Retrieval-Augmented LMs with Compression and Selective Augmentation](https://arxiv.org/abs/2310.04408)
+- Tue, 10 Oct 2023 [LongLLMLingua: Accelerating and Enhancing LLMs in Long Context Scenarios via Prompt Compression](https://arxiv.org/abs/2310.06839)
+- 
+
+# Document Repacking
+The performance of subsequent processes, such as LLM response generation, may be affected by the order documents are provided.
+- Thu, 6 Jul 2023 [Lost in the Middle: How Language Models Use Long Contexts](https://arxiv.org/abs/2307.03172)
+  - 将重要的文档排到两边，大模型会偷懒不看中间的文档
+  - 太诡异了，如果(2024年)新训练的，标榜长上下文的模型还需要将检索文档重新排序，那就真的太诡异了。
+
+
+# Generate
+
+# Verification
+Given the input question, the retrieved knowledge, and the generated answer, a small language model is trained to determine whether the generated answer correctly reflects the retrieved knowledge.
+- Thu, 19 Oct 2023 [Knowledge-Augmented Language Model Verification](https://arxiv.org/abs/2310.12836)
+
+
+# Advanced RAG
+利用llm的Planning&reasoning, 做RAG复杂流程调度
+- Tue, 17 Oct 2023 [Self-RAG: Learning to Retrieve, Generate, and Critique through Self-Reflection](https://arxiv.org/abs/2310.11511)
+
+
+# Best Practice
+- Thu, 18 Jan 2024 [ChatQA: Surpassing GPT-4 on Conversational QA and RAG](https://arxiv.org/abs/2401.10225)
+- Mon, 1 Jul 2024 [Searching for Best Practices in Retrieval-Augmented Generation](https://arxiv.org/abs/2407.01219)
+- Fri, 19 Jul 2024 [ChatQA 2: Bridging the Gap to Proprietary LLMs in Long Context and RAG Capabilities](https://arxiv.org/abs/2407.14482)
+
+# Survey 
+- Fri, 26 Jul [Modular RAG: Transforming RAG Systems into LEGO-like Reconfigurable Frameworks](https://arxiv.org/abs/2407.21059)
+
+
+
 
 
 # RAG for pre-train
