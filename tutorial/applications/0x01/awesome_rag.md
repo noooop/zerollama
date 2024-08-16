@@ -115,7 +115,26 @@ Given the input question, the retrieved knowledge, and the generated answer, a s
 - Fri, 26 Jul [Modular RAG: Transforming RAG Systems into LEGO-like Reconfigurable Frameworks](https://arxiv.org/abs/2407.21059)
 
 
+# Benchmark
+- Mon, 4 Sep 2023 [Benchmarking Large Language Models in Retrieval-Augmented Generation](https://arxiv.org/abs/2309.01431)
+  - Noise Robustness
+  - Negative Rejection
+  - Information Integration
+  - Counterfactual Robustness
+- Fri, 7 Jun 2024 [CRAG -- Comprehensive RAG Benchmark](https://arxiv.org/abs/2406.04744)
+  - [kdd-cup-2024](https://www.aicrowd.com/challenges/meta-comprehensive-rag-benchmark-kdd-cup-2024)
+  - Task
+    - Task 1: Retrieval Summarization.
+    - Task 2: KG and Web Retrieval Augmentation.
+    - Task 3: End-to-end RAG.
+  - Question type
+    - Simple \ Simple w. condition \ Set \ Comparison \ Aggregation \ Multi-hop \ Post-processing heavy \ False Premise
+  - Metrics
+    -  We then use a scoring method Scoreh with score 1, 0.5, 0, and -1 for each perfect, acceptable, missing, and incorrect answer, respectively
 
+# Evaluate
+- Mon, 29 May 2023 [A Critical Evaluation of Evaluations for Long-form Question Answering](https://arxiv.org/abs/2305.18201)
+  - We encourage future work to move away from a single “overall score” of the answer and adopt a multi-faceted evaluation, targeting aspects such as factuality and completeness.
 
 
 # RAG for pre-train
