@@ -39,6 +39,8 @@ Queries requiring retrieval proceed through the RAG modules; others are handled 
   - While smaller chunks may not fully convey the necessary context, they do have less noise
 - Fri, 26 Jul 2024 [Modular RAG: Transforming RAG Systems into LEGO-like Reconfigurable Frameworks](https://arxiv.org/abs/2407.21059)
   - 除了论文里提出，有名有姓的方法，Sliding Window、Metadata Attachment、Hierarchical Index也是简单有效的方法
+Sat, 7 Sep 2024 [Late Chunking: Contextual Chunk Embeddings Using Long-Context Embedding Models](https://arxiv.org/abs/2409.04701)
+  - 先过transformer layers，在sequence_output上做Chunking mean pooling，有意思
 
 # Retrieval / Embedding Model
 [跳转](./awesome_retrieval.md#retrievalembeddings-model)
@@ -67,6 +69,9 @@ Queries requiring retrieval proceed through the RAG modules; others are handled 
   - However, rewriting method requires extra computational time for autoregressive generation process and probably also API cost for using powerful models like GPT-3.5-Turbo. 
 - Mon, 1 Jul 2024 [Searching for Best Practices in Retrieval-Augmented Generation](https://arxiv.org/abs/2407.01219)
   - However, query rewriting and query decomposition did not enhance retrieval performance as effectively
+
+# Query Disambiguation
+- Sat, 20 Jul 2024 [Golden-Retriever: High-Fidelity Agentic Retrieval Augmented Generation for Industrial Knowledge Base](https://arxiv.org/abs/2408.00798)
 
 # Query Decomposition
 - Mon, 1 Jul 2024 [Searching for Best Practices in Retrieval-Augmented Generation](https://arxiv.org/abs/2407.01219)
@@ -135,6 +140,33 @@ Given the input question, the retrieved knowledge, and the generated answer, a s
 # Evaluate
 - Mon, 29 May 2023 [A Critical Evaluation of Evaluations for Long-form Question Answering](https://arxiv.org/abs/2305.18201)
   - We encourage future work to move away from a single “overall score” of the answer and adopt a multi-faceted evaluation, targeting aspects such as factuality and completeness.
+- Mon, 20 May 2024 [xFinder: Robust and Pinpoint Answer Extraction for Large Language Models](https://arxiv.org/abs/2405.11874)
+  - RegEx accuracy in the best evaluation framework is 74.38%, we propose xFinder, a model specifically designed for key answer extraction.
+
+
+# Fine-Tuning for RAG
+随着大模型能力不断提升， zeroshot、in-Context Learning 和 follow instructions 的能力不断增强，专门为 RAG 任务 Fine-Tuning 到底有多大的收益
+
+- Sun, 25 Jun 2023 [SAIL: Search-Augmented Instruction Learning](https://arxiv.org/abs/2305.15225)
+  - We show that instruction-tuned LLMs can be heavily misled by distracting grounding information and noisy search results.
+  - We constructed a search-augmented instruction training corpus.
+  - We fine-tune a 7B-parameter language model (SAIL-7B) with the constructed training set, which outperforms strong baseline models including GPT-3.5-Turbo and Vicuna-13B on several NLP tasks.
+
+# Add control token
+- Tue, 17 Oct 2023 [Self-RAG: Learning to Retrieve, Generate, and Critique through Self-Reflection](https://arxiv.org/abs/2310.11511)
+  - Agentic RAG?
+    - Retrieve Decides when to retrieve with R.
+    - ISREL d provides useful information to solve x.
+    - ISSUP All of the verification-worthy statement in y is supported by d.
+    - ISUSE y is a useful response to x.
+- Mon, 6 May 2024 [When to Retrieve: Teaching LLMs to Utilize Information Retrieval Effectively](https://arxiv.org/abs/2404.19705)
+  - LLMs are trained to generate a special token, ⟨RET⟩, when they do not know the answer to a question. 
+
+# Knowledge Graph RAG
+- Wed, 24 Apr 2024 [From Local to Global: A Graph RAG Approach to Query-Focused Summarization](https://arxiv.org/abs/2404.16130)
+- Fri, 7 Jun 2024 [CRAG -- Comprehensive RAG Benchmark](https://arxiv.org/abs/2406.04744)
+- Fri, 9 Aug 2024 [A Hybrid RAG System with Comprehensive Enhancement on Complex Reasoning](https://arxiv.org/abs/2408.05141)
+  - CRAG + 1
 
 
 # RAG for pre-train
@@ -147,10 +179,3 @@ Given the input question, the retrieved knowledge, and the generated answer, a s
 - Wed, 8 May 2024 [A Method for Parsing and Vectorization of Semi-structured Data used in Retrieval Augmented Generation](https://arxiv.org/abs/2405.03989)
   - unstructured -> .docx -> chunk by title -> RAG
 
-# Fine-Tuning for RAG
-随着大模型能力不断提升， zeroshot、in-Context Learning 和 follow instructions 的能力不断增强，专门为 RAG 任务 Fine-Tuning 到底有多大的收益
-
-- Sun, 25 Jun 2023 [SAIL: Search-Augmented Instruction Learning](https://arxiv.org/abs/2305.15225)
-  - We show that instruction-tuned LLMs can be heavily misled by distracting grounding information and noisy search results.
-  - We constructed a search-augmented instruction training corpus.
-  - We fine-tune a 7B-parameter language model (SAIL-7B) with the constructed training set, which outperforms strong baseline models including GPT-3.5-Turbo and Vicuna-13B on several NLP tasks.
