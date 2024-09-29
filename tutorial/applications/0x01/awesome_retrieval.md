@@ -332,7 +332,6 @@ retrieval rerank 两阶段检索，第一阶段先用双塔模型大量召回比
 很多文章吧 Rerank model 称为 cross-encoder，相对与 Dense Retrieval 的 dual-encoder。
 相比 Dense Retrieval 模型，算法上可以结合Metric Learning 和 Contrastive Learning，系统上可以跟 approximate nearest neighbor 结合， 下游任务又可以跟  large-scale open-domain QA 结合。
 Rerank model 真的要无聊很多，Rerank model 本质上就是个二分类任务，约等于 bert 预训练任务 Next Sentence Prediction。
-- Mon, 27 Apr 2020 [ColBERT: Efficient and Effective Passage Search via Contextualized Late Interaction over BERT](https://arxiv.org/abs/2004.12832)
 - Sun, 4 Feb 2024 [为RAG而生-BCE embedding技术报告](https://zhuanlan.zhihu.com/p/681370855)
   - 我们将BCEmbedding设计为二阶段检索器，分工合作：“离线”的Embedding负责尽可能召回，“在线”的Reranker负责精排和低质量过滤。
     - 精排阶段为了解决信息交互的问题，采用cross-encoder架构（如图二-2 (b)所示）。Reranker模型可以实现用户问题和知识库语料的信息交互，使模型可以“见机行事”地识别到更加准确的语义关系，算法性能上限可以很高。该方式的缺点是，需要对用户问题和知识库语料进行在线（online）地语义关系提取，效率比较低，无法对全量的知识库语料进行实时处理。
@@ -353,6 +352,12 @@ Rerank model 真的要无聊很多，Rerank model 本质上就是个二分类任
   - trained based on gemma2-9b
 - Mon, 29 Jul 2024 [mGTE: Generalized Long-Context Text Representation and Reranking Models for Multilingual Text Retrieval](https://arxiv.org/abs/2407.19669)
   - 从头训练一个基础模型，并微调成一个 Retrieval(Embeddings) model 和 Reranking Model, 有钱真好
+
+# learned sparse representations \ late-interaction methods
+- Mon, 27 Apr 2020 [ColBERT: Efficient and Effective Passage Search via Contextualized Late Interaction over BERT](https://arxiv.org/abs/2004.12832)
+- Mon, 5 Feb 2024 [BGE M3-Embedding: Multi-Lingual, Multi-Functionality, Multi-Granularity Text Embeddings Through Self-Knowledge Distillation](https://arxiv.org/abs/2402.03216)
+- Mon, 23 Sep 2024 [Reducing the Footprint of Multi-Vector Retrieval with Minimal Performance Impact via Token Pooling](https://arxiv.org/abs/2409.14683)
+
 
 # Generation-Augmented Retrieval
 你没看错，是生成增强检索

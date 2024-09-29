@@ -51,6 +51,12 @@ Sat, 7 Sep 2024 [Late Chunking: Contextual Chunk Embeddings Using Long-Context E
 - Chroma
 - Faiss
 - hnswlib
+- Tue, 10 Sep 2024 [Operational Advice for Dense and Sparse Retrievers: HNSW, Flat, or Inverted Indexes?](https://arxiv.org/abs/2409.06464)
+  - based on Lucene 9.9.1 (released Dec. 2023)
+  - https://www.elastic.co/cn/blog/whats-new-elasticsearch-platform-8-13-0 至少Elasticsearch 8.0 就支持 HNSW 和 flat
+  - 问题就来了，Table 2 看不出随着数据量增加，HNSW 和 flat 召回如何变化，期待更详细的测试
+- https://github.com/harsha-simhadri/big-ann-benchmarks/blob/main/neurips23/ongoing_leaderboard/leaderboard.md
+  - Pinecone 和 Zilliz 真的好猛
 
 # Query Rewriting
 - Thu, 30 Apr 2020 [Question Rewriting for Conversational Question Answering](https://arxiv.org/abs/2004.14652)
@@ -110,15 +116,19 @@ Given the input question, the retrieved knowledge, and the generated answer, a s
 利用llm的Planning&reasoning, 做RAG复杂流程调度
 - Tue, 17 Oct 2023 [Self-RAG: Learning to Retrieve, Generate, and Critique through Self-Reflection](https://arxiv.org/abs/2310.11511)
 
-
+**[**
 # Best Practice
 - Thu, 18 Jan 2024 [ChatQA: Surpassing GPT-4 on Conversational QA and RAG](https://arxiv.org/abs/2401.10225)
 - Mon, 1 Jul 2024 [Searching for Best Practices in Retrieval-Augmented Generation](https://arxiv.org/abs/2407.01219)
 - Fri, 19 Jul 2024 [ChatQA 2: Bridging the Gap to Proprietary LLMs in Long Context and RAG Capabilities](https://arxiv.org/abs/2407.14482)
 
 # Survey 
-- Fri, 26 Jul [Modular RAG: Transforming RAG Systems into LEGO-like Reconfigurable Frameworks](https://arxiv.org/abs/2407.21059)
-
+- Fri, 26 Jul 2024 [Modular RAG: Transforming RAG Systems into LEGO-like Reconfigurable Frameworks](https://arxiv.org/abs/2407.21059)
+- Mon, 23 Sep 2024 [Retrieval Augmented Generation (RAG) and Beyond: A Comprehensive Survey on How to Make your LLMs use External Data More Wisely](https://arxiv.org/abs/2409.14924)
+  - Level-1 Explicit Facts
+  - Level-2 Implicit Facts
+  - Level-3 Interpretable Rationales
+  - Level-4 Hidden Rationales
 
 # Benchmark
 - Mon, 4 Sep 2023 [Benchmarking Large Language Models in Retrieval-Augmented Generation](https://arxiv.org/abs/2309.01431)
