@@ -58,7 +58,7 @@ Sat, 7 Sep 2024 [Late Chunking: Contextual Chunk Embeddings Using Long-Context E
 - https://github.com/harsha-simhadri/big-ann-benchmarks/blob/main/neurips23/ongoing_leaderboard/leaderboard.md
   - Pinecone 和 Zilliz 真的好猛
 
-# Query Rewriting
+# Query Rewriting\Query Disambiguation\Query Decomposition
 - Thu, 30 Apr 2020 [Question Rewriting for Conversational Question Answering](https://arxiv.org/abs/2004.14652)
 - Tue, 19 Jan 2021 [A Comparison of Question Rewriting Methods for Conversational Passage Retrieval](https://arxiv.org/abs/2101.07382)
 - Sat, 22 Jan 2022 [Question rewriting? Assessing its importance for conversational question answering](https://arxiv.org/abs/2201.09146)
@@ -75,13 +75,9 @@ Sat, 7 Sep 2024 [Late Chunking: Contextual Chunk Embeddings Using Long-Context E
   - However, rewriting method requires extra computational time for autoregressive generation process and probably also API cost for using powerful models like GPT-3.5-Turbo. 
 - Mon, 1 Jul 2024 [Searching for Best Practices in Retrieval-Augmented Generation](https://arxiv.org/abs/2407.01219)
   - However, query rewriting and query decomposition did not enhance retrieval performance as effectively
-
-# Query Disambiguation
 - Sat, 20 Jul 2024 [Golden-Retriever: High-Fidelity Agentic Retrieval Augmented Generation for Industrial Knowledge Base](https://arxiv.org/abs/2408.00798)
-
-# Query Decomposition
-- Mon, 1 Jul 2024 [Searching for Best Practices in Retrieval-Augmented Generation](https://arxiv.org/abs/2407.01219)
-  - However, query rewriting and query decomposition did not enhance retrieval performance as effectively
+- Mon, 9 Sep 2024 [MemoRAG: Moving towards Next-Gen RAG Via Memory-Inspired Knowledge Discovery](https://arxiv.org/abs/2409.05591)
+  - RQ-RAG 效果比较差
 
 # Reranking 
 [跳转](./awesome_retrieval.md#rerank-model)
@@ -96,7 +92,6 @@ Retrieval results may contain redundant or unnecessary information. Additionally
 Summarization tasks can be extractive or abstractive.
 - Fri, 6 Oct 2023 [RECOMP: Improving Retrieval-Augmented LMs with Compression and Selective Augmentation](https://arxiv.org/abs/2310.04408)
 - Tue, 10 Oct 2023 [LongLLMLingua: Accelerating and Enhancing LLMs in Long Context Scenarios via Prompt Compression](https://arxiv.org/abs/2310.06839)
-- 
 
 # Document Repacking
 The performance of subsequent processes, such as LLM response generation, may be affected by the order documents are provided.
@@ -112,11 +107,19 @@ Given the input question, the retrieved knowledge, and the generated answer, a s
 - Thu, 19 Oct 2023 [Knowledge-Augmented Language Model Verification](https://arxiv.org/abs/2310.12836)
 
 
-# Advanced RAG
+# Advanced RAG\Agentic RAG
 利用llm的Planning&reasoning, 做RAG复杂流程调度
 - Tue, 17 Oct 2023 [Self-RAG: Learning to Retrieve, Generate, and Critique through Self-Reflection](https://arxiv.org/abs/2310.11511)
+- Fri, 24 May 2024 [Are Long-LLMs A Necessity For Long-Context Tasks?](https://arxiv.org/pdf/2405.15318)
+  - Hand-Designed Agent
+    - Task Understanding
+    - Retrieve
+    - Move
+    - Append
+    - Merge
+    - Answer
+    - Aggregation
 
-**[**
 # Best Practice
 - Thu, 18 Jan 2024 [ChatQA: Surpassing GPT-4 on Conversational QA and RAG](https://arxiv.org/abs/2401.10225)
 - Mon, 1 Jul 2024 [Searching for Best Practices in Retrieval-Augmented Generation](https://arxiv.org/abs/2407.01219)
@@ -177,6 +180,20 @@ Given the input question, the retrieved knowledge, and the generated answer, a s
 - Fri, 7 Jun 2024 [CRAG -- Comprehensive RAG Benchmark](https://arxiv.org/abs/2406.04744)
 - Fri, 9 Aug 2024 [A Hybrid RAG System with Comprehensive Enhancement on Complex Reasoning](https://arxiv.org/abs/2408.05141)
   - CRAG + 1
+- Tue, 8 Oct 2024 [LightRAG: Simple and Fast Retrieval-Augmented Generation](https://arxiv.org/abs/2410.05779)
+
+# Long-Context
+- Mon, 9 Sep 2024 [MemoRAG: Moving towards Next-Gen RAG Via Memory-Inspired Knowledge Discovery](https://arxiv.org/abs/2409.05591)
+
+
+# Practice
+- Wed, 8 May 2024 [A Method for Parsing and Vectorization of Semi-structured Data used in Retrieval Augmented Generation](https://arxiv.org/abs/2405.03989)
+  - unstructured -> .docx -> chunk by title -> RAG
+- Mon, 24 Jun 2024 [Context-augmented Retrieval: A Novel Framework for Fast Information Retrieval based Response Generation using Large Language Model](https://arxiv.org/abs/2406.16383)
+  - Query-Index Classification Model: The query is classified into the appropriate domain/category using the classification model
+    - DistilBERT Training Accuracy 1.00 Testing Accuracy 0.42 Recall 0.42 Precision 0.59 ???
+  - Entity Extraction, BM25 retriever, Hybrid Retriever
+  - Index Generation: OpenAI’s text-embedding-ada-002 embeddings with a chunk size limit of 512 tokens
 
 
 # RAG for pre-train
@@ -185,7 +202,4 @@ Given the input question, the retrieved knowledge, and the generated answer, a s
 - Tue, 31 Oct 2023 [GAR-meets-RAG Paradigm for Zero-Shot Information Retrieval](https://arxiv.org/abs/2310.20158)
 - Fri, 8 Mar 2024 [PipeRAG: Fast Retrieval-Augmented Generation via Algorithm-System Co-design](https://arxiv.org/abs/2403.05676)
 
-# Documentation Parsing
-- Wed, 8 May 2024 [A Method for Parsing and Vectorization of Semi-structured Data used in Retrieval Augmented Generation](https://arxiv.org/abs/2405.03989)
-  - unstructured -> .docx -> chunk by title -> RAG
 
