@@ -183,8 +183,31 @@ Given the input question, the retrieved knowledge, and the generated answer, a s
 - Tue, 8 Oct 2024 [LightRAG: Simple and Fast Retrieval-Augmented Generation](https://arxiv.org/abs/2410.05779)
 
 # Long-Context
+- Tue, 9 Apr 2024 [RULER: What's the Real Context Size of Your Long-Context Language Models?](https://arxiv.org/abs/2404.06654)
+  - https://github.com/NVIDIA/RULER 
+  - Retrieval: Needle-in-a-haystack (NIAH)
+    - Single NIAH (S-NIAH)
+    - Multi-keys NIAH (MK-NIAH)
+    - Multi-values NIAH (MV-NIAH)
+    - Multi-queries NIAH (MQ-NIAH)
+  - Multi-hop Tracing: Variable Tracking (VT)
+  - Aggregation: Common Words (CWE) and Frequent Words Extraction (FWE)
+  - Question Answering (QA)
+  - GLM4 (9B) 效果不错
+- Tue, 27 Aug 2024 [Writing in the Margins: Better Inference Pattern for Long Context Retrieval](https://arxiv.org/abs/2408.14906)
+  - Needle Retrieval and Single-Hop Question Answering
+    - Unsurprisingly, RAG emerges as the most optimal pattern for 
+six out of seven evaluated models when extending the context length to 64k tokens in SQuAD. Indeed, for single-hop
+reasoning tasks, if the filtering process is successful (here we
+approximate the retriever by an LLM classifier), the challenge
+is reduced to a trivial task of retrieving a needle from a context window of 4096 tokens. However, this assumption in the
+RAG setup is overly optimistic because the LLMs used in our
+experiment are at least 7B in model parameters, and such large
+models are not typically used as retrievers. 
+    - 反过来说，如果成本可控，用7B以上的模型做retrievers几乎完美
 - Mon, 9 Sep 2024 [MemoRAG: Moving towards Next-Gen RAG Via Memory-Inspired Knowledge Discovery](https://arxiv.org/abs/2409.05591)
-
+- Fri, 20 Sep 2024 [Introducing Contextual Retrieval](https://www.anthropic.com/news/contextual-retrieval)
+  - A note on simply using a longer prompt
 
 # Practice
 - Wed, 8 May 2024 [A Method for Parsing and Vectorization of Semi-structured Data used in Retrieval Augmented Generation](https://arxiv.org/abs/2405.03989)
@@ -194,8 +217,15 @@ Given the input question, the retrieved knowledge, and the generated answer, a s
     - DistilBERT Training Accuracy 1.00 Testing Accuracy 0.42 Recall 0.42 Precision 0.59 ???
   - Entity Extraction, BM25 retriever, Hybrid Retriever
   - Index Generation: OpenAI’s text-embedding-ada-002 embeddings with a chunk size limit of 512 tokens
-
-
+- Fri, 20 Sep 2024 [Introducing Contextual Retrieval](https://www.anthropic.com/news/contextual-retrieval)
+  - A note on simply using a longer prompt
+    - Sometimes the simplest solution is the best. If your knowledge base is smaller than 200,000 tokens (about 500 pages of material), you can just include the entire knowledge base in the prompt that you give the model, with no need for RAG or similar methods.
+  - Using Prompt Caching
+  - BM25 + semantic embeddings
+  - We’ve written a prompt that instructs the model to provide concise, chunk-specific context that explains the chunk using the context of the overall document.
+    - WHOLE_DOCUMENT + CHUNK_CONTENT -> llm -> contextual text
+  - Using Prompt Caching to reduce the costs of Contextual Retrieval
+  
 # RAG for pre-train
 - Fri, 22 May 2020 [Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks](https://arxiv.org/abs/2005.11401)
 - Wed, 8 Dec 2021 [Improving language models by retrieving from trillions of tokens](https://arxiv.org/abs/2112.04426)
