@@ -39,8 +39,12 @@ Queries requiring retrieval proceed through the RAG modules; others are handled 
   - While smaller chunks may not fully convey the necessary context, they do have less noise
 - Fri, 26 Jul 2024 [Modular RAG: Transforming RAG Systems into LEGO-like Reconfigurable Frameworks](https://arxiv.org/abs/2407.21059)
   - 除了论文里提出，有名有姓的方法，Sliding Window、Metadata Attachment、Hierarchical Index也是简单有效的方法
-Sat, 7 Sep 2024 [Late Chunking: Contextual Chunk Embeddings Using Long-Context Embedding Models](https://arxiv.org/abs/2409.04701)
+- Sat, 7 Sep 2024 [Late Chunking: Contextual Chunk Embeddings Using Long-Context Embedding Models](https://arxiv.org/abs/2409.04701)
   - 先过transformer layers，在sequence_output上做Chunking mean pooling，有意思
+- Wed, 16 Oct 2024 [Is Semantic Chunking Worth the Computational Cost?](https://arxiv.org/abs/2410.13070)
+  - We demonstrate that while semantic chunking shows some benefits in certain scenarios,
+  these are inconsistent and often insufficient to
+  justify the computational cost.
 
 # Retrieval / Embedding Model
 [跳转](./awesome_retrieval.md#retrievalembeddings-model)
@@ -164,6 +168,8 @@ Given the input question, the retrieved knowledge, and the generated answer, a s
   - We show that instruction-tuned LLMs can be heavily misled by distracting grounding information and noisy search results.
   - We constructed a search-augmented instruction training corpus.
   - We fine-tune a 7B-parameter language model (SAIL-7B) with the constructed training set, which outperforms strong baseline models including GPT-3.5-Turbo and Vicuna-13B on several NLP tasks.
+- Thu, 17 Oct 2024 [Block-Attention for Efficient RAG](https://arxiv.org/abs/2409.15355)
+  - Block-Attention enables us to reuse the KV states of passages that have been seen before, thereby significantly reducing the latency and the computation overhead during inference
 
 # Add control token
 - Tue, 17 Oct 2023 [Self-RAG: Learning to Retrieve, Generate, and Critique through Self-Reflection](https://arxiv.org/abs/2310.11511)
@@ -208,6 +214,11 @@ models are not typically used as retrievers.
 - Mon, 9 Sep 2024 [MemoRAG: Moving towards Next-Gen RAG Via Memory-Inspired Knowledge Discovery](https://arxiv.org/abs/2409.05591)
 - Fri, 20 Sep 2024 [Introducing Contextual Retrieval](https://www.anthropic.com/news/contextual-retrieval)
   - A note on simply using a longer prompt
+- Sun, 6 Oct 2024 [Inference Scaling for Long-Context Retrieval Augmented Generation](https://arxiv.org/abs/2410.04343)
+  - IterDRAG 只用从 32k -> 128k 才能超越 RAG 和 DRAG
+  - Agentic RAG 需要非常大的 Inference Scaling 才能体现出优势
+- Tue, 5 Nov 2024 [Long Context RAG Performance of Large Language Models](https://arxiv.org/abs/2411.03538)
+  - 给模型更多512token的片段，而不是更长的连续上下文？？？？
 
 # Practice
 - Wed, 8 May 2024 [A Method for Parsing and Vectorization of Semi-structured Data used in Retrieval Augmented Generation](https://arxiv.org/abs/2405.03989)
