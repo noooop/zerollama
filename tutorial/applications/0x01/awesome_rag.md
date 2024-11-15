@@ -114,15 +114,7 @@ Given the input question, the retrieved knowledge, and the generated answer, a s
 # Advanced RAG\Agentic RAG
 利用llm的Planning&reasoning, 做RAG复杂流程调度
 - Tue, 17 Oct 2023 [Self-RAG: Learning to Retrieve, Generate, and Critique through Self-Reflection](https://arxiv.org/abs/2310.11511)
-- Fri, 24 May 2024 [Are Long-LLMs A Necessity For Long-Context Tasks?](https://arxiv.org/pdf/2405.15318)
-  - Hand-Designed Agent
-    - Task Understanding
-    - Retrieve
-    - Move
-    - Append
-    - Merge
-    - Answer
-    - Aggregation
+
 
 # Best Practice
 - Thu, 18 Jan 2024 [ChatQA: Surpassing GPT-4 on Conversational QA and RAG](https://arxiv.org/abs/2401.10225)
@@ -188,7 +180,25 @@ Given the input question, the retrieved knowledge, and the generated answer, a s
   - CRAG + 1
 - Tue, 8 Oct 2024 [LightRAG: Simple and Fast Retrieval-Augmented Generation](https://arxiv.org/abs/2410.05779)
 
-# Long-Context
+# Long-Context Evaluate
+- Wed, 21 Feb 2024 [∞Bench: Extending Long Context Evaluation Beyond 100K Tokens](https://arxiv.org/abs/2402.13718)
+  - LRA (Tay et al., 2020) ∼10K 
+  - LongBench (Bai et al., 2023) ∼10K QA, summarization, synthetic retrieval, and code
+  - L-Eval (An et al., 2023) 4K - 60K QA, summarization, math, retrieval, and multiple-choice (MC)
+  - LooGLE (Li et al., 2023) ∼20K summary and QA
+  - ∞BENCH (ours) ∼200K 
+    - Retrieve.PassKey 
+    - Retrieve.Number
+    - Retrieve.KV
+    - En.Sum
+    - En.QA
+    - En.MC
+    - En.Dia
+    - Zh.QA
+    - Code.Debug
+    - Code.Run
+    - Math.Calc
+    - Math.Find
 - Tue, 9 Apr 2024 [RULER: What's the Real Context Size of Your Long-Context Language Models?](https://arxiv.org/abs/2404.06654)
   - https://github.com/NVIDIA/RULER 
   - Retrieval: Needle-in-a-haystack (NIAH)
@@ -200,6 +210,11 @@ Given the input question, the retrieved knowledge, and the generated answer, a s
   - Aggregation: Common Words (CWE) and Frequent Words Extraction (FWE)
   - Question Answering (QA)
   - GLM4 (9B) 效果不错
+- Sat, 29 Jun 2024 [Is It Really Long Context if All You Need Is Retrieval? Towards Genuinely Difficult Long Context NLP](https://arxiv.org/abs/2407.00402)
+  - 
+
+
+# Long-Context
 - Tue, 27 Aug 2024 [Writing in the Margins: Better Inference Pattern for Long Context Retrieval](https://arxiv.org/abs/2408.14906)
   - Needle Retrieval and Single-Hop Question Answering
     - Unsurprisingly, RAG emerges as the most optimal pattern for 
@@ -219,6 +234,30 @@ models are not typically used as retrievers.
   - Agentic RAG 需要非常大的 Inference Scaling 才能体现出优势
 - Tue, 5 Nov 2024 [Long Context RAG Performance of Large Language Models](https://arxiv.org/abs/2411.03538)
   - 给模型更多512token的片段，而不是更长的连续上下文？？？？
+
+# approximate Long-Context
+使用短上下文近似长上下文效果， 相当于一种特别的 Agentic RAG
+- Sun, 18 Feb 2024 [LongAgent: Scaling Language Models to 128k Context through Multi-Agent Collaboration](https://arxiv.org/abs/2402.11550)
+  - Needle-in-a-Haystack PLUS (Single-Doc QA + Multi-Doc QA) 
+- Fri, 24 May 2024 [Are Long-LLMs A Necessity For Long-Context Tasks?](https://arxiv.org/abs/2405.15318)
+  - Single-Doc QA Multi-Doc QA + Summarization + Synthetic Task: Passage Count Self-Constructed Dataset + Code Completion
+  - Hand-Designed Agent
+    - Task Understanding
+    - Retrieve
+    - Move
+    - Append
+    - Merge
+    - Answer
+    - Aggregation
+- Tue, 4 Jun 2024 [Chain of Agents: Large Language Models Collaborating on Long-Context Tasks](https://arxiv.org/abs/2406.02818)
+  - QA Summarization Code Completion
+- Sat, 12 Oct 2024 [LLM×MapReduce: Simplified Long-Sequence Processing using Large Language Models](https://arxiv.org/abs/2410.09342)
+  - ∞BENCH
+  - Map Stage + Collapse Stage + Reduce Stage
+  - However, in complex cases where historical
+and current information conflict, LC-Boost may
+struggle to fully resolve the issue relying solely on
+the accumulated summary and the current text.
 
 # Practice
 - Wed, 8 May 2024 [A Method for Parsing and Vectorization of Semi-structured Data used in Retrieval Augmented Generation](https://arxiv.org/abs/2405.03989)
