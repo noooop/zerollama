@@ -108,7 +108,22 @@ The performance of subsequent processes, such as LLM response generation, may be
 
 # Verification
 Given the input question, the retrieved knowledge, and the generated answer, a small language model is trained to determine whether the generated answer correctly reflects the retrieved knowledge.
+- Wed, 24 May 2023 [SAIL: Search-Augmented Instruction Learning](https://arxiv.org/abs/2305.15225)
+  - We show that instruction-tuned LLMs can be heavily misled by distracting grounding information and noisy search results.
+  - 微调模型
+- Tue, 17 Oct 2023 [Self-RAG: Learning to Retrieve, Generate, and Critique through Self-Reflection](https://arxiv.org/abs/2310.11511)
+  - 微调模型
 - Thu, 19 Oct 2023 [Knowledge-Augmented Language Model Verification](https://arxiv.org/abs/2310.12836)
+- Mon, 29 Jan 2024 [Corrective Retrieval Augmented Generation](https://arxiv.org/abs/2401.15884)
+- Thu, 11 Jul 2024 [Speculative RAG: Enhancing Retrieval Augmented Generation through Drafting](https://arxiv.org/abs/2407.08223)
+  - Diversity and reduced redundancy in retrieval improves draft quality significantly. 检索的noise对生成的影响还是挺大的
+  - ∗We use the RAG drafter’s generation probability ρDraft as the confidence score for selecting drafts when we use it alone
+    - we use Mistral7B or Mixtral8x7B as the RAG verifier, and denote them as MVerifier-7B or MVerifier-8x7B
+    - MDrafter-7B 是有什么魔法吗？
+    - Table 1 TriviaQA 
+      - Mistral7B 54.15 Mistral-Instruct7B 67.11 -> MDrafter-7B∗ 71.11 ？
+    - Table 1 PubHealth 
+      - Mistral7B  34.85 Mistral-Instruct7B 42.15 -> MDrafter-7B∗ 75.58 ？
 
 
 # Advanced RAG\Agentic RAG
@@ -155,8 +170,7 @@ Given the input question, the retrieved knowledge, and the generated answer, a s
 
 # Fine-Tuning for RAG
 随着大模型能力不断提升， zeroshot、in-Context Learning 和 follow instructions 的能力不断增强，专门为 RAG 任务 Fine-Tuning 到底有多大的收益
-
-- Sun, 25 Jun 2023 [SAIL: Search-Augmented Instruction Learning](https://arxiv.org/abs/2305.15225)
+- Wed, 24 May 2023 [SAIL: Search-Augmented Instruction Learning](https://arxiv.org/abs/2305.15225)
   - We show that instruction-tuned LLMs can be heavily misled by distracting grounding information and noisy search results.
   - We constructed a search-augmented instruction training corpus.
   - We fine-tune a 7B-parameter language model (SAIL-7B) with the constructed training set, which outperforms strong baseline models including GPT-3.5-Turbo and Vicuna-13B on several NLP tasks.
@@ -227,6 +241,10 @@ experiment are at least 7B in model parameters, and such large
 models are not typically used as retrievers. 
     - 反过来说，如果成本可控，用7B以上的模型做retrievers几乎完美
 - Mon, 9 Sep 2024 [MemoRAG: Moving towards Next-Gen RAG Via Memory-Inspired Knowledge Discovery](https://arxiv.org/abs/2409.05591)
+  - LongBench  	InfBench 	UltraDomain
+  - Using Long LLMs as Memory Model
+  - it employs a light but longrange LLM to form the global memory of database, generates draft answers
+  - it leverages an expensive but expressive LLM, which generates the ultimate answer based on the retrieved information.
 - Fri, 20 Sep 2024 [Introducing Contextual Retrieval](https://www.anthropic.com/news/contextual-retrieval)
   - A note on simply using a longer prompt
 - Sun, 6 Oct 2024 [Inference Scaling for Long-Context Retrieval Augmented Generation](https://arxiv.org/abs/2410.04343)
