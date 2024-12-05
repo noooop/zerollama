@@ -358,14 +358,6 @@ Rerank model 真的要无聊很多，Rerank model 本质上就是个二分类任
 - Mon, 5 Feb 2024 [BGE M3-Embedding: Multi-Lingual, Multi-Functionality, Multi-Granularity Text Embeddings Through Self-Knowledge Distillation](https://arxiv.org/abs/2402.03216)
 - Mon, 23 Sep 2024 [Reducing the Footprint of Multi-Vector Retrieval with Minimal Performance Impact via Token Pooling](https://arxiv.org/abs/2409.14683)
 
-
-# Generation-Augmented Retrieval
-你没看错，是生成增强检索
-- Thu, 17 Sep 2020 [Generation-Augmented Retrieval for Open-domain Question Answering](https://arxiv.org/abs/2009.08553)
-- Tue, 20 Dec 2022 [Precise Zero-Shot Dense Retrieval without Relevance Labels](https://arxiv.org/abs/2212.10496)
-  -  Given a query, HyDE first zero-shot instructs an instruction-following language model (e.g. InstructGPT) to generate a hypothetical document.
-- Wed, 31 Jan 2024 [RAPTOR: Recursive Abstractive Processing for Tree-Organized Retrieval](https://arxiv.org/abs/2401.18059)
-
 # Chunking / Chucking Granularity
 [跳转](./awesome_rag.md#chunking--chucking-granularity)
   

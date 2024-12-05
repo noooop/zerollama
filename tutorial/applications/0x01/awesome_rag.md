@@ -22,6 +22,14 @@ Queries requiring retrieval proceed through the RAG modules; others are handled 
 - Mon, 1 Jul 2024 [Searching for Best Practices in Retrieval-Augmented Generation](https://arxiv.org/abs/2407.01219)
   - 将 query 二分类，需不需检索
   - BERT-base-multilingual Acc 0.95 Prec 0.96 Rec 0.94 F1 0.95
+- Wed, 21 Feb 2024 [Self-DC: When to retrieve and When to generate? Self Divide-and-Conquer for Compositional Unknown Questions](https://arxiv.org/abs/2402.13514)
+  - 使用 Confidence Score 分成三类，知道不知道，不确定，然后将不确定分解
+  - Confidence Score Acquisition 1. verbalize-based 2. probability-based
+  - generate-then-read
+  - retrieve-then-read
+  - decompose
+  - combine-sub-qas
+  - Baselines  1) Direct Prompting 2) Chain-of-thought (CoT) prompting  3) GenRead 4) Retrievethen-read (RR) 5) Self-Ask 6) IRCoT 7) REFEED 8) ITER-RETGEN
 
 # Chunking / Chucking Granularity / Chunking Techniques
 - Thu, 22 Aug 2019 [Multi-passage BERT: A Globally Normalized BERT Model for Open-domain Question Answering](https://arxiv.org/abs/1908.08167)
@@ -67,6 +75,7 @@ Queries requiring retrieval proceed through the RAG modules; others are handled 
 - Tue, 19 Jan 2021 [A Comparison of Question Rewriting Methods for Conversational Passage Retrieval](https://arxiv.org/abs/2101.07382)
 - Sat, 22 Jan 2022 [Question rewriting? Assessing its importance for conversational question answering](https://arxiv.org/abs/2201.09146)
 - Tue, 23 May 2023 [Query Rewriting for Retrieval-Augmented Large Language Models](https://arxiv.org/abs/2305.14283)
+  - “The internet as a knowledge base” setup 
 - Tue, 7 Nov 2023 [Large Language Model based Long-tail Query Rewriting in Taobao Search](https://arxiv.org/abs/2311.03758)
 - Tue, 19 Dec 2023 [Rewriting Conversational Utterances with Instructed Large Language Models](https://ieeexplore.ieee.org/document/10350178)
 - Thu, 18 Jan 2024 [ChatQA: Surpassing GPT-4 on Conversational QA and RAG](https://arxiv.org/abs/2401.10225)
@@ -79,9 +88,24 @@ Queries requiring retrieval proceed through the RAG modules; others are handled 
   - However, rewriting method requires extra computational time for autoregressive generation process and probably also API cost for using powerful models like GPT-3.5-Turbo. 
 - Mon, 1 Jul 2024 [Searching for Best Practices in Retrieval-Augmented Generation](https://arxiv.org/abs/2407.01219)
   - However, query rewriting and query decomposition did not enhance retrieval performance as effectively
+- Mon, 15 Jul 2024 [Enhancing Retrieval and Managing Retrieval: A Four-Module Synergy for Improved Quality and Efficiency in RAG Systems](https://arxiv.org/abs/2407.10670)
+  - “The internet as a knowledge base” setup 
+  - Question Rewriter+ -> Retrieval Trigger -> Knowledge Retriever -> Knowledge Filter -> LLM Reader -> Memory Knowledge Reservoir
+  - (1) single query have an inherent upper limit of retrievable relevant information; 
+  - (2) employing multiple queries that focus on different semantic aspects can surpass the information plateau, enhancing both the precision and recall of information retrieval; 
+  - (3) The phenomenon of irrelevant knowledge is pervasive in RAG and becomes more pronounced with larger volumes of retrieved external information; and 
+  - (4) rewriting ambiguous questions into intent-specific questions improves the precision of responses.
 - Sat, 20 Jul 2024 [Golden-Retriever: High-Fidelity Agentic Retrieval Augmented Generation for Industrial Knowledge Base](https://arxiv.org/abs/2408.00798)
+  - 处理行话
 - Mon, 9 Sep 2024 [MemoRAG: Moving towards Next-Gen RAG Via Memory-Inspired Knowledge Discovery](https://arxiv.org/abs/2409.05591)
   - RQ-RAG 效果比较差
+
+# Generation-Augmented Retrieval 
+你没看错，是生成增强检索
+- Thu, 17 Sep 2020 [Generation-Augmented Retrieval for Open-domain Question Answering](https://arxiv.org/abs/2009.08553)
+- Tue, 20 Dec 2022 [Precise Zero-Shot Dense Retrieval without Relevance Labels](https://arxiv.org/abs/2212.10496)
+  -  Given a query, HyDE first zero-shot instructs an instruction-following language model (e.g. InstructGPT) to generate a hypothetical document.
+- Wed, 31 Jan 2024 [RAPTOR: Recursive Abstractive Processing for Tree-Organized Retrieval](https://arxiv.org/abs/2401.18059)
 
 # Reranking 
 [跳转](./awesome_retrieval.md#rerank-model)
@@ -134,7 +158,10 @@ Given the input question, the retrieved knowledge, and the generated answer, a s
 # Best Practice
 - Thu, 18 Jan 2024 [ChatQA: Surpassing GPT-4 on Conversational QA and RAG](https://arxiv.org/abs/2401.10225)
 - Mon, 1 Jul 2024 [Searching for Best Practices in Retrieval-Augmented Generation](https://arxiv.org/abs/2407.01219)
+- Wed, 10 Jul 2024 [FACTS About Building Retrieval Augmented Generation-based Chatbots](https://arxiv.org/abs/2407.07858)
 - Fri, 19 Jul 2024 [ChatQA 2: Bridging the Gap to Proprietary LLMs in Long Context and RAG Capabilities](https://arxiv.org/abs/2407.14482)
+- Thu, 15 Aug 2024 [Hermes 3 Technical Report](https://arxiv.org/abs/2408.11857)
+  - For RAG, the model has been trained to cite retrieval sources using the <co> tag
 
 # Survey 
 - Fri, 26 Jul 2024 [Modular RAG: Transforming RAG Systems into LEGO-like Reconfigurable Frameworks](https://arxiv.org/abs/2407.21059)
@@ -143,6 +170,8 @@ Given the input question, the retrieved knowledge, and the generated answer, a s
   - Level-2 Implicit Facts
   - Level-3 Interpretable Rationales
   - Level-4 Hidden Rationales
+- Thu, 3 Oct 2024 [A Comprehensive Survey of Retrieval-Augmented Generation (RAG): Evolution, Current Landscape and Future Directions](https://arxiv.org/abs/2410.12837)
+  - 非常基础
 
 # Benchmark
 - Mon, 4 Sep 2023 [Benchmarking Large Language Models in Retrieval-Augmented Generation](https://arxiv.org/abs/2309.01431)
@@ -195,6 +224,9 @@ Given the input question, the retrieved knowledge, and the generated answer, a s
 - Tue, 8 Oct 2024 [LightRAG: Simple and Fast Retrieval-Augmented Generation](https://arxiv.org/abs/2410.05779)
 
 # Long-Context Evaluate
+- Mar, 8 Feb 2023 [Needle in a haystack](https://github.com/gkamradt/LLMTest_NeedleInAHaystack)
+  - Doing simple retrieval from LLM models at various context lengths to measure accuracy
+- Mon, 28 Aug 2023 [LongBench: A Bilingual, Multitask Benchmark for Long Context Understanding](https://arxiv.org/abs/2308.14508)
 - Wed, 21 Feb 2024 [∞Bench: Extending Long Context Evaluation Beyond 100K Tokens](https://arxiv.org/abs/2402.13718)
   - LRA (Tay et al., 2020) ∼10K 
   - LongBench (Bai et al., 2023) ∼10K QA, summarization, synthetic retrieval, and code
@@ -229,6 +261,13 @@ Given the input question, the retrieved knowledge, and the generated answer, a s
 
 
 # Long-Context
+- Tue, 23 Jul 2024 [Retrieval Augmented Generation or Long-Context LLMs? A Comprehensive Study and Hybrid Approach](https://arxiv.org/abs/2407.16833)
+  - LongBench and ∞Bench, mainly focus on tasks that are (a) in English, (b) real, and (c) query-based
+  - Results reveal that when resourced sufficiently, LC consistently outperforms RAG in terms of average performance.
+  - However, RAG’s significantly lower cost remains a distinct advantage. 
+  - Based on this observation, we propose SELF-ROUTE, a simple yet effective method that routes queries to RAG or LC based on model self-reflection. 
+    - For the queries deemed unanswerable, we proceed to the second step, providing the full context to the long-context LLMs to obtain the final prediction (i.e., LC)
+    - 相当于一种 Adaptive Retrieval 方法
 - Tue, 27 Aug 2024 [Writing in the Margins: Better Inference Pattern for Long Context Retrieval](https://arxiv.org/abs/2408.14906)
   - Needle Retrieval and Single-Hop Question Answering
     - Unsurprisingly, RAG emerges as the most optimal pattern for 
@@ -293,8 +332,11 @@ the accumulated summary and the current text.
   - We’ve written a prompt that instructs the model to provide concise, chunk-specific context that explains the chunk using the context of the overall document.
     - WHOLE_DOCUMENT + CHUNK_CONTENT -> llm -> contextual text
   - Using Prompt Caching to reduce the costs of Contextual Retrieval
+- Mon, 14 Oct 2024 [EasyRAG: Efficient Retrieval-Augmented Generation Framework for Automated Network Operations](https://arxiv.org/abs/2410.10315)
+  - https://zhuanlan.zhihu.com/p/7272025344
+  - Easy 的背后有多少人工就有多少智能 
   
-# RAG for pre-train
+# trained the retrieval and generative components jointly
 - Fri, 22 May 2020 [Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks](https://arxiv.org/abs/2005.11401)
 - Wed, 8 Dec 2021 [Improving language models by retrieving from trillions of tokens](https://arxiv.org/abs/2112.04426)
 - Tue, 31 Oct 2023 [GAR-meets-RAG Paradigm for Zero-Shot Information Retrieval](https://arxiv.org/abs/2310.20158)
