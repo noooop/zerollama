@@ -124,6 +124,7 @@ Queries requiring retrieval proceed through the RAG modules; others are handled 
 - Thu, 17 Sep 2020 [Generation-Augmented Retrieval for Open-domain Question Answering](https://arxiv.org/abs/2009.08553)
 - Tue, 20 Dec 2022 [Precise Zero-Shot Dense Retrieval without Relevance Labels](https://arxiv.org/abs/2212.10496)
   -  Given a query, HyDE first zero-shot instructs an instruction-following language model (e.g. InstructGPT) to generate a hypothetical document.
+- Fri, 6 Oct 2023 [Keyword Augmented Retrieval: Novel framework for Information Retrieval integrated with speech interface](https://arxiv.org/abs/2310.04205)
 - Wed, 31 Jan 2024 [RAPTOR: Recursive Abstractive Processing for Tree-Organized Retrieval](https://arxiv.org/abs/2401.18059)
 
 # Reranking 
@@ -132,6 +133,11 @@ Queries requiring retrieval proceed through the RAG modules; others are handled 
 - Fri, 26 Jul [Modular RAG: Transforming RAG Systems into LEGO-like Reconfigurable Frameworks](https://arxiv.org/abs/2407.21059)
   - 使用通用大模型做 Reranking 也不是不行，就是有的慢
   - Another straightforward and effective approach involves having the LLM evaluate the retrieved content before generating the final answer
+
+# Retrieval evaluator
+- Mon, 29 Jan 2024 [Corrective Retrieval Augmented Generation](https://arxiv.org/abs/2401.15884)
+  - a lightweight retrieval evaluator is designed to assess the overall quality of retrieved documents for a query, returning a confidence degree based on which different knowledge retrieval actions can be triggered.
+  - Confidence: CORRECT INCORRECT AMBIGUOUS
 
 # Summarization
 Retrieval results may contain redundant or unnecessary information. Additionally, long prompts can slow down the inference process.
@@ -177,7 +183,8 @@ Given the input question, the retrieved knowledge, and the generated answer, a s
 reasoning 的风吹到了 RAG
 - Thu, 9 Jan 2025 [Search-o1: Agentic Search-Enhanced Large Reasoning Models](https://arxiv.org/abs/2501.05366)
   - QwQ-32B
-
+- Thu, 20 Jan 2025 [DeepSeek-R1](https://github.com/deepseek-ai/DeepSeek-R1)
+- Wed, 26 Mar 2025 [MCTS-RAG: Enhancing Retrieval-Augmented Generation with Monte Carlo Tree Search](https://arxiv.org/abs/2503.20757)
 
 # Best Practice
 - Mon, 1 Jul 2024 [Searching for Best Practices in Retrieval-Augmented Generation](https://arxiv.org/abs/2407.01219)
@@ -218,11 +225,12 @@ reasoning 的风吹到了 RAG
     -  We then use a scoring method Scoreh with score 1, 0.5, 0, and -1 for each perfect, acceptable, missing, and incorrect answer, respectively
 
 # Evaluate
+- [ragas](https://docs.ragas.io/en/stable/)
 - Mon, 29 May 2023 [A Critical Evaluation of Evaluations for Long-form Question Answering](https://arxiv.org/abs/2305.18201)
   - We encourage future work to move away from a single “overall score” of the answer and adopt a multi-faceted evaluation, targeting aspects such as factuality and completeness.
 - Mon, 20 May 2024 [xFinder: Robust and Pinpoint Answer Extraction for Large Language Models](https://arxiv.org/abs/2405.11874)
   - RegEx accuracy in the best evaluation framework is 74.38%, we propose xFinder, a model specifically designed for key answer extraction.
-
+- Fri, 19 Jul 2024 [RAG-QA Arena: Evaluating Domain Robustness for Long-form Retrieval Augmented Question Answering](https://arxiv.org/abs/2407.13998)
 
 # Fine-Tuning for RAG
 ## RAG 专用模型
@@ -378,6 +386,8 @@ the accumulated summary and the current text.
 # Practice
 - Wed, 8 May 2024 [A Method for Parsing and Vectorization of Semi-structured Data used in Retrieval Augmented Generation](https://arxiv.org/abs/2405.03989)
   - unstructured -> .docx -> chunk by title -> RAG
+- Mon, 17 Jun 2024 [Evaluating the Efficacy of Open-Source LLMs in Enterprise-Specific RAG Systems: A Comparative Study of Performance and Scalability](https://arxiv.org/abs/2406.11424v1)
+  - Web Crawling + BAAI/bge-large-en-v1.5 + FAISS + Ensemble Retriever + DeepEval +  Llama3-8B 
 - Mon, 24 Jun 2024 [Context-augmented Retrieval: A Novel Framework for Fast Information Retrieval based Response Generation using Large Language Model](https://arxiv.org/abs/2406.16383)
   - Query-Index Classification Model: The query is classified into the appropriate domain/category using the classification model
     - DistilBERT Training Accuracy 1.00 Testing Accuracy 0.42 Recall 0.42 Precision 0.59 ???
@@ -393,7 +403,13 @@ the accumulated summary and the current text.
   - Using Prompt Caching to reduce the costs of Contextual Retrieval
 - Mon, 14 Oct 2024 [EasyRAG: Efficient Retrieval-Augmented Generation Framework for Automated Network Operations](https://arxiv.org/abs/2410.10315)
   - https://zhuanlan.zhihu.com/p/7272025344
-  - Easy 的背后有多少人工就有多少智能 
+  - Easy 的背后有多少人工就有多少智能
+
+# LAB
+- Wed, 22 May 2024 [FlashRAG: A Modular Toolkit for Efficient Retrieval-Augmented Generation Research](https://arxiv.org/abs/2405.13576)
+  - https://github.com/RUC-NLPIR/FlashRAG
+- Wed, 21 Aug 2024 [RAGLAB: A Modular and Research-Oriented Unified Framework for Retrieval-Augmented Generation](https://arxiv.org/abs/2408.11381)
+  - https://github.com/fate-ubw/RAGLAB
   
 # trained the retrieval and generative components jointly
 - Fri, 22 May 2020 [Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks](https://arxiv.org/abs/2005.11401)
